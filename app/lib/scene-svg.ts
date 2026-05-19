@@ -58,7 +58,7 @@ export function sceneToSvgMarkup(scene: Scene): string {
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" viewBox="0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}" role="img" aria-label="Covercast OBS live background">`,
     renderDefs("covercast", scene),
-    renderBackground(scene.backgroundColor, scene.backgroundOpacity),
+    renderBackground(scene.backgroundColor, scene.backgroundOpacity, "covercast", scene),
     ...scene.elements.map((element) => renderElement(element, "covercast")),
     "</svg>",
   ].join("");
@@ -74,6 +74,7 @@ export function renderDefs(prefix: string, scene?: Scene): string {
       )
       .map((element) => renderShapeGradient(element, prefix))
       .join("") ?? "";
+  const backgroundMask = renderBackgroundMask(prefix, scene);
 
   return `
     <defs>
@@ -95,17 +96,28 @@ export function renderDefs(prefix: string, scene?: Scene): string {
         <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#142070" flood-opacity="0.28" />
       </filter>
       ${customGradients}
+      ${backgroundMask}
     </defs>
   `;
 }
 
-export function renderBackground(backgroundColor: string, backgroundOpacity = 1): string {
+export function renderBackground(
+  backgroundColor: string,
+  backgroundOpacity = 1,
+  prefix = "covercast",
+  scene?: Scene,
+): string {
   const opacity = clampOpacity(backgroundOpacity);
   const glowOpacity = Number((0.68 * opacity).toFixed(3));
+  const mask = hasBackgroundCutouts(scene)
+    ? ` mask="url(#${backgroundMaskId(prefix)})"`
+    : "";
 
   return `
-    <rect width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" fill="${escapeAttribute(backgroundColor)}" opacity="${opacity}" />
-    <rect width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" fill="url(#covercast-bg-glow)" opacity="${glowOpacity}" />
+    <g${mask}>
+      <rect width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" fill="${escapeAttribute(backgroundColor)}" opacity="${opacity}" />
+      <rect width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" fill="url(#${prefix}-bg-glow)" opacity="${glowOpacity}" />
+    </g>
   `;
 }
 
@@ -123,7 +135,10 @@ function renderElement(element: SceneElement, prefix: string): string {
 
 function renderShapeElement(element: ShapeElement, prefix: string): string {
   const opacity = element.opacity ?? 1;
-  const common = `fill="${escapeAttribute(resolveShapeFill(element, prefix))}" opacity="${opacity}"`;
+  const fill = element.backgroundCutout
+    ? "transparent"
+    : escapeAttribute(resolveShapeFill(element, prefix));
+  const common = `fill="${fill}" opacity="${element.backgroundCutout ? 1 : opacity}"`;
   const stroke = element.stroke
     ? ` stroke="${escapeAttribute(element.stroke)}" stroke-width="${element.strokeWidth ?? 1}"`
     : "";
@@ -170,6 +185,48 @@ function isGradientShape(element: SceneElement): element is ShapeElement & {
 
 function shapeGradientId(prefix: string, elementId: string): string {
   return `${prefix}-shape-gradient-${elementId}`;
+}
+
+function renderBackgroundMask(prefix: string, scene?: Scene): string {
+  const cutouts =
+    scene?.elements
+      .filter((element): element is ShapeElement => isBackgroundCutoutShape(element))
+      .map(renderCutoutMaskShape)
+      .join("") ?? "";
+
+  if (!cutouts) {
+    return "";
+  }
+
+  return `
+    <mask id="${backgroundMaskId(prefix)}" maskUnits="userSpaceOnUse">
+      <rect width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" fill="#ffffff" />
+      ${cutouts}
+    </mask>
+  `;
+}
+
+function renderCutoutMaskShape(element: ShapeElement): string {
+  if (element.type === "ellipse") {
+    return `<ellipse cx="${element.x + element.width / 2}" cy="${element.y + element.height / 2}" rx="${element.width / 2}" ry="${element.height / 2}" fill="#000000" />`;
+  }
+
+  return `<rect x="${element.x}" y="${element.y}" width="${element.width}" height="${element.height}" rx="${element.radius ?? 0}" fill="#000000" />`;
+}
+
+function isBackgroundCutoutShape(element: SceneElement): element is ShapeElement {
+  return (
+    (element.type === "rect" || element.type === "ellipse") &&
+    element.backgroundCutout === true
+  );
+}
+
+function hasBackgroundCutouts(scene?: Scene): boolean {
+  return scene?.elements.some(isBackgroundCutoutShape) ?? false;
+}
+
+function backgroundMaskId(prefix: string): string {
+  return `${prefix}-background-mask`;
 }
 
 export function gradientVector(direction: NonNullable<ShapeElement["gradient"]>["direction"]) {

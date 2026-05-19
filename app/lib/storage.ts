@@ -106,8 +106,32 @@ function normalizeScene(value: unknown): Scene {
       typeof candidate.backgroundOpacity === "number"
         ? clamp(candidate.backgroundOpacity, 0, 1)
         : fallback.backgroundOpacity,
-    elements: candidate.elements,
+    elements: candidate.elements.map(normalizeElement),
   } as Scene;
+}
+
+function normalizeElement(element: unknown) {
+  if (!element || typeof element !== "object") {
+    return element;
+  }
+
+  const candidate = element as { id?: unknown; name?: unknown; type?: unknown };
+  const elementRecord = element as Record<string, unknown>;
+  const isVideoPlaceholder =
+    candidate.type === "rect" &&
+    (candidate.id === "video-left" ||
+      candidate.id === "video-right" ||
+      candidate.name === "左侧视频占位" ||
+      candidate.name === "右侧视频占位");
+
+  if (!isVideoPlaceholder || "backgroundCutout" in elementRecord) {
+    return element;
+  }
+
+  return {
+    ...elementRecord,
+    backgroundCutout: true,
+  };
 }
 
 function isSafeAssetId(id: string) {

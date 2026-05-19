@@ -344,6 +344,24 @@ h1 {
   box-shadow: 0 0 0 3px rgba(39, 100, 246, 0.14);
 }
 
+.checkbox-field {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkbox-field input {
+  width: 20px;
+  min-height: 20px;
+}
+
+.field-help {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .field-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -636,9 +636,22 @@ function ShapeInspector({
 
   return (
     <>
+      <label className="field checkbox-field">
+        <span>背景穿透</span>
+        <input
+          type="checkbox"
+          checked={element.backgroundCutout === true}
+          onChange={(event) =>
+            onPatch({
+              backgroundCutout: event.currentTarget.checked,
+            } as Partial<ShapeElement>)
+          }
+        />
+      </label>
       <label className="field">
         <span>填充类型</span>
         <select
+          disabled={element.backgroundCutout === true}
           value={fillMode}
           onChange={(event) => {
             const nextMode = event.currentTarget.value as ShapeFillMode;
@@ -653,7 +666,9 @@ function ShapeInspector({
         </select>
       </label>
 
-      {fillMode === "gradient" ? (
+      {element.backgroundCutout === true ? (
+        <p className="field-help">已挖空封面背景，OBS 中可透出后方画面；可继续保留描边。</p>
+      ) : fillMode === "gradient" ? (
         <>
           <ColorField
             label="渐变起点"

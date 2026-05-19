@@ -106,20 +106,60 @@ export default function SceneCanvas({
               </linearGradient>
             );
           })}
+        {hasBackgroundCutouts(scene) ? (
+          <mask id={backgroundMaskId(idPrefix)} maskUnits="userSpaceOnUse">
+            <rect width={CANVAS_WIDTH} height={CANVAS_HEIGHT} fill="#ffffff" />
+            {scene.elements
+              .filter(
+                (element): element is ShapeElement =>
+                  isBackgroundCutoutShape(element),
+              )
+              .map((element) =>
+                element.type === "ellipse" ? (
+                  <ellipse
+                    key={element.id}
+                    cx={element.x + element.width / 2}
+                    cy={element.y + element.height / 2}
+                    rx={element.width / 2}
+                    ry={element.height / 2}
+                    fill="#000000"
+                  />
+                ) : (
+                  <rect
+                    key={element.id}
+                    x={element.x}
+                    y={element.y}
+                    width={element.width}
+                    height={element.height}
+                    rx={element.radius ?? 0}
+                    fill="#000000"
+                  />
+                ),
+              )}
+          </mask>
+        ) : null}
       </defs>
 
-      <rect
-        width={CANVAS_WIDTH}
-        height={CANVAS_HEIGHT}
-        fill={scene.backgroundColor}
-        opacity={clampOpacity(scene.backgroundOpacity)}
-      />
-      <rect
-        width={CANVAS_WIDTH}
-        height={CANVAS_HEIGHT}
-        fill={`url(#${idPrefix}-bg-glow)`}
-        opacity={0.68 * clampOpacity(scene.backgroundOpacity)}
-      />
+      <g
+        mask={
+          hasBackgroundCutouts(scene)
+            ? `url(#${backgroundMaskId(idPrefix)})`
+            : undefined
+        }
+      >
+        <rect
+          width={CANVAS_WIDTH}
+          height={CANVAS_HEIGHT}
+          fill={scene.backgroundColor}
+          opacity={clampOpacity(scene.backgroundOpacity)}
+        />
+        <rect
+          width={CANVAS_WIDTH}
+          height={CANVAS_HEIGHT}
+          fill={`url(#${idPrefix}-bg-glow)`}
+          opacity={0.68 * clampOpacity(scene.backgroundOpacity)}
+        />
+      </g>
 
       {scene.elements.map((element) => (
         <ElementView
@@ -197,10 +237,10 @@ function ShapeElementView({
   idPrefix: string;
 }) {
   const commonProps = {
-    fill: resolveShapeFill(element, idPrefix),
+    fill: element.backgroundCutout ? "transparent" : resolveShapeFill(element, idPrefix),
     stroke: element.stroke,
     strokeWidth: element.strokeWidth,
-    opacity: element.opacity ?? 1,
+    opacity: element.backgroundCutout ? 1 : (element.opacity ?? 1),
   };
 
   if (element.type === "ellipse") {
@@ -435,4 +475,19 @@ function isGradientShape(element: SceneElement): element is ShapeElement & {
 
 function shapeGradientId(prefix: string, elementId: string): string {
   return `${prefix}-shape-gradient-${elementId}`;
+}
+
+function isBackgroundCutoutShape(element: SceneElement): element is ShapeElement {
+  return (
+    (element.type === "rect" || element.type === "ellipse") &&
+    element.backgroundCutout === true
+  );
+}
+
+function hasBackgroundCutouts(scene: Scene) {
+  return scene.elements.some(isBackgroundCutoutShape);
+}
+
+function backgroundMaskId(prefix: string) {
+  return `${prefix}-background-mask`;
 }

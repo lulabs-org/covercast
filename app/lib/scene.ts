@@ -42,6 +42,7 @@ export type ShapeElement = ElementBase & {
   fill: string;
   fillMode?: ShapeFillMode;
   gradient?: ShapeGradient;
+  backgroundCutout?: boolean;
   stroke?: string;
   strokeWidth?: number;
   radius?: number;
@@ -216,7 +217,7 @@ const defaultScene: Scene = {
       name: "已报满标记",
       type: "text",
       text: "（已报满）",
-      x: 611,
+      x: 650,
       y: 219,
       width: 138,
       height: 28,
@@ -292,6 +293,7 @@ const defaultScene: Scene = {
       fill: "#000000",
       stroke: "#ffffff",
       strokeWidth: 1,
+      backgroundCutout: true,
     },
     {
       id: "video-right",
@@ -305,6 +307,7 @@ const defaultScene: Scene = {
       fill: "#000000",
       stroke: "#ffffff",
       strokeWidth: 1,
+      backgroundCutout: true,
     },
     {
       id: "speaker-left-name",
