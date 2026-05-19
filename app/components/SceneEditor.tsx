@@ -457,7 +457,7 @@ export default function SceneEditor() {
       <section className="editor-toolbar" aria-label="Covercast editor controls">
         <div>
           <p className="eyebrow">Covercast</p>
-          <h1>OBS 直播背景编辑器</h1>
+          <h1>直播背景编辑器</h1>
         </div>
         <div className="toolbar-actions">
           <button type="button" className="secondary-button" onClick={addTextElement}>
