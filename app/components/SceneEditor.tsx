@@ -58,6 +58,7 @@ export default function SceneEditor() {
   const [customTemplates, setCustomTemplates] = useState<CustomSceneTemplate[]>([]);
   const [customTemplateName, setCustomTemplateName] = useState("");
   const [activeTemplateId, setActiveTemplateId] = useState<string>(DEFAULT_TEMPLATE_ID);
+  const [showTemplateForm, setShowTemplateForm] = useState(false);
   const [drag, setDrag] = useState<DragState | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -520,42 +521,73 @@ export default function SceneEditor() {
             caption={`${BUILT_IN_TEMPLATES.length + customTemplates.length} 个模板`}
           />
           <div className="template-library">
-            <div className="template-list">
-              {BUILT_IN_TEMPLATES.map((template) => (
-                <TemplateRow
-                  key={template.id}
-                  name={template.name}
-                  description={template.description}
-                  badge="内置"
-                  active={activeTemplateId === template.id}
-                  onApply={() => applyBuiltInTemplate(template.id)}
-                />
-              ))}
-              {customTemplates.map((template) => (
-                <TemplateRow
-                  key={template.id}
-                  name={template.name}
-                  description={formatTemplateDate(template.createdAt)}
-                  badge="自定义"
-                  active={activeTemplateId === template.id}
-                  onApply={() => applyTemplate(template)}
-                  onDelete={() => deleteCustomTemplate(template.id)}
-                />
-              ))}
+            <div className="template-section">
+              <div className="template-section-header">
+                <span className="template-section-title">内置模板</span>
+                <span className="template-section-count">{BUILT_IN_TEMPLATES.length} 个</span>
+              </div>
+              <div className="template-list">
+                {BUILT_IN_TEMPLATES.map((template) => (
+                  <TemplateCard
+                    key={template.id}
+                    name={template.name}
+                    description={template.description}
+                    badge="内置"
+                    active={activeTemplateId === template.id}
+                    onApply={() => applyBuiltInTemplate(template.id)}
+                  />
+                ))}
+              </div>
             </div>
+
+            {customTemplates.length > 0 && (
+              <div className="template-section">
+                <div className="template-section-header">
+                  <span className="template-section-title">自定义模板</span>
+                  <span className="template-section-count">{customTemplates.length} 个</span>
+                </div>
+                <div className="template-list">
+                  {customTemplates.map((template) => (
+                    <TemplateCard
+                      key={template.id}
+                      name={template.name}
+                      description={formatTemplateDate(template.createdAt)}
+                      badge="自定义"
+                      active={activeTemplateId === template.id}
+                      onApply={() => applyTemplate(template)}
+                      onDelete={() => deleteCustomTemplate(template.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="template-form">
-              <TextField
-                label="模板名称"
-                value={customTemplateName}
-                onChange={setCustomTemplateName}
-              />
               <button
                 type="button"
-                className="secondary-button"
-                onClick={saveCustomTemplate}
+                className="template-form-toggle"
+                onClick={() => setShowTemplateForm(!showTemplateForm)}
               >
-                保存当前为模板
+                <span>{showTemplateForm ? "收起保存表单" : "保存当前为模板"}</span>
+                <span className={`toggle-icon ${showTemplateForm ? "rotate" : ""}`}>▼</span>
               </button>
+              {showTemplateForm && (
+                <div className="template-form-content">
+                  <TextField
+                    label="模板名称"
+                    placeholder="未命名模板"
+                    value={customTemplateName}
+                    onChange={setCustomTemplateName}
+                  />
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={saveCustomTemplate}
+                  >
+                    确认保存
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -934,7 +966,7 @@ function ImageInspector({
   );
 }
 
-function TemplateRow({
+function TemplateCard({
   name,
   description,
   badge,
@@ -950,23 +982,25 @@ function TemplateRow({
   onDelete?: () => void;
 }) {
   return (
-    <div className={active ? "template-row active" : "template-row"}>
-      <button type="button" className="template-apply" onClick={onApply}>
-        <span>{name}</span>
-        <small>{description}</small>
+    <div className={active ? "template-card active" : "template-card"}>
+      <button type="button" className="template-card-button" onClick={onApply}>
+        <div className="template-card-content">
+          <span className="template-card-name">{name}</span>
+          <small className="template-card-desc">{description}</small>
+        </div>
+        <span className="template-card-badge">{badge}</span>
       </button>
       {onDelete ? (
         <button
           type="button"
-          className="template-delete"
+          className="template-card-delete"
           aria-label={`删除模板 ${name}`}
           onClick={onDelete}
+          title="删除模板"
         >
-          删除
+          ×
         </button>
-      ) : (
-        <span className="template-badge">{badge}</span>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -984,15 +1018,22 @@ function TextField({
   label,
   value,
   onChange,
+  placeholder,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  placeholder?: string;
 }) {
   return (
     <label className="field">
       <span>{label}</span>
-      <input type="text" value={value} onChange={(event) => onChange(event.currentTarget.value)} />
+      <input
+        type="text"
+        value={value}
+        placeholder={placeholder}
+        onChange={(event) => onChange(event.currentTarget.value)}
+      />
     </label>
   );
 }
