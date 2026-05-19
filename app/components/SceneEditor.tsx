@@ -9,8 +9,11 @@ import {
   useState,
 } from "react";
 import {
+  BUILT_IN_TEMPLATES,
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
+  DEFAULT_TEMPLATE_ID,
+  cloneScene,
   createDefaultScene,
   createImageElement,
   createRectElement,
@@ -38,11 +41,23 @@ type DragState = {
   element: SceneElement;
 };
 
+type CustomSceneTemplate = {
+  id: string;
+  name: string;
+  createdAt: string;
+  scene: Scene;
+};
+
+const CUSTOM_TEMPLATE_STORAGE_KEY = "covercast.customTemplates.v1";
+
 export default function SceneEditor() {
   const [scene, setScene] = useState<Scene>(() => createDefaultScene());
   const [selectedId, setSelectedId] = useState<string>("main-title");
   const [status, setStatus] = useState("正在读取本地场景...");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [customTemplates, setCustomTemplates] = useState<CustomSceneTemplate[]>([]);
+  const [customTemplateName, setCustomTemplateName] = useState("");
+  const [activeTemplateId, setActiveTemplateId] = useState<string>(DEFAULT_TEMPLATE_ID);
   const [drag, setDrag] = useState<DragState | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -50,6 +65,16 @@ export default function SceneEditor() {
     () => scene.elements.find((element) => element.id === selectedId) ?? null,
     [scene.elements, selectedId],
   );
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setCustomTemplates(readCustomTemplatesFromStorage());
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -66,6 +91,7 @@ export default function SceneEditor() {
           setScene(nextScene);
           setStatus("已读取本地场景");
           setHasUnsavedChanges(false);
+          setActiveTemplateId(findMatchingBuiltInTemplateId(nextScene));
           setSelectedId(nextScene.elements[0]?.id ?? "");
         }
       } catch {
@@ -137,6 +163,7 @@ export default function SceneEditor() {
           } as SceneElement;
         }),
       }));
+      setActiveTemplateId("");
       setHasUnsavedChanges(true);
     }
 
@@ -155,6 +182,7 @@ export default function SceneEditor() {
 
   function changeScene(updater: (currentScene: Scene) => Scene) {
     setScene(updater);
+    setActiveTemplateId("");
     setHasUnsavedChanges(true);
   }
 
@@ -237,12 +265,66 @@ export default function SceneEditor() {
     }
   }
 
-  function resetTemplate() {
-    const nextScene = createDefaultScene();
+  function applyTemplate(template: { id: string; name: string; scene: Scene }) {
+    const nextScene = cloneScene(template.scene);
     setScene(nextScene);
-    setSelectedId("main-title");
-    setStatus("已恢复默认模板，保存后 OBS 生效");
+    setSelectedId(nextScene.elements[0]?.id ?? "");
+    setActiveTemplateId(template.id);
+    setStatus(`已套用「${template.name}」，保存后 OBS 生效`);
     setHasUnsavedChanges(true);
+  }
+
+  function applyBuiltInTemplate(templateId: string) {
+    const template = BUILT_IN_TEMPLATES.find((item) => item.id === templateId);
+    if (!template) {
+      return;
+    }
+
+    applyTemplate(template);
+  }
+
+  function resetTemplate() {
+    const defaultTemplate = BUILT_IN_TEMPLATES.find((template) => template.id === DEFAULT_TEMPLATE_ID);
+    if (defaultTemplate) {
+      applyTemplate(defaultTemplate);
+    }
+  }
+
+  function saveCustomTemplate() {
+    const templateName =
+      customTemplateName.trim() || `自定义模板 ${customTemplates.length + 1}`;
+    const template: CustomSceneTemplate = {
+      id: `custom-${Date.now()}`,
+      name: templateName,
+      createdAt: new Date().toISOString(),
+      scene: cloneScene(scene),
+    };
+    const nextTemplates = [template, ...customTemplates];
+
+    try {
+      writeCustomTemplatesToStorage(nextTemplates);
+      setCustomTemplates(nextTemplates);
+      setCustomTemplateName("");
+      setActiveTemplateId(template.id);
+      setStatus(`已保存「${template.name}」到浏览器缓存`);
+    } catch {
+      setStatus("自定义模板保存失败，浏览器缓存空间可能不足");
+    }
+  }
+
+  function deleteCustomTemplate(templateId: string) {
+    const nextTemplates = customTemplates.filter((template) => template.id !== templateId);
+
+    try {
+      writeCustomTemplatesToStorage(nextTemplates);
+      setCustomTemplates(nextTemplates);
+      if (activeTemplateId === templateId) {
+        setActiveTemplateId("");
+      }
+      setStatus("已删除自定义模板");
+    } catch {
+      setStatus("自定义模板删除失败，请检查浏览器缓存权限");
+    }
   }
 
   function addTextElement() {
@@ -431,6 +513,50 @@ export default function SceneEditor() {
             <a href="/live" target="_blank" rel="noreferrer">
               {liveUrl}
             </a>
+          </div>
+
+          <PanelTitle
+            title="模板"
+            caption={`${BUILT_IN_TEMPLATES.length + customTemplates.length} 个模板`}
+          />
+          <div className="template-library">
+            <div className="template-list">
+              {BUILT_IN_TEMPLATES.map((template) => (
+                <TemplateRow
+                  key={template.id}
+                  name={template.name}
+                  description={template.description}
+                  badge="内置"
+                  active={activeTemplateId === template.id}
+                  onApply={() => applyBuiltInTemplate(template.id)}
+                />
+              ))}
+              {customTemplates.map((template) => (
+                <TemplateRow
+                  key={template.id}
+                  name={template.name}
+                  description={formatTemplateDate(template.createdAt)}
+                  badge="自定义"
+                  active={activeTemplateId === template.id}
+                  onApply={() => applyTemplate(template)}
+                  onDelete={() => deleteCustomTemplate(template.id)}
+                />
+              ))}
+            </div>
+            <div className="template-form">
+              <TextField
+                label="模板名称"
+                value={customTemplateName}
+                onChange={setCustomTemplateName}
+              />
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={saveCustomTemplate}
+              >
+                保存当前为模板
+              </button>
+            </div>
           </div>
 
           <PanelTitle title="元素" caption={`${scene.elements.length} 个图层`} />
@@ -808,6 +934,43 @@ function ImageInspector({
   );
 }
 
+function TemplateRow({
+  name,
+  description,
+  badge,
+  active,
+  onApply,
+  onDelete,
+}: {
+  name: string;
+  description: string;
+  badge: string;
+  active: boolean;
+  onApply: () => void;
+  onDelete?: () => void;
+}) {
+  return (
+    <div className={active ? "template-row active" : "template-row"}>
+      <button type="button" className="template-apply" onClick={onApply}>
+        <span>{name}</span>
+        <small>{description}</small>
+      </button>
+      {onDelete ? (
+        <button
+          type="button"
+          className="template-delete"
+          aria-label={`删除模板 ${name}`}
+          onClick={onDelete}
+        >
+          删除
+        </button>
+      ) : (
+        <span className="template-badge">{badge}</span>
+      )}
+    </div>
+  );
+}
+
 function PanelTitle({ title, caption }: { title: string; caption: string }) {
   return (
     <div className="panel-title">
@@ -960,6 +1123,130 @@ function ColorField({
   );
 }
 
+function readCustomTemplatesFromStorage(): CustomSceneTemplate[] {
+  try {
+    const rawValue = window.localStorage.getItem(CUSTOM_TEMPLATE_STORAGE_KEY);
+    if (!rawValue) {
+      return [];
+    }
+
+    const parsedValue = JSON.parse(rawValue) as unknown;
+    if (!Array.isArray(parsedValue)) {
+      return [];
+    }
+
+    return parsedValue
+      .map(normalizeCustomTemplate)
+      .filter((template): template is CustomSceneTemplate => template !== null);
+  } catch {
+    return [];
+  }
+}
+
+function writeCustomTemplatesToStorage(templates: CustomSceneTemplate[]) {
+  window.localStorage.setItem(CUSTOM_TEMPLATE_STORAGE_KEY, JSON.stringify(templates));
+}
+
+function normalizeCustomTemplate(value: unknown): CustomSceneTemplate | null {
+  if (!isRecord(value) || !isScene(value.scene)) {
+    return null;
+  }
+
+  if (
+    typeof value.id !== "string" ||
+    typeof value.name !== "string" ||
+    typeof value.createdAt !== "string"
+  ) {
+    return null;
+  }
+
+  return {
+    id: value.id,
+    name: value.name,
+    createdAt: value.createdAt,
+    scene: cloneScene(value.scene),
+  };
+}
+
+function isScene(value: unknown): value is Scene {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    value.version === 1 &&
+    typeof value.backgroundColor === "string" &&
+    typeof value.backgroundOpacity === "number" &&
+    Array.isArray(value.elements) &&
+    value.elements.every(isStoredSceneElement)
+  );
+}
+
+function isStoredSceneElement(value: unknown): value is SceneElement {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  const hasBounds =
+    typeof value.id === "string" &&
+    typeof value.name === "string" &&
+    typeof value.x === "number" &&
+    typeof value.y === "number" &&
+    typeof value.width === "number" &&
+    typeof value.height === "number";
+
+  if (!hasBounds) {
+    return false;
+  }
+
+  if (value.type === "text") {
+    return (
+      typeof value.text === "string" &&
+      typeof value.fill === "string" &&
+      typeof value.fontSize === "number" &&
+      typeof value.fontFamily === "string" &&
+      typeof value.fontWeight === "number" &&
+      (value.align === "left" || value.align === "center" || value.align === "right") &&
+      typeof value.lineHeight === "number"
+    );
+  }
+
+  if (value.type === "image") {
+    return (
+      typeof value.src === "string" &&
+      typeof value.alt === "string" &&
+      (value.fit === "cover" || value.fit === "contain") &&
+      (value.shape === "rect" || value.shape === "circle")
+    );
+  }
+
+  if (value.type === "rect" || value.type === "ellipse") {
+    return typeof value.fill === "string";
+  }
+
+  return false;
+}
+
+function formatTemplateDate(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "保存在浏览器缓存";
+  }
+
+  return `保存于 ${date.toLocaleDateString("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+  })}`;
+}
+
+function findMatchingBuiltInTemplateId(scene: Scene) {
+  const sceneValue = JSON.stringify(scene);
+  return (
+    BUILT_IN_TEMPLATES.find((template) => JSON.stringify(template.scene) === sceneValue)?.id ?? ""
+  );
+}
+
 async function inlineSceneAssets(scene: Scene): Promise<Scene> {
   const elements = await Promise.all(
     scene.elements.map(async (element) => {
@@ -1030,6 +1317,10 @@ function minimumHeight(element: SceneElement) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object";
 }
 
 function isHexColor(value: string) {
