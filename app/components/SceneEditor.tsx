@@ -15,6 +15,7 @@ import {
   DEFAULT_TEMPLATE_ID,
   cloneScene,
   createDefaultScene,
+  createEllipseElement,
   createImageElement,
   createRectElement,
   createTextElement,
@@ -499,6 +500,15 @@ export default function SceneEditor() {
     setSelectedId(element.id);
   }
 
+  function addEllipseElement() {
+    const element = createEllipseElement();
+    changeScene((currentScene) => ({
+      ...currentScene,
+      elements: [...currentScene.elements, element],
+    }));
+    setSelectedId(element.id);
+  }
+
   async function uploadAsset(file: File, mode: "add" | "replace") {
     setStatus("正在上传素材...");
 
@@ -616,6 +626,9 @@ export default function SceneEditor() {
           </button>
           <button type="button" className="secondary-button" onClick={addRectElement}>
             添加矩形
+          </button>
+          <button type="button" className="secondary-button" onClick={addEllipseElement}>
+            添加椭圆
           </button>
           <label className="secondary-button file-button">
             添加图片

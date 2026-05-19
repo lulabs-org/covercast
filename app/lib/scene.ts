@@ -144,6 +144,28 @@ export function createRectElement(): ShapeElement {
   };
 }
 
+export function createEllipseElement(): ShapeElement {
+  return {
+    id: `ellipse-${Date.now()}`,
+    name: "自定义椭圆",
+    type: "ellipse",
+    x: 340,
+    y: 740,
+    width: 260,
+    height: 160,
+    fill: "#ffffff",
+    fillMode: "gradient",
+    gradient: {
+      startColor: "#ffffff",
+      endColor: "#99f19c",
+      direction: "horizontal",
+    },
+    stroke: "#ffffff",
+    strokeWidth: 0,
+    opacity: 1,
+  };
+}
+
 export function createImageElement(src: string, name = "自定义素材"): ImageElement {
   return {
     id: `image-${Date.now()}`,
