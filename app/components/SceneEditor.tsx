@@ -56,8 +56,15 @@ type SceneSlotInfo = {
   name: string;
 };
 
+const TEMPLATE_EXPORT_FORMAT = "covercast.template";
+
 type SidebarSectionId = "scene" | "sources" | "templates" | "layers";
-type ExportFormat = "png" | "jpeg" | "svg";
+type ExportFormat = "png" | "jpeg" | "svg" | "json";
+type TemplateExportPayload = {
+  format: typeof TEMPLATE_EXPORT_FORMAT;
+  version: 1;
+  template: CustomSceneTemplate;
+};
 
 const CUSTOM_TEMPLATE_STORAGE_KEY = "covercast.customTemplates.v1";
 const SLOT_NAMES_STORAGE_KEY = "covercast.slotNames.v1";
@@ -70,6 +77,7 @@ const EXPORT_FORMAT_OPTIONS: {
   { extension: "png", label: "PNG", mimeType: "image/png", value: "png" },
   { extension: "jpg", label: "JPG", mimeType: "image/jpeg", value: "jpeg" },
   { extension: "svg", label: "SVG", mimeType: "image/svg+xml;charset=utf-8", value: "svg" },
+  { extension: "json", label: "JSON", mimeType: "application/json;charset=utf-8", value: "json" },
 ];
 
 export default function SceneEditor() {
@@ -495,7 +503,7 @@ export default function SceneEditor() {
     const templateName =
       customTemplateName.trim() || `自定义模板 ${customTemplates.length + 1}`;
     const template: CustomSceneTemplate = {
-      id: `custom-${Date.now()}`,
+      id: createCustomTemplateId(),
       name: templateName,
       createdAt: new Date().toISOString(),
       scene: cloneScene(scene),
@@ -526,6 +534,62 @@ export default function SceneEditor() {
       setStatus("已删除自定义模板");
     } catch {
       setStatus("自定义模板删除失败，请检查浏览器缓存权限");
+    }
+  }
+
+  function exportTemplateJson() {
+    const payload = createTemplateExportPayload(
+      activeTemplate?.name ?? "自定义场景",
+      scene,
+    );
+    const filename = `covercast-template-${new Date().toISOString().slice(0, 10)}.json`;
+    const json = JSON.stringify(payload, null, 2);
+
+    downloadBlob(
+      new Blob([json], { type: "application/json;charset=utf-8" }),
+      filename,
+    );
+    setStatus(`模板 JSON 已导出：${payload.template.name}`);
+  }
+
+  async function importTemplateFile(file: File) {
+    const isJsonFile =
+      file.type === "application/json" || file.name.toLowerCase().endsWith(".json");
+
+    if (!isJsonFile) {
+      setStatus("导入失败，仅支持 JSON 文件");
+      return;
+    }
+
+    setStatus("正在导入模板 JSON...");
+
+    try {
+      const parsedValue = JSON.parse(await file.text()) as unknown;
+      const template = normalizeTemplateExportPayload(parsedValue);
+
+      if (!template) {
+        setStatus("导入失败，请选择 Covercast 导出的模板 JSON");
+        return;
+      }
+
+      const importedTemplate: CustomSceneTemplate = {
+        ...template,
+        id: createCustomTemplateId(),
+        name: uniqueTemplateName(template.name, customTemplates),
+        createdAt: new Date().toISOString(),
+        scene: cloneScene(template.scene),
+      };
+      const nextTemplates = [importedTemplate, ...customTemplates];
+
+      writeCustomTemplatesToStorage(nextTemplates);
+      setCustomTemplates(nextTemplates);
+      setScene(cloneScene(importedTemplate.scene));
+      setSelectedId(importedTemplate.scene.elements[0]?.id ?? "");
+      setActiveTemplateId(importedTemplate.id);
+      setActiveSlotId("default");
+      setStatus(`已导入模板「${importedTemplate.name}」`);
+    } catch {
+      setStatus("导入失败，请检查 JSON 文件内容或浏览器缓存空间");
     }
   }
 
@@ -607,6 +671,15 @@ export default function SceneEditor() {
     }
   }
 
+  function handleTemplateImportInput(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+
+    if (file) {
+      void importTemplateFile(file);
+    }
+  }
+
   function deleteSelected() {
     if (!selectedElement) {
       return;
@@ -627,6 +700,11 @@ export default function SceneEditor() {
     setStatus(`正在导出 ${formatOption.label}...`);
 
     try {
+      if (format === "json") {
+        exportTemplateJson();
+        return;
+      }
+
       const exportScene = await inlineSceneAssets(scene);
       const svgMarkup = sceneToSvgMarkup(exportScene);
       const filename = `covercast-${new Date().toISOString().slice(0, 10)}.${formatOption.extension}`;
@@ -683,6 +761,14 @@ export default function SceneEditor() {
           >
             保存为模板
           </button>
+          <label className="secondary-button file-button">
+            导入
+            <input
+              type="file"
+              accept="application/json,.json"
+              onChange={handleTemplateImportInput}
+            />
+          </label>
           <div className="export-control" aria-label="导出场景">
             <select
               className="export-format-select"
@@ -1652,6 +1738,31 @@ function writeCustomTemplatesToStorage(templates: CustomSceneTemplate[]) {
   window.localStorage.setItem(CUSTOM_TEMPLATE_STORAGE_KEY, JSON.stringify(templates));
 }
 
+function createTemplateExportPayload(name: string, scene: Scene): TemplateExportPayload {
+  return {
+    format: TEMPLATE_EXPORT_FORMAT,
+    version: 1,
+    template: {
+      id: createCustomTemplateId(),
+      name: name.trim() || "自定义场景",
+      createdAt: new Date().toISOString(),
+      scene: cloneScene(scene),
+    },
+  };
+}
+
+function normalizeTemplateExportPayload(value: unknown): CustomSceneTemplate | null {
+  if (
+    !isRecord(value) ||
+    value.format !== TEMPLATE_EXPORT_FORMAT ||
+    value.version !== 1
+  ) {
+    return null;
+  }
+
+  return normalizeCustomTemplate(value.template);
+}
+
 function normalizeCustomTemplate(value: unknown): CustomSceneTemplate | null {
   if (!isRecord(value) || !isScene(value.scene)) {
     return null;
@@ -1671,6 +1782,29 @@ function normalizeCustomTemplate(value: unknown): CustomSceneTemplate | null {
     createdAt: value.createdAt,
     scene: cloneScene(value.scene),
   };
+}
+
+function createCustomTemplateId() {
+  return `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function uniqueTemplateName(name: string, templates: CustomSceneTemplate[]) {
+  const baseName = name.trim() || "导入模板";
+  const existingNames = new Set(templates.map((template) => template.name));
+
+  if (!existingNames.has(baseName)) {
+    return baseName;
+  }
+
+  let suffix = 2;
+  let candidate = `${baseName} ${suffix}`;
+
+  while (existingNames.has(candidate)) {
+    suffix += 1;
+    candidate = `${baseName} ${suffix}`;
+  }
+
+  return candidate;
 }
 
 function isScene(value: unknown): value is Scene {
