@@ -55,11 +55,14 @@ export function elementBounds(element: SceneElement) {
 }
 
 export function sceneToSvgMarkup(scene: Scene): string {
+  const visibleElements = scene.elements.filter((element) => element.hidden !== true);
+  const visibleScene = { ...scene, elements: visibleElements };
+
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" viewBox="0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}" role="img" aria-label="Covercast OBS live background">`,
-    renderDefs("covercast", scene),
-    renderBackground(scene.backgroundColor, scene.backgroundOpacity, "covercast", scene),
-    ...scene.elements.map((element) => renderElement(element, "covercast")),
+    renderDefs("covercast", visibleScene),
+    renderBackground(scene.backgroundColor, scene.backgroundOpacity, "covercast", visibleScene),
+    ...visibleElements.map((element) => renderElement(element, "covercast")),
     "</svg>",
   ].join("");
 }
@@ -67,6 +70,7 @@ export function sceneToSvgMarkup(scene: Scene): string {
 export function renderDefs(prefix: string, scene?: Scene): string {
   const customGradients =
     scene?.elements
+      .filter((element) => element.hidden !== true)
       .filter(
         (element): element is ShapeElement & {
           gradient: NonNullable<ShapeElement["gradient"]>;
@@ -178,6 +182,7 @@ function isGradientShape(element: SceneElement): element is ShapeElement & {
 } {
   return (
     (element.type === "rect" || element.type === "ellipse") &&
+    element.hidden !== true &&
     element.fillMode === "gradient" &&
     Boolean(element.gradient)
   );
@@ -190,6 +195,7 @@ function shapeGradientId(prefix: string, elementId: string): string {
 function renderBackgroundMask(prefix: string, scene?: Scene): string {
   const cutouts =
     scene?.elements
+      .filter((element) => element.hidden !== true)
       .filter((element): element is ShapeElement => isBackgroundCutoutShape(element))
       .map(renderCutoutMaskShape)
       .join("") ?? "";
@@ -217,6 +223,7 @@ function renderCutoutMaskShape(element: ShapeElement): string {
 function isBackgroundCutoutShape(element: SceneElement): element is ShapeElement {
   return (
     (element.type === "rect" || element.type === "ellipse") &&
+    element.hidden !== true &&
     element.backgroundCutout === true
   );
 }

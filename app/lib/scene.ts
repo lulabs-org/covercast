@@ -24,6 +24,8 @@ type ElementBase = {
   width: number;
   height: number;
   opacity?: number;
+  hidden?: boolean;
+  locked?: boolean;
 };
 
 export type TextElement = ElementBase & {

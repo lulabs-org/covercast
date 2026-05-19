@@ -45,7 +45,8 @@ export default function SceneCanvas({
   onElementPointerDown,
   onResizePointerDown,
 }: SceneCanvasProps) {
-  const selectedElement = scene.elements.find((element) => element.id === selectedId);
+  const visibleElements = scene.elements.filter((element) => element.hidden !== true);
+  const selectedElement = visibleElements.find((element) => element.id === selectedId);
 
   return (
     <svg
@@ -85,7 +86,7 @@ export default function SceneCanvas({
           <stop offset="0%" stopColor="#73f08c" />
           <stop offset="100%" stopColor="#2859d7" />
         </linearGradient>
-        {scene.elements
+        {visibleElements
           .filter((element): element is ShapeElement & {
             gradient: NonNullable<ShapeElement["gradient"]>;
           } => isGradientShape(element))
@@ -106,10 +107,10 @@ export default function SceneCanvas({
               </linearGradient>
             );
           })}
-        {hasBackgroundCutouts(scene) ? (
+        {hasBackgroundCutouts(visibleElements) ? (
           <mask id={backgroundMaskId(idPrefix)} maskUnits="userSpaceOnUse">
             <rect width={CANVAS_WIDTH} height={CANVAS_HEIGHT} fill="#ffffff" />
-            {scene.elements
+            {visibleElements
               .filter(
                 (element): element is ShapeElement =>
                   isBackgroundCutoutShape(element),
@@ -142,7 +143,7 @@ export default function SceneCanvas({
 
       <g
         mask={
-          hasBackgroundCutouts(scene)
+          hasBackgroundCutouts(visibleElements)
             ? `url(#${backgroundMaskId(idPrefix)})`
             : undefined
         }
@@ -161,7 +162,7 @@ export default function SceneCanvas({
         />
       </g>
 
-      {scene.elements.map((element) => (
+      {visibleElements.map((element) => (
         <ElementView
           key={element.id}
           element={element}
@@ -197,7 +198,7 @@ function ElementView({
 }) {
   return (
     <g
-      className={interactive ? "scene-element" : undefined}
+      className={interactive ? `scene-element${element.locked ? " locked" : ""}` : undefined}
       data-element-id={element.id}
       onPointerDown={(event) => {
         if (!interactive) {
@@ -468,6 +469,7 @@ function isGradientShape(element: SceneElement): element is ShapeElement & {
 } {
   return (
     (element.type === "rect" || element.type === "ellipse") &&
+    element.hidden !== true &&
     element.fillMode === "gradient" &&
     Boolean(element.gradient)
   );
@@ -480,12 +482,13 @@ function shapeGradientId(prefix: string, elementId: string): string {
 function isBackgroundCutoutShape(element: SceneElement): element is ShapeElement {
   return (
     (element.type === "rect" || element.type === "ellipse") &&
+    element.hidden !== true &&
     element.backgroundCutout === true
   );
 }
 
-function hasBackgroundCutouts(scene: Scene) {
-  return scene.elements.some(isBackgroundCutoutShape);
+function hasBackgroundCutouts(elements: SceneElement[]) {
+  return elements.some(isBackgroundCutoutShape);
 }
 
 function backgroundMaskId(prefix: string) {

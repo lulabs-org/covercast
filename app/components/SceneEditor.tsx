@@ -3,6 +3,7 @@
 import {
   type ChangeEvent,
   type PointerEvent as ReactPointerEvent,
+  type ReactNode,
   useEffect,
   useMemo,
   useRef,
@@ -55,6 +56,8 @@ type SceneSlotInfo = {
   name: string;
 };
 
+type SidebarSectionId = "scene" | "sources" | "templates" | "layers";
+
 const CUSTOM_TEMPLATE_STORAGE_KEY = "covercast.customTemplates.v1";
 const SLOT_NAMES_STORAGE_KEY = "covercast.slotNames.v1";
 
@@ -71,6 +74,12 @@ export default function SceneEditor() {
   const svgRef = useRef<SVGSVGElement>(null);
   const [activeSlotId, setActiveSlotId] = useState<string>("default");
   const [templateSlots, setTemplateSlots] = useState<SceneSlotInfo[]>([]);
+  const [collapsedSections, setCollapsedSections] = useState<Record<SidebarSectionId, boolean>>({
+    scene: false,
+    sources: false,
+    templates: false,
+    layers: false,
+  });
 
   const selectedElement = useMemo(
     () => scene.elements.find((element) => element.id === selectedId) ?? null,
@@ -159,6 +168,14 @@ export default function SceneEditor() {
   const currentTemplateSlots = templateSlots.filter(
     (s) => s.templateId === activeTemplateId,
   );
+  const activeTemplate =
+    BUILT_IN_TEMPLATES.find((template) => template.id === activeTemplateId) ??
+    customTemplates.find((template) => template.id === activeTemplateId) ??
+    null;
+  const activeSlot = templateSlots.find((slot) => slot.slotId === activeSlotId) ?? null;
+  const visualLayers = scene.elements
+    .map((element, index) => ({ element, index }))
+    .reverse();
 
   function getSlotUrl(templateId: string, slotId: string) {
     return `http://localhost:3000/live?t=${encodeURIComponent(templateId)}&s=${encodeURIComponent(slotId)}`;
@@ -248,6 +265,13 @@ export default function SceneEditor() {
 
   function selectSlotForEditing(slotId: string) {
     setActiveSlotId(slotId);
+  }
+
+  function toggleSidebarSection(sectionId: SidebarSectionId) {
+    setCollapsedSections((current) => ({
+      ...current,
+      [sectionId]: !current[sectionId],
+    }));
   }
 
   useEffect(() => {
@@ -345,6 +369,48 @@ export default function SceneEditor() {
     patchElement(selectedElement.id, patch);
   }
 
+  function toggleElementHidden(elementId: string) {
+    changeScene((currentScene) => ({
+      ...currentScene,
+      elements: currentScene.elements.map((element) =>
+        element.id === elementId
+          ? ({ ...element, hidden: !element.hidden } as SceneElement)
+          : element,
+      ),
+    }));
+  }
+
+  function toggleElementLocked(elementId: string) {
+    changeScene((currentScene) => ({
+      ...currentScene,
+      elements: currentScene.elements.map((element) =>
+        element.id === elementId
+          ? ({ ...element, locked: !element.locked } as SceneElement)
+          : element,
+      ),
+    }));
+  }
+
+  function moveElementLayer(elementId: string, direction: "forward" | "backward") {
+    changeScene((currentScene) => {
+      const currentIndex = currentScene.elements.findIndex((element) => element.id === elementId);
+      const nextIndex = direction === "forward" ? currentIndex + 1 : currentIndex - 1;
+
+      if (
+        currentIndex < 0 ||
+        nextIndex < 0 ||
+        nextIndex >= currentScene.elements.length
+      ) {
+        return currentScene;
+      }
+
+      const elements = [...currentScene.elements];
+      [elements[currentIndex], elements[nextIndex]] = [elements[nextIndex], elements[currentIndex]];
+      return { ...currentScene, elements };
+    });
+    setSelectedId(elementId);
+  }
+
   function handleElementPointerDown(
     elementId: string,
     event: ReactPointerEvent<SVGGElement>,
@@ -355,8 +421,12 @@ export default function SceneEditor() {
       return;
     }
 
-    const point = getSvgPoint(svg, event.clientX, event.clientY);
     setSelectedId(elementId);
+    if (element.locked) {
+      return;
+    }
+
+    const point = getSvgPoint(svg, event.clientX, event.clientY);
     setDrag({
       id: elementId,
       mode: "move",
@@ -376,8 +446,12 @@ export default function SceneEditor() {
       return;
     }
 
-    const point = getSvgPoint(svg, event.clientX, event.clientY);
     setSelectedId(elementId);
+    if (element.locked) {
+      return;
+    }
+
+    const point = getSvgPoint(svg, event.clientX, event.clientY);
     setDrag({
       id: elementId,
       mode: "resize",
@@ -652,30 +726,50 @@ export default function SceneEditor() {
 
       <section className="editor-grid">
         <aside className="left-panel" aria-label="Scene settings">
-          <PanelTitle title="画布" caption="941×1672 竖屏" />
-          <ColorField
-            label="背景颜色"
-            value={scene.backgroundColor}
-            onChange={(value) =>
-              changeScene((currentScene) => ({
-                ...currentScene,
-                backgroundColor: value,
-              }))
-            }
-          />
-          <OpacityField
-            label="背景透明度"
-            value={scene.backgroundOpacity}
-            onChange={(value) =>
-              changeScene((currentScene) => ({
-                ...currentScene,
-                backgroundOpacity: value,
-              }))
-            }
-          />
-          <div className="live-url-section">
-            <div className="live-url-header">
-              <span>OBS 浏览器源</span>
+          <div className="sidebar-context">
+            <span className="context-label">当前编辑</span>
+            <strong>{activeTemplate?.name ?? "自定义场景"}</strong>
+            <small>{activeSlot?.name ?? "未选择 OBS 源"}</small>
+          </div>
+
+          <SidebarSection
+            title="场景"
+            caption="941×1672 竖屏"
+            collapsed={collapsedSections.scene}
+            onToggle={() => toggleSidebarSection("scene")}
+          >
+            <div className="section-fields">
+              <ColorField
+                label="背景颜色"
+                value={scene.backgroundColor}
+                onChange={(value) =>
+                  changeScene((currentScene) => ({
+                    ...currentScene,
+                    backgroundColor: value,
+                  }))
+                }
+              />
+              <OpacityField
+                label="背景透明度"
+                value={scene.backgroundOpacity}
+                onChange={(value) =>
+                  changeScene((currentScene) => ({
+                    ...currentScene,
+                    backgroundOpacity: value,
+                  }))
+                }
+              />
+            </div>
+          </SidebarSection>
+
+          <SidebarSection
+            title="OBS 源"
+            caption={`${templateSlots.length} 个源`}
+            collapsed={collapsedSections.sources}
+            onToggle={() => toggleSidebarSection("sources")}
+          >
+            <div className="source-create-row">
+              <span>新建浏览器源</span>
               <select
                 className="template-select-dropdown"
                 value=""
@@ -687,7 +781,7 @@ export default function SceneEditor() {
                 }}
                 title="选择模板创建浏览器源"
               >
-                <option value="" disabled>选择模板创建...</option>
+                <option value="" disabled>选择模板...</option>
                 <optgroup label="内置模板">
                   {BUILT_IN_TEMPLATES.map((template) => (
                     <option key={template.id} value={template.id}>
@@ -709,7 +803,7 @@ export default function SceneEditor() {
 
             {templateSlots.length === 0 ? (
               <div className="live-url-empty">
-                <p>暂无浏览器源，请从上方下拉框选择模板创建</p>
+                <p>暂无浏览器源，请从上方选择模板创建</p>
               </div>
             ) : (
               <div className="slot-list">
@@ -727,32 +821,22 @@ export default function SceneEditor() {
                       onClick={() => selectSlotForEditing(slot.slotId)}
                     >
                       <div className="slot-item-header">
-                        <span className="slot-template-badge">{templateName}</span>
-                        <svg
-                          className="slot-edit-icon"
-                          width="12"
-                          height="12"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                        >
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
-                        <EditableSlotName
-                          name={slot.name}
-                          onSave={(newName) => {
-                            writeSlotNameToStorage(slot.templateId, slot.slotId, newName);
-                            setTemplateSlots((prev) =>
-                              prev.map((s) =>
-                                s.templateId === slot.templateId && s.slotId === slot.slotId
-                                  ? { ...s, name: newName }
-                                  : s,
-                              ),
-                            );
-                          }}
-                        />
+                        <div className="slot-title-group">
+                          <span className="slot-template-badge">{templateName}</span>
+                          <EditableSlotName
+                            name={slot.name}
+                            onSave={(newName) => {
+                              writeSlotNameToStorage(slot.templateId, slot.slotId, newName);
+                              setTemplateSlots((prev) =>
+                                prev.map((s) =>
+                                  s.templateId === slot.templateId && s.slotId === slot.slotId
+                                    ? { ...s, name: newName }
+                                    : s,
+                                ),
+                              );
+                            }}
+                          />
+                        </div>
                         <button
                           type="button"
                           className="slot-delete-button"
@@ -765,26 +849,7 @@ export default function SceneEditor() {
                           ×
                         </button>
                       </div>
-                      <div
-                        className="slot-item-url"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigator.clipboard.writeText(url).then(() => {
-                            setStatus("URL 已复制到剪贴板");
-                          });
-                        }}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            navigator.clipboard.writeText(url).then(() => {
-                              setStatus("URL 已复制到剪贴板");
-                            });
-                          }
-                        }}
-                        title="点击复制 URL"
-                      >
+                      <div className="slot-item-url">
                         <code>{url}</code>
                         <button
                           type="button"
@@ -797,7 +862,7 @@ export default function SceneEditor() {
                           }}
                           title="复制到剪贴板"
                         >
-                          复制
+                          复制 URL
                         </button>
                       </div>
                     </div>
@@ -805,97 +870,158 @@ export default function SceneEditor() {
                 })}
               </div>
             )}
-          </div>
+          </SidebarSection>
 
-          <PanelTitle
+          <SidebarSection
             title="模板"
-            caption={`${BUILT_IN_TEMPLATES.length + customTemplates.length} 个模板`}
-          />
-          <div className="template-library">
-            <div className="template-section">
-              <div className="template-section-header">
-                <span className="template-section-title">内置模板</span>
-                <span className="template-section-count">{BUILT_IN_TEMPLATES.length} 个</span>
-              </div>
-              <div className="template-list">
-                {BUILT_IN_TEMPLATES.map((template) => (
-                  <TemplateCard
-                    key={template.id}
-                    name={template.name}
-                    description={template.description}
-                    badge="内置"
-                    active={activeTemplateId === template.id}
-                    onApply={() => applyBuiltInTemplate(template.id)}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {customTemplates.length > 0 && (
+            caption={`${BUILT_IN_TEMPLATES.length + customTemplates.length} 个`}
+            collapsed={collapsedSections.templates}
+            onToggle={() => toggleSidebarSection("templates")}
+          >
+            <div className="template-library">
               <div className="template-section">
                 <div className="template-section-header">
-                  <span className="template-section-title">自定义模板</span>
-                  <span className="template-section-count">{customTemplates.length} 个</span>
+                  <span className="template-section-title">内置模板</span>
+                  <span className="template-section-count">{BUILT_IN_TEMPLATES.length} 个</span>
                 </div>
                 <div className="template-list">
-                  {customTemplates.map((template) => (
+                  {BUILT_IN_TEMPLATES.map((template) => (
                     <TemplateCard
                       key={template.id}
                       name={template.name}
-                      description={formatTemplateDate(template.createdAt)}
-                      badge="自定义"
+                      description={template.description}
+                      badge="内置"
                       active={activeTemplateId === template.id}
-                      onApply={() => applyTemplate(template)}
-                      onDelete={() => deleteCustomTemplate(template.id)}
+                      onApply={() => applyBuiltInTemplate(template.id)}
                     />
                   ))}
                 </div>
               </div>
-            )}
 
-            <div className="template-form">
-              <button
-                type="button"
-                className="template-form-toggle"
-                onClick={() => setShowTemplateForm(!showTemplateForm)}
-              >
-                <span>{showTemplateForm ? "收起保存表单" : "保存当前为模板"}</span>
-                <span className={`toggle-icon ${showTemplateForm ? "rotate" : ""}`}>▼</span>
-              </button>
-              {showTemplateForm && (
-                <div className="template-form-content">
-                  <TextField
-                    label="模板名称"
-                    placeholder="未命名模板"
-                    value={customTemplateName}
-                    onChange={setCustomTemplateName}
-                  />
-                  <button
-                    type="button"
-                    className="primary-button"
-                    onClick={saveCustomTemplate}
-                  >
-                    确认保存
-                  </button>
+              {customTemplates.length > 0 && (
+                <div className="template-section">
+                  <div className="template-section-header">
+                    <span className="template-section-title">自定义模板</span>
+                    <span className="template-section-count">{customTemplates.length} 个</span>
+                  </div>
+                  <div className="template-list">
+                    {customTemplates.map((template) => (
+                      <TemplateCard
+                        key={template.id}
+                        name={template.name}
+                        description={formatTemplateDate(template.createdAt)}
+                        badge="自定义"
+                        active={activeTemplateId === template.id}
+                        onApply={() => applyTemplate(template)}
+                        onDelete={() => deleteCustomTemplate(template.id)}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
-            </div>
-          </div>
 
-          <PanelTitle title="元素" caption={`${scene.elements.length} 个图层`} />
-          <div className="element-list">
-            {scene.elements.map((element) => (
-              <button
-                key={element.id}
-                type="button"
-                className={element.id === selectedId ? "element-row active" : "element-row"}
-                onClick={() => setSelectedId(element.id)}
-              >
-                <span>{element.name}</span>
-                <small>{element.type}</small>
-              </button>
-            ))}
-          </div>
+              <div className="template-form">
+                <button
+                  type="button"
+                  className="template-form-toggle"
+                  onClick={() => setShowTemplateForm(!showTemplateForm)}
+                >
+                  <span>{showTemplateForm ? "收起保存表单" : "保存当前为模板"}</span>
+                  <span className={`toggle-icon ${showTemplateForm ? "rotate" : ""}`}>▼</span>
+                </button>
+                {showTemplateForm && (
+                  <div className="template-form-content">
+                    <TextField
+                      label="模板名称"
+                      placeholder="未命名模板"
+                      value={customTemplateName}
+                      onChange={setCustomTemplateName}
+                    />
+                    <button
+                      type="button"
+                      className="primary-button"
+                      onClick={saveCustomTemplate}
+                    >
+                      确认保存
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </SidebarSection>
+
+          <SidebarSection
+            title="图层"
+            caption={`${scene.elements.length} 个`}
+            collapsed={collapsedSections.layers}
+            onToggle={() => toggleSidebarSection("layers")}
+          >
+            <div className="layer-list">
+              {visualLayers.map(({ element, index }) => {
+                const isActive = element.id === selectedId;
+                const isTop = index === scene.elements.length - 1;
+                const isBottom = index === 0;
+
+                return (
+                  <div
+                    key={element.id}
+                    className={[
+                      "layer-row",
+                      isActive ? "active" : "",
+                      element.hidden ? "muted" : "",
+                      element.locked ? "locked" : "",
+                    ].filter(Boolean).join(" ")}
+                  >
+                    <button
+                      type="button"
+                      className="layer-main"
+                      onClick={() => setSelectedId(element.id)}
+                    >
+                      <span className="layer-type">{elementTypeGlyph(element)}</span>
+                      <span className="layer-name">{element.name}</span>
+                      <small>{elementTypeLabel(element)}</small>
+                    </button>
+                    <div className="layer-actions">
+                      <button
+                        type="button"
+                        className={element.hidden ? "layer-action active" : "layer-action"}
+                        onClick={() => toggleElementHidden(element.id)}
+                        title={element.hidden ? "显示图层" : "隐藏图层"}
+                      >
+                        {element.hidden ? "隐" : "显"}
+                      </button>
+                      <button
+                        type="button"
+                        className={element.locked ? "layer-action active" : "layer-action"}
+                        onClick={() => toggleElementLocked(element.id)}
+                        title={element.locked ? "解锁图层" : "锁定图层"}
+                      >
+                        {element.locked ? "锁" : "解"}
+                      </button>
+                      <button
+                        type="button"
+                        className="layer-action"
+                        disabled={isTop}
+                        onClick={() => moveElementLayer(element.id, "forward")}
+                        title="上移一层"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        className="layer-action"
+                        disabled={isBottom}
+                        onClick={() => moveElementLayer(element.id, "backward")}
+                        title="下移一层"
+                      >
+                        ↓
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </SidebarSection>
         </aside>
 
         <section className="stage-panel" aria-label="Canvas preview">
@@ -1303,6 +1429,68 @@ function PanelTitle({ title, caption }: { title: string; caption: string }) {
       <span>{caption}</span>
     </div>
   );
+}
+
+function SidebarSection({
+  title,
+  caption,
+  collapsed,
+  onToggle,
+  children,
+}: {
+  title: string;
+  caption: string;
+  collapsed: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <section className="sidebar-section">
+      <button
+        type="button"
+        className="sidebar-section-header"
+        onClick={onToggle}
+        aria-expanded={!collapsed}
+      >
+        <span>{title}</span>
+        <small>{caption}</small>
+        <b>{collapsed ? "＋" : "－"}</b>
+      </button>
+      {collapsed ? null : <div className="sidebar-section-body">{children}</div>}
+    </section>
+  );
+}
+
+function elementTypeLabel(element: SceneElement) {
+  if (element.type === "text") {
+    return "文字";
+  }
+
+  if (element.type === "image") {
+    return "图片";
+  }
+
+  if (element.type === "ellipse") {
+    return "椭圆";
+  }
+
+  return "矩形";
+}
+
+function elementTypeGlyph(element: SceneElement) {
+  if (element.type === "text") {
+    return "T";
+  }
+
+  if (element.type === "image") {
+    return "I";
+  }
+
+  if (element.type === "ellipse") {
+    return "O";
+  }
+
+  return "R";
 }
 
 function TextField({
