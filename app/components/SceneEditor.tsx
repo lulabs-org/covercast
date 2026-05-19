@@ -65,7 +65,6 @@ export default function SceneEditor() {
   const [scene, setScene] = useState<Scene>(() => createDefaultScene());
   const [selectedId, setSelectedId] = useState<string>("main-title");
   const [status, setStatus] = useState("正在读取本地场景...");
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [customTemplates, setCustomTemplates] = useState<CustomSceneTemplate[]>([]);
   const [customTemplateName, setCustomTemplateName] = useState("");
   const [activeTemplateId, setActiveTemplateId] = useState<string>(DEFAULT_TEMPLATE_ID);
@@ -110,7 +109,6 @@ export default function SceneEditor() {
         if (active) {
           setScene(nextScene);
           setStatus("已读取本地场景");
-          setHasUnsavedChanges(false);
           setActiveTemplateId(findMatchingBuiltInTemplateId(nextScene));
           setSelectedId(nextScene.elements[0]?.id ?? "");
         }
@@ -165,9 +163,6 @@ export default function SceneEditor() {
     };
   }, []);
 
-  const currentTemplateSlots = templateSlots.filter(
-    (s) => s.templateId === activeTemplateId,
-  );
   const activeTemplate =
     BUILT_IN_TEMPLATES.find((template) => template.id === activeTemplateId) ??
     customTemplates.find((template) => template.id === activeTemplateId) ??
@@ -231,7 +226,7 @@ export default function SceneEditor() {
 
       setTemplateSlots((prev) => [...prev, newSlot]);
       setActiveSlotId(slotId);
-      setStatus(`已创建浏览器源「${name}」，点击保存将写入此源`);
+      setStatus(`已创建浏览器源「${name}」`);
     } catch {
       setStatus("创建浏览器源失败");
     }
@@ -330,7 +325,6 @@ export default function SceneEditor() {
         }),
       }));
       setActiveTemplateId("");
-      setHasUnsavedChanges(true);
     }
 
     function handlePointerUp() {
@@ -349,7 +343,6 @@ export default function SceneEditor() {
   function changeScene(updater: (currentScene: Scene) => Scene) {
     setScene(updater);
     setActiveTemplateId("");
-    setHasUnsavedChanges(true);
   }
 
   function patchElement(elementId: string, patch: Partial<SceneElement>) {
@@ -461,31 +454,6 @@ export default function SceneEditor() {
     });
   }
 
-  async function saveScene() {
-    setStatus("正在保存到 OBS 场景...");
-    try {
-      const response = await fetch("/api/scene", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          templateId: activeTemplateId,
-          slotId: activeSlotId,
-          scene,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Save failed");
-      }
-
-      const slotName = currentTemplateSlots.find((s) => s.slotId === activeSlotId)?.name ?? activeSlotId;
-      setStatus(`已保存到「${slotName}」，/live 会在 1 秒内同步`);
-      setHasUnsavedChanges(false);
-    } catch {
-      setStatus("保存失败，请确认开发服务器仍在运行");
-    }
-  }
-
   function applyTemplate(template: { id: string; name: string; scene: Scene }) {
     const nextScene = cloneScene(template.scene);
     setScene(nextScene);
@@ -499,8 +467,7 @@ export default function SceneEditor() {
       setActiveSlotId("default");
     }
 
-    setStatus(`已套用「${template.name}」，保存后 OBS 生效`);
-    setHasUnsavedChanges(true);
+    setStatus(`已套用「${template.name}」到当前画布`);
   }
 
   function applyBuiltInTemplate(templateId: string) {
@@ -536,6 +503,7 @@ export default function SceneEditor() {
       setCustomTemplateName("");
       setActiveTemplateId(template.id);
       setStatus(`已保存「${template.name}」到浏览器缓存`);
+      setShowTemplateForm(false);
     } catch {
       setStatus("自定义模板保存失败，浏览器缓存空间可能不足");
     }
@@ -606,7 +574,7 @@ export default function SceneEditor() {
           src: payload.src,
           alt: payload.name,
         } as Partial<ImageElement>);
-        setStatus("素材已替换，保存后 OBS 生效");
+        setStatus("素材已替换到当前画布");
         return;
       }
 
@@ -616,7 +584,7 @@ export default function SceneEditor() {
         elements: [...currentScene.elements, element],
       }));
       setSelectedId(element.id);
-      setStatus("素材已添加，保存后 OBS 生效");
+      setStatus("素材已添加到当前画布");
     } catch {
       setStatus("素材上传失败，仅支持 PNG、JPG、WebP");
     }
@@ -715,14 +683,49 @@ export default function SceneEditor() {
           <button type="button" className="secondary-button" onClick={resetTemplate}>
             重置模板
           </button>
-          <button type="button" className="primary-button" onClick={() => void saveScene()}>
-            保存到 OBS
+          <button
+            type="button"
+            className={`secondary-button toolbar-template-button${showTemplateForm ? " active" : ""}`}
+            onClick={() => setShowTemplateForm((visible) => !visible)}
+            aria-expanded={showTemplateForm}
+            aria-controls="template-save-panel"
+          >
+            保存为模板
           </button>
           <button type="button" className="primary-button muted" onClick={() => void exportPng()}>
             导出 PNG
           </button>
         </div>
       </section>
+
+      {showTemplateForm && (
+        <section
+          className="template-save-panel"
+          id="template-save-panel"
+          aria-label="保存当前场景为模板"
+        >
+          <TextField
+            label="模板名称"
+            placeholder="未命名模板"
+            value={customTemplateName}
+            onChange={setCustomTemplateName}
+          />
+          <button
+            type="button"
+            className="primary-button"
+            onClick={saveCustomTemplate}
+          >
+            确认保存
+          </button>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => setShowTemplateForm(false)}
+          >
+            取消
+          </button>
+        </section>
+      )}
 
       <section className="editor-grid">
         <aside className="left-panel" aria-label="Scene settings">
@@ -920,33 +923,6 @@ export default function SceneEditor() {
                 </div>
               )}
 
-              <div className="template-form">
-                <button
-                  type="button"
-                  className="template-form-toggle"
-                  onClick={() => setShowTemplateForm(!showTemplateForm)}
-                >
-                  <span>{showTemplateForm ? "收起保存表单" : "保存当前为模板"}</span>
-                  <span className={`toggle-icon ${showTemplateForm ? "rotate" : ""}`}>▼</span>
-                </button>
-                {showTemplateForm && (
-                  <div className="template-form-content">
-                    <TextField
-                      label="模板名称"
-                      placeholder="未命名模板"
-                      value={customTemplateName}
-                      onChange={setCustomTemplateName}
-                    />
-                    <button
-                      type="button"
-                      className="primary-button"
-                      onClick={saveCustomTemplate}
-                    >
-                      确认保存
-                    </button>
-                  </div>
-                )}
-              </div>
             </div>
           </SidebarSection>
 
@@ -1026,7 +1002,7 @@ export default function SceneEditor() {
 
         <section className="stage-panel" aria-label="Canvas preview">
           <div className="stage-header">
-            <span>{hasUnsavedChanges ? "有未保存更改" : status}</span>
+            <span>{status}</span>
             <span>拖拽移动，右下角黄点缩放</span>
           </div>
           <div className="stage-viewport">
