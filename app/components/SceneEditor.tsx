@@ -48,7 +48,14 @@ type CustomSceneTemplate = {
   scene: Scene;
 };
 
+type SceneSlotInfo = {
+  templateId: string;
+  slotId: string;
+  name: string;
+};
+
 const CUSTOM_TEMPLATE_STORAGE_KEY = "covercast.customTemplates.v1";
+const SLOT_NAMES_STORAGE_KEY = "covercast.slotNames.v1";
 
 export default function SceneEditor() {
   const [scene, setScene] = useState<Scene>(() => createDefaultScene());
@@ -61,6 +68,8 @@ export default function SceneEditor() {
   const [showTemplateForm, setShowTemplateForm] = useState(false);
   const [drag, setDrag] = useState<DragState | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const [activeSlotId, setActiveSlotId] = useState<string>("default");
+  const [templateSlots, setTemplateSlots] = useState<SceneSlotInfo[]>([]);
 
   const selectedElement = useMemo(
     () => scene.elements.find((element) => element.id === selectedId) ?? null,
@@ -108,6 +117,137 @@ export default function SceneEditor() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadSlots() {
+      try {
+        const response = await fetch("/api/scene?list=1", { cache: "no-store" });
+        if (!response.ok) return;
+
+        const allSlots = (await response.json()) as { templateId: string; slots: string[] }[];
+        if (!active) return;
+
+        const slotNames = readSlotNamesFromStorage();
+        const currentSlots: SceneSlotInfo[] = [];
+
+        for (const entry of allSlots) {
+          for (const slotId of entry.slots) {
+            currentSlots.push({
+              templateId: entry.templateId,
+              slotId,
+              name: slotNames[`${entry.templateId}/${slotId}`] ?? slotId,
+            });
+          }
+        }
+
+        setTemplateSlots(currentSlots);
+      } catch {
+        // slots will remain empty, user can add manually
+      }
+    }
+
+    void loadSlots();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const currentTemplateSlots = templateSlots.filter(
+    (s) => s.templateId === activeTemplateId,
+  );
+
+  function getSlotUrl(templateId: string, slotId: string) {
+    return `http://localhost:3000/live?t=${encodeURIComponent(templateId)}&s=${encodeURIComponent(slotId)}`;
+  }
+
+  function readSlotNamesFromStorage(): Record<string, string> {
+    try {
+      const raw = window.localStorage.getItem(SLOT_NAMES_STORAGE_KEY);
+      return raw ? (JSON.parse(raw) as Record<string, string>) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  function writeSlotNameToStorage(templateId: string, slotId: string, name: string) {
+    const names = readSlotNamesFromStorage();
+    names[`${templateId}/${slotId}`] = name;
+    window.localStorage.setItem(SLOT_NAMES_STORAGE_KEY, JSON.stringify(names));
+  }
+
+  function removeSlotNameFromStorage(templateId: string, slotId: string) {
+    const names = readSlotNamesFromStorage();
+    delete names[`${templateId}/${slotId}`];
+    window.localStorage.setItem(SLOT_NAMES_STORAGE_KEY, JSON.stringify(names));
+  }
+
+  async function addSlot(templateId: string) {
+    const slotId = `slot-${Date.now()}`;
+    const template = BUILT_IN_TEMPLATES.find((t) => t.id === templateId)
+      ?? customTemplates.find((t) => t.id === templateId);
+    const defaultScene = template?.scene ?? createDefaultScene();
+
+    try {
+      await fetch("/api/scene", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          templateId,
+          slotId,
+          scene: defaultScene,
+        }),
+      });
+
+      const templateName = template?.name ?? "未命名模板";
+      const name = `${templateName} - 源 ${templateSlots.length + 1}`;
+      writeSlotNameToStorage(templateId, slotId, name);
+
+      const newSlot: SceneSlotInfo = {
+        templateId,
+        slotId,
+        name,
+      };
+
+      setTemplateSlots((prev) => [...prev, newSlot]);
+      setActiveSlotId(slotId);
+      setStatus(`已创建浏览器源「${name}」，点击保存将写入此源`);
+    } catch {
+      setStatus("创建浏览器源失败");
+    }
+  }
+
+  async function removeSlot(templateId: string, slotId: string) {
+    removeSlotNameFromStorage(templateId, slotId);
+
+    try {
+      const response = await fetch("/api/scene", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ templateId, slotId }),
+      });
+
+      if (response.ok) {
+        setTemplateSlots((prev) =>
+          prev.filter((s) => !(s.templateId === templateId && s.slotId === slotId)),
+        );
+
+        if (activeSlotId === slotId) {
+          const remaining = templateSlots.filter((s) => !(s.templateId === templateId && s.slotId === slotId));
+          const nextSlotId = remaining[0]?.slotId ?? "default";
+          setActiveSlotId(nextSlotId);
+        }
+      }
+    } catch {
+      setStatus("删除浏览器源失败");
+    }
+  }
+
+  function selectSlotForEditing(slotId: string) {
+    setActiveSlotId(slotId);
+  }
 
   useEffect(() => {
     if (!drag) {
@@ -252,14 +392,19 @@ export default function SceneEditor() {
       const response = await fetch("/api/scene", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(scene),
+        body: JSON.stringify({
+          templateId: activeTemplateId,
+          slotId: activeSlotId,
+          scene,
+        }),
       });
 
       if (!response.ok) {
         throw new Error("Save failed");
       }
 
-      setStatus("已保存，/live 会在 1 秒内同步");
+      const slotName = currentTemplateSlots.find((s) => s.slotId === activeSlotId)?.name ?? activeSlotId;
+      setStatus(`已保存到「${slotName}」，/live 会在 1 秒内同步`);
       setHasUnsavedChanges(false);
     } catch {
       setStatus("保存失败，请确认开发服务器仍在运行");
@@ -271,6 +416,14 @@ export default function SceneEditor() {
     setScene(nextScene);
     setSelectedId(nextScene.elements[0]?.id ?? "");
     setActiveTemplateId(template.id);
+
+    const templateSlot = templateSlots.find((s) => s.templateId === template.id);
+    if (templateSlot) {
+      setActiveSlotId(templateSlot.slotId);
+    } else {
+      setActiveSlotId("default");
+    }
+
     setStatus(`已套用「${template.name}」，保存后 OBS 生效`);
     setHasUnsavedChanges(true);
   }
@@ -450,8 +603,6 @@ export default function SceneEditor() {
     }
   }
 
-  const liveUrl = "http://localhost:3000/live";
-
   return (
     <main className="editor-shell">
       <section className="editor-toolbar" aria-label="Covercast editor controls">
@@ -509,11 +660,138 @@ export default function SceneEditor() {
               }))
             }
           />
-          <div className="live-url">
-            <span>OBS 浏览器源</span>
-            <a href="/live" target="_blank" rel="noreferrer">
-              {liveUrl}
-            </a>
+          <div className="live-url-section">
+            <div className="live-url-header">
+              <span>OBS 浏览器源</span>
+              <select
+                className="template-select-dropdown"
+                value=""
+                onChange={(e) => {
+                  if (e.currentTarget.value) {
+                    void addSlot(e.currentTarget.value);
+                    e.currentTarget.value = "";
+                  }
+                }}
+                title="选择模板创建浏览器源"
+              >
+                <option value="" disabled>选择模板创建...</option>
+                <optgroup label="内置模板">
+                  {BUILT_IN_TEMPLATES.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.name}
+                    </option>
+                  ))}
+                </optgroup>
+                {customTemplates.length > 0 && (
+                  <optgroup label="自定义模板">
+                    {customTemplates.map((template) => (
+                      <option key={template.id} value={template.id}>
+                        {template.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
+            </div>
+
+            {templateSlots.length === 0 ? (
+              <div className="live-url-empty">
+                <p>暂无浏览器源，请从上方下拉框选择模板创建</p>
+              </div>
+            ) : (
+              <div className="slot-list">
+                {templateSlots.map((slot) => {
+                  const url = getSlotUrl(slot.templateId, slot.slotId);
+                  const isActive = slot.slotId === activeSlotId;
+                  const template = BUILT_IN_TEMPLATES.find((t) => t.id === slot.templateId)
+                    ?? customTemplates.find((t) => t.id === slot.templateId);
+                  const templateName = template?.name ?? "未命名模板";
+
+                  return (
+                    <div
+                      key={`${slot.templateId}/${slot.slotId}`}
+                      className={`slot-item${isActive ? " active" : ""}`}
+                      onClick={() => selectSlotForEditing(slot.slotId)}
+                    >
+                      <div className="slot-item-header">
+                        <span className="slot-template-badge">{templateName}</span>
+                        <svg
+                          className="slot-edit-icon"
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                        <EditableSlotName
+                          name={slot.name}
+                          onSave={(newName) => {
+                            writeSlotNameToStorage(slot.templateId, slot.slotId, newName);
+                            setTemplateSlots((prev) =>
+                              prev.map((s) =>
+                                s.templateId === slot.templateId && s.slotId === slot.slotId
+                                  ? { ...s, name: newName }
+                                  : s,
+                              ),
+                            );
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="slot-delete-button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void removeSlot(slot.templateId, slot.slotId);
+                          }}
+                          title="删除此浏览器源"
+                        >
+                          ×
+                        </button>
+                      </div>
+                      <div
+                        className="slot-item-url"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigator.clipboard.writeText(url).then(() => {
+                            setStatus("URL 已复制到剪贴板");
+                          });
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            navigator.clipboard.writeText(url).then(() => {
+                              setStatus("URL 已复制到剪贴板");
+                            });
+                          }
+                        }}
+                        title="点击复制 URL"
+                      >
+                        <code>{url}</code>
+                        <button
+                          type="button"
+                          className="slot-copy-button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(url).then(() => {
+                              setStatus("URL 已复制到剪贴板");
+                            });
+                          }}
+                          title="复制到剪贴板"
+                        >
+                          复制
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <PanelTitle
@@ -1366,4 +1644,64 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isHexColor(value: string) {
   return /^#[0-9a-fA-F]{6}$/.test(value);
+}
+
+function EditableSlotName({
+  name,
+  onSave,
+}: {
+  name: string;
+  onSave: (value: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(name);
+
+  if (editing) {
+    return (
+      <input
+        className="slot-name-input"
+        type="text"
+        value={draft}
+        onChange={(e) => setDraft(e.currentTarget.value)}
+        onBlur={() => {
+          const trimmed = draft.trim();
+          if (trimmed && trimmed !== name) {
+            onSave(trimmed);
+          }
+          setEditing(false);
+          setDraft(name);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            const trimmed = draft.trim();
+            if (trimmed && trimmed !== name) {
+              onSave(trimmed);
+            }
+            setEditing(false);
+            setDraft(name);
+          }
+          if (e.key === "Escape") {
+            setEditing(false);
+            setDraft(name);
+          }
+        }}
+        autoFocus
+        onClick={(e) => e.stopPropagation()}
+      />
+    );
+  }
+
+  return (
+    <span
+      className="slot-name"
+      onClick={(e) => {
+        e.stopPropagation();
+        setDraft(name);
+        setEditing(true);
+      }}
+      title="点击重命名"
+    >
+      {name}
+    </span>
+  );
 }

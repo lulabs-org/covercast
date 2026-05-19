@@ -1,11 +1,12 @@
 import { randomUUID } from "crypto";
-import { mkdir, readFile, stat, writeFile } from "fs/promises";
+import { mkdir, readFile, readdir, stat, unlink, writeFile } from "fs/promises";
 import path from "path";
 import { createDefaultScene, type Scene } from "./scene";
 
 const DATA_DIR = path.join(process.cwd(), ".covercast");
 const ASSETS_DIR = path.join(DATA_DIR, "assets");
 const SCENE_FILE = path.join(DATA_DIR, "scene.json");
+const SCENES_DIR = path.join(DATA_DIR, "scenes");
 
 const MIME_TO_EXT: Record<string, string> = {
   "image/png": "png",
@@ -32,6 +33,68 @@ export async function readStoredScene(): Promise<Scene> {
 export async function writeStoredScene(scene: Scene) {
   await mkdir(DATA_DIR, { recursive: true });
   await writeFile(SCENE_FILE, JSON.stringify(normalizeScene(scene), null, 2), "utf8");
+}
+
+export async function readSceneBySlot(templateId: string, slotId: string): Promise<Scene> {
+  try {
+    const filePath = path.join(SCENES_DIR, templateId, `${slotId}.json`);
+    const content = await readFile(filePath, "utf8");
+    return normalizeScene(JSON.parse(content));
+  } catch {
+    return createDefaultScene();
+  }
+}
+
+export async function writeSceneBySlot(
+  templateId: string,
+  slotId: string,
+  scene: Scene,
+) {
+  const dirPath = path.join(SCENES_DIR, templateId);
+  await mkdir(dirPath, { recursive: true });
+  const filePath = path.join(dirPath, `${slotId}.json`);
+  await writeFile(filePath, JSON.stringify(normalizeScene(scene), null, 2), "utf8");
+}
+
+export async function listTemplateSlots(templateId: string): Promise<string[]> {
+  try {
+    const dirPath = path.join(SCENES_DIR, templateId);
+    const entries = await readdir(dirPath, { withFileTypes: true });
+    return entries
+      .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+      .map((entry) => entry.name.replace(/\.json$/, ""));
+  } catch {
+    return [];
+  }
+}
+
+export async function listAllSlots(): Promise<{ templateId: string; slots: string[] }[]> {
+  try {
+    const templateDirs = await readdir(SCENES_DIR, { withFileTypes: true });
+    const results: { templateId: string; slots: string[] }[] = [];
+
+    for (const dir of templateDirs) {
+      if (dir.isDirectory()) {
+        const slots = await listTemplateSlots(dir.name);
+        if (slots.length > 0) {
+          results.push({ templateId: dir.name, slots });
+        }
+      }
+    }
+
+    return results;
+  } catch {
+    return [];
+  }
+}
+
+export async function deleteSceneSlot(templateId: string, slotId: string) {
+  const filePath = path.join(SCENES_DIR, templateId, `${slotId}.json`);
+  try {
+    await unlink(filePath);
+  } catch {
+    // file doesn't exist, nothing to delete
+  }
 }
 
 export async function saveAssetFile(file: File) {

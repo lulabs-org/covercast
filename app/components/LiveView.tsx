@@ -4,7 +4,12 @@ import { useEffect, useState } from "react";
 import { createDefaultScene, type Scene } from "../lib/scene";
 import SceneCanvas from "./SceneCanvas";
 
-export default function LiveView() {
+type LiveViewProps = {
+  templateId?: string;
+  slotId?: string;
+};
+
+export default function LiveView({ templateId, slotId }: LiveViewProps) {
   const [scene, setScene] = useState<Scene>(() => createDefaultScene());
 
   useEffect(() => {
@@ -12,7 +17,11 @@ export default function LiveView() {
 
     async function refreshScene() {
       try {
-        const response = await fetch(`/api/scene?ts=${Date.now()}`, {
+        const url = templateId && slotId
+          ? `/api/scene?t=${encodeURIComponent(templateId)}&s=${encodeURIComponent(slotId)}&ts=${Date.now()}`
+          : `/api/scene?ts=${Date.now()}`;
+
+        const response = await fetch(url, {
           cache: "no-store",
         });
         if (!response.ok) {
@@ -35,7 +44,7 @@ export default function LiveView() {
       active = false;
       window.clearInterval(interval);
     };
-  }, []);
+  }, [templateId, slotId]);
 
   return (
     <>
