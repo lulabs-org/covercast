@@ -967,6 +967,7 @@ h1 {
 
 .stage-header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 10px;
   padding: 10px 14px;
@@ -976,11 +977,75 @@ h1 {
   font-weight: 700;
 }
 
+.stage-status {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stage-header-tools {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.canvas-zoom-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.zoom-button,
+.zoom-fit-button {
+  min-width: 28px;
+  min-height: 28px;
+  border: 1px solid #cfd8e8;
+  border-radius: 6px;
+  padding: 0 8px;
+  color: #243247;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.zoom-button:hover:not(:disabled),
+.zoom-fit-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: #f0f4ff;
+}
+
+.zoom-button:disabled,
+.zoom-fit-button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.zoom-slider-label {
+  display: inline-grid;
+  grid-template-columns: 42px 92px;
+  align-items: center;
+  gap: 6px;
+}
+
+.zoom-slider-label span {
+  color: #39485f;
+  font-size: 12px;
+  font-weight: 900;
+  text-align: right;
+}
+
+.zoom-slider-label input {
+  width: 92px;
+  accent-color: var(--accent);
+}
+
 .stage-viewport {
   flex: 1;
   min-height: 0;
-  display: grid;
-  place-items: center;
   overflow: auto;
   padding: 18px;
   background:
@@ -989,9 +1054,22 @@ h1 {
     #eef2f7;
 }
 
+.stage-viewport-inner {
+  width: max-content;
+  min-width: 100%;
+  height: max-content;
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.scene-preview-frame {
+  flex: 0 0 auto;
+  transition: width 0.12s ease;
+}
+
 .scene-preview {
-  width: min(100%, calc((100vh - 150px) * 0.563));
-  max-width: 560px;
+  width: 100%;
   height: auto;
   aspect-ratio: 941 / 1672;
   display: block;
@@ -1167,6 +1245,17 @@ h1 {
 
   .editor-grid {
     grid-template-columns: 1fr;
+  }
+
+  .stage-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .stage-header-tools {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
   }
 
   .stage-viewport {

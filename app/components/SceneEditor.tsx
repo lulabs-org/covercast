@@ -4,6 +4,7 @@ import {
   type ChangeEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
+  type WheelEvent as ReactWheelEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -61,6 +62,12 @@ type SceneSlotInfo = {
 
 const TEMPLATE_EXPORT_FORMAT = "covercast.template";
 const CUSTOM_FONT_FAMILY_VALUE = "__custom-font-family__";
+const CANVAS_ASPECT_RATIO = CANVAS_WIDTH / CANVAS_HEIGHT;
+const CANVAS_ZOOM_MIN = 0.25;
+const CANVAS_ZOOM_MAX = 3;
+const CANVAS_ZOOM_STEP = 0.1;
+const CANVAS_PREVIEW_MAX_WIDTH = 560;
+const STAGE_VIEWPORT_PADDING = 36;
 
 type SidebarSectionId = "scene" | "sources" | "templates" | "layers";
 type ExportFormat = "png" | "jpeg" | "svg" | "json";
@@ -135,8 +142,11 @@ export default function SceneEditor() {
   const [activeTemplateId, setActiveTemplateId] = useState<string>(DEFAULT_TEMPLATE_ID);
   const [showTemplateForm, setShowTemplateForm] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat>("png");
+  const [canvasZoom, setCanvasZoom] = useState(1);
+  const [canvasFitWidth, setCanvasFitWidth] = useState(CANVAS_PREVIEW_MAX_WIDTH);
   const [drag, setDrag] = useState<DragState | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const stageViewportRef = useRef<HTMLDivElement>(null);
   const elementClipboardRef = useRef<SceneElement | null>(null);
   const pasteOffsetRef = useRef(1);
   const sceneElementsRef = useRef<SceneElement[]>(scene.elements);
@@ -239,6 +249,39 @@ export default function SceneEditor() {
     };
   }, []);
 
+  useEffect(() => {
+    const viewport = stageViewportRef.current;
+
+    if (!viewport) {
+      return;
+    }
+
+    const currentViewport = viewport;
+
+    function updateFitWidth() {
+      const availableWidth = Math.max(160, currentViewport.clientWidth - STAGE_VIEWPORT_PADDING);
+      const availableHeight = Math.max(280, currentViewport.clientHeight - STAGE_VIEWPORT_PADDING);
+      const nextFitWidth = Math.min(
+        availableWidth,
+        availableHeight * CANVAS_ASPECT_RATIO,
+        CANVAS_PREVIEW_MAX_WIDTH,
+      );
+
+      setCanvasFitWidth(Math.max(160, nextFitWidth));
+    }
+
+    updateFitWidth();
+
+    const observer = new ResizeObserver(updateFitWidth);
+    observer.observe(currentViewport);
+    window.addEventListener("resize", updateFitWidth);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateFitWidth);
+    };
+  }, []);
+
   const activeBuiltInTemplate =
     BUILT_IN_TEMPLATES.find((template) => template.id === activeTemplateId) ?? null;
   const activeCustomTemplate =
@@ -256,6 +299,8 @@ export default function SceneEditor() {
   const visualLayers = scene.elements
     .map((element, index) => ({ element, index }))
     .reverse();
+  const canvasPreviewWidth = Math.round(canvasFitWidth * canvasZoom);
+  const canvasZoomPercent = Math.round(canvasZoom * 100);
 
   const markSceneEdited = useCallback(() => {
     if (activeCustomTemplate) {
@@ -362,6 +407,32 @@ export default function SceneEditor() {
       ...current,
       [sectionId]: !current[sectionId],
     }));
+  }
+
+  function setCanvasZoomLevel(value: number) {
+    setCanvasZoom(clampZoom(value));
+  }
+
+  function zoomCanvasIn() {
+    setCanvasZoom((value) => clampZoom(value + CANVAS_ZOOM_STEP));
+  }
+
+  function zoomCanvasOut() {
+    setCanvasZoom((value) => clampZoom(value - CANVAS_ZOOM_STEP));
+  }
+
+  function resetCanvasZoom() {
+    setCanvasZoom(1);
+  }
+
+  function handleStageWheel(event: ReactWheelEvent<HTMLDivElement>) {
+    if (!event.ctrlKey && !event.metaKey) {
+      return;
+    }
+
+    event.preventDefault();
+    const direction = event.deltaY < 0 ? 1 : -1;
+    setCanvasZoom((value) => clampZoom(value + direction * CANVAS_ZOOM_STEP));
   }
 
   useEffect(() => {
@@ -1296,21 +1367,75 @@ export default function SceneEditor() {
 
         <section className="stage-panel" aria-label="Canvas preview">
           <div className="stage-header">
-            <span>{status}</span>
-            <span>拖拽移动，右下角黄点缩放</span>
+            <span className="stage-status">{status}</span>
+            <div className="stage-header-tools">
+              <span>拖拽移动，右下角黄点缩放</span>
+              <div className="canvas-zoom-controls" aria-label="画布缩放">
+                <button
+                  type="button"
+                  className="zoom-button"
+                  onClick={zoomCanvasOut}
+                  disabled={canvasZoom <= CANVAS_ZOOM_MIN}
+                  title="缩小画布"
+                >
+                  -
+                </button>
+                <label className="zoom-slider-label">
+                  <span>{canvasZoomPercent}%</span>
+                  <input
+                    type="range"
+                    min={CANVAS_ZOOM_MIN}
+                    max={CANVAS_ZOOM_MAX}
+                    step={CANVAS_ZOOM_STEP}
+                    value={canvasZoom}
+                    onChange={(event) => setCanvasZoomLevel(Number(event.currentTarget.value))}
+                    title="调整画布缩放"
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="zoom-button"
+                  onClick={zoomCanvasIn}
+                  disabled={canvasZoom >= CANVAS_ZOOM_MAX}
+                  title="放大画布"
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  className="zoom-fit-button"
+                  onClick={resetCanvasZoom}
+                  disabled={canvasZoom === 1}
+                  title="恢复适配视图"
+                >
+                  适配
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="stage-viewport">
-            <SceneCanvas
-              scene={scene}
-              className="scene-preview"
-              idPrefix="editor"
-              interactive
-              selectedId={selectedId}
-              svgRef={svgRef}
-              onCanvasPointerDown={() => setSelectedId("")}
-              onElementPointerDown={handleElementPointerDown}
-              onResizePointerDown={handleResizePointerDown}
-            />
+          <div
+            className="stage-viewport"
+            ref={stageViewportRef}
+            onWheel={handleStageWheel}
+          >
+            <div className="stage-viewport-inner">
+              <div
+                className="scene-preview-frame"
+                style={{ width: canvasPreviewWidth }}
+              >
+                <SceneCanvas
+                  scene={scene}
+                  className="scene-preview"
+                  idPrefix="editor"
+                  interactive
+                  selectedId={selectedId}
+                  svgRef={svgRef}
+                  onCanvasPointerDown={() => setSelectedId("")}
+                  onElementPointerDown={handleElementPointerDown}
+                  onResizePointerDown={handleResizePointerDown}
+                />
+              </div>
+            </div>
           </div>
         </section>
 
@@ -2379,6 +2504,10 @@ function minimumHeight(element: SceneElement) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
+}
+
+function clampZoom(value: number) {
+  return clamp(Number.isFinite(value) ? value : 1, CANVAS_ZOOM_MIN, CANVAS_ZOOM_MAX);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
