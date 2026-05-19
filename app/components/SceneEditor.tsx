@@ -48,6 +48,7 @@ type CustomSceneTemplate = {
   id: string;
   name: string;
   createdAt: string;
+  updatedAt?: string;
   scene: Scene;
 };
 
@@ -194,14 +195,33 @@ export default function SceneEditor() {
     };
   }, []);
 
-  const activeTemplate =
-    BUILT_IN_TEMPLATES.find((template) => template.id === activeTemplateId) ??
-    customTemplates.find((template) => template.id === activeTemplateId) ??
-    null;
+  const activeBuiltInTemplate =
+    BUILT_IN_TEMPLATES.find((template) => template.id === activeTemplateId) ?? null;
+  const activeCustomTemplate =
+    customTemplates.find((template) => template.id === activeTemplateId) ?? null;
+  const activeTemplate = activeBuiltInTemplate ?? activeCustomTemplate;
   const activeSlot = templateSlots.find((slot) => slot.slotId === activeSlotId) ?? null;
+  const hasUnsavedCustomTemplateChanges = activeCustomTemplate
+    ? !scenesMatch(activeCustomTemplate.scene, scene)
+    : false;
+  const editingContextCaption = activeCustomTemplate
+    ? hasUnsavedCustomTemplateChanges
+      ? "自定义模板有未保存修改"
+      : "自定义模板已保存"
+    : activeSlot?.name ?? "未选择 OBS 源";
   const visualLayers = scene.elements
     .map((element, index) => ({ element, index }))
     .reverse();
+
+  const markSceneEdited = useCallback(() => {
+    if (activeCustomTemplate) {
+      return;
+    }
+
+    if (activeBuiltInTemplate) {
+      setActiveTemplateId("");
+    }
+  }, [activeBuiltInTemplate, activeCustomTemplate]);
 
   function getSlotUrl(templateId: string, slotId: string) {
     return `http://localhost:3000/live?t=${encodeURIComponent(templateId)}&s=${encodeURIComponent(slotId)}`;
@@ -355,7 +375,7 @@ export default function SceneEditor() {
           } as SceneElement;
         }),
       }));
-      setActiveTemplateId("");
+      markSceneEdited();
     }
 
     function handlePointerUp() {
@@ -369,7 +389,7 @@ export default function SceneEditor() {
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     };
-  }, [drag]);
+  }, [drag, markSceneEdited]);
 
   const copySelectedElement = useCallback(() => {
     const element = selectedElementRef.current;
@@ -407,9 +427,9 @@ export default function SceneEditor() {
       elements: [...currentScene.elements, pastedElement],
     }));
     setSelectedId(pastedElement.id);
-    setActiveTemplateId("");
+    markSceneEdited();
     setStatus(`已粘贴「${pastedElement.name}」`);
-  }, []);
+  }, [markSceneEdited]);
 
   useEffect(() => {
     function handleEditorKeyDown(event: KeyboardEvent) {
@@ -440,7 +460,7 @@ export default function SceneEditor() {
 
   function changeScene(updater: (currentScene: Scene) => Scene) {
     setScene(updater);
-    setActiveTemplateId("");
+    markSceneEdited();
   }
 
   function patchElement(elementId: string, patch: Partial<SceneElement>) {
@@ -578,12 +598,14 @@ export default function SceneEditor() {
   }
 
   function saveCustomTemplate() {
+    const timestamp = new Date().toISOString();
     const templateName =
       customTemplateName.trim() || `自定义模板 ${customTemplates.length + 1}`;
     const template: CustomSceneTemplate = {
       id: createCustomTemplateId(),
       name: templateName,
-      createdAt: new Date().toISOString(),
+      createdAt: timestamp,
+      updatedAt: timestamp,
       scene: cloneScene(scene),
     };
     const nextTemplates = [template, ...customTemplates];
@@ -597,6 +619,32 @@ export default function SceneEditor() {
       setShowTemplateForm(false);
     } catch {
       setStatus("自定义模板保存失败，浏览器缓存空间可能不足");
+    }
+  }
+
+  function saveActiveCustomTemplate() {
+    if (!activeCustomTemplate) {
+      setShowTemplateForm(true);
+      setStatus("当前不是自定义模板，请另存为新模板");
+      return;
+    }
+
+    const updatedTemplate: CustomSceneTemplate = {
+      ...activeCustomTemplate,
+      updatedAt: new Date().toISOString(),
+      scene: cloneScene(scene),
+    };
+    const nextTemplates = customTemplates.map((template) =>
+      template.id === activeCustomTemplate.id ? updatedTemplate : template,
+    );
+
+    try {
+      writeCustomTemplatesToStorage(nextTemplates);
+      setCustomTemplates(nextTemplates);
+      setActiveTemplateId(updatedTemplate.id);
+      setStatus(`已保存「${updatedTemplate.name}」的修改`);
+    } catch {
+      setStatus("模板保存失败，浏览器缓存空间可能不足");
     }
   }
 
@@ -655,6 +703,7 @@ export default function SceneEditor() {
         id: createCustomTemplateId(),
         name: uniqueTemplateName(template.name, customTemplates),
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         scene: cloneScene(template.scene),
       };
       const nextTemplates = [importedTemplate, ...customTemplates];
@@ -830,6 +879,17 @@ export default function SceneEditor() {
               onChange={(event) => handleAssetInput(event, "add")}
             />
           </label>
+          {activeCustomTemplate ? (
+            <button
+              type="button"
+              className="primary-button"
+              onClick={saveActiveCustomTemplate}
+              disabled={!hasUnsavedCustomTemplateChanges}
+              title={hasUnsavedCustomTemplateChanges ? "覆盖保存当前自定义模板" : "当前模板没有未保存修改"}
+            >
+              保存模板
+            </button>
+          ) : null}
           <button
             type="button"
             className={`secondary-button toolbar-template-button${showTemplateForm ? " active" : ""}`}
@@ -837,7 +897,7 @@ export default function SceneEditor() {
             aria-expanded={showTemplateForm}
             aria-controls="template-save-panel"
           >
-            保存为模板
+            {activeCustomTemplate ? "另存为模板" : "保存为模板"}
           </button>
           <label className="secondary-button file-button">
             导入
@@ -904,8 +964,13 @@ export default function SceneEditor() {
         <aside className="left-panel" aria-label="Scene settings">
           <div className="sidebar-context">
             <span className="context-label">当前编辑</span>
-            <strong>{activeTemplate?.name ?? "自定义场景"}</strong>
-            <small>{activeSlot?.name ?? "未选择 OBS 源"}</small>
+            <strong>
+              {activeTemplate?.name ?? "自定义场景"}
+              {hasUnsavedCustomTemplateChanges ? (
+                <span className="unsaved-pill">未保存</span>
+              ) : null}
+            </strong>
+            <small>{editingContextCaption}</small>
           </div>
 
           <SidebarSection
@@ -1085,9 +1150,21 @@ export default function SceneEditor() {
                       <TemplateCard
                         key={template.id}
                         name={template.name}
-                        description={formatTemplateDate(template.createdAt)}
-                        badge="自定义"
+                        description={
+                          activeTemplateId === template.id && hasUnsavedCustomTemplateChanges
+                            ? "有未保存修改"
+                            : formatTemplateDate(
+                              template.updatedAt ?? template.createdAt,
+                              template.updatedAt ? "更新于" : "保存于",
+                            )
+                        }
+                        badge={
+                          activeTemplateId === template.id && hasUnsavedCustomTemplateChanges
+                            ? "未保存"
+                            : "自定义"
+                        }
                         active={activeTemplateId === template.id}
+                        dirty={activeTemplateId === template.id && hasUnsavedCustomTemplateChanges}
                         onApply={() => applyTemplate(template)}
                         onDelete={() => deleteCustomTemplate(template.id)}
                       />
@@ -1560,6 +1637,7 @@ function TemplateCard({
   description,
   badge,
   active,
+  dirty = false,
   onApply,
   onDelete,
 }: {
@@ -1567,11 +1645,16 @@ function TemplateCard({
   description: string;
   badge: string;
   active: boolean;
+  dirty?: boolean;
   onApply: () => void;
   onDelete?: () => void;
 }) {
   return (
-    <div className={active ? "template-card active" : "template-card"}>
+    <div className={[
+      "template-card",
+      active ? "active" : "",
+      dirty ? "dirty" : "",
+    ].filter(Boolean).join(" ")}>
       <button type="button" className="template-card-button" onClick={onApply}>
         <div className="template-card-content">
           <span className="template-card-name">{name}</span>
@@ -1840,13 +1923,16 @@ function writeCustomTemplatesToStorage(templates: CustomSceneTemplate[]) {
 }
 
 function createTemplateExportPayload(name: string, scene: Scene): TemplateExportPayload {
+  const timestamp = new Date().toISOString();
+
   return {
     format: TEMPLATE_EXPORT_FORMAT,
     version: 1,
     template: {
       id: createCustomTemplateId(),
       name: name.trim() || "自定义场景",
-      createdAt: new Date().toISOString(),
+      createdAt: timestamp,
+      updatedAt: timestamp,
       scene: cloneScene(scene),
     },
   };
@@ -1881,6 +1967,7 @@ function normalizeCustomTemplate(value: unknown): CustomSceneTemplate | null {
     id: value.id,
     name: value.name,
     createdAt: value.createdAt,
+    updatedAt: typeof value.updatedAt === "string" ? value.updatedAt : undefined,
     scene: cloneScene(value.scene),
   };
 }
@@ -1967,24 +2054,27 @@ function isStoredSceneElement(value: unknown): value is SceneElement {
   return false;
 }
 
-function formatTemplateDate(value: string) {
+function formatTemplateDate(value: string, prefix = "保存于") {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
     return "保存在浏览器缓存";
   }
 
-  return `保存于 ${date.toLocaleDateString("zh-CN", {
+  return `${prefix} ${date.toLocaleDateString("zh-CN", {
     month: "2-digit",
     day: "2-digit",
   })}`;
 }
 
 function findMatchingBuiltInTemplateId(scene: Scene) {
-  const sceneValue = JSON.stringify(scene);
   return (
-    BUILT_IN_TEMPLATES.find((template) => JSON.stringify(template.scene) === sceneValue)?.id ?? ""
+    BUILT_IN_TEMPLATES.find((template) => scenesMatch(template.scene, scene))?.id ?? ""
   );
+}
+
+function scenesMatch(left: Scene, right: Scene) {
+  return JSON.stringify(left) === JSON.stringify(right);
 }
 
 function cloneSceneElement(element: SceneElement): SceneElement {

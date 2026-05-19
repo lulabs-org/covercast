@@ -119,6 +119,11 @@ h1 {
   background: var(--accent-strong);
 }
 
+.primary-button:disabled {
+  background: #9aa9c0;
+  cursor: not-allowed;
+}
+
 .primary-button.muted {
   background: #1f2937;
 }
@@ -264,11 +269,24 @@ h1 {
 
 .sidebar-context strong {
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   color: #1f2d44;
   font-size: 14px;
   font-weight: 900;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.unsaved-pill {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 2px 6px;
+  color: #8a4b00;
+  background: #fff2cc;
+  font-size: 10px;
+  font-weight: 900;
 }
 
 .sidebar-context small {
@@ -836,6 +854,17 @@ h1 {
   border-color: var(--accent);
   background: #eaf1ff;
   box-shadow: 0 0 0 1px var(--accent);
+}
+
+.template-card.dirty {
+  border-color: #f59e0b;
+  background: #fff8e6;
+  box-shadow: 0 0 0 1px #f59e0b;
+}
+
+.template-card.dirty .template-card-badge {
+  color: #8a4b00;
+  background: #fff2cc;
 }
 
 .template-card-button {
