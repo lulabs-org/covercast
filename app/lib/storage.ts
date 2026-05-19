@@ -102,10 +102,22 @@ function normalizeScene(value: unknown): Scene {
       typeof candidate.backgroundColor === "string"
         ? candidate.backgroundColor
         : fallback.backgroundColor,
+    backgroundOpacity:
+      typeof candidate.backgroundOpacity === "number"
+        ? clamp(candidate.backgroundOpacity, 0, 1)
+        : fallback.backgroundOpacity,
     elements: candidate.elements,
   } as Scene;
 }
 
 function isSafeAssetId(id: string) {
   return /^[a-f0-9-]+\.(png|jpg|jpeg|webp)$/i.test(id);
+}
+
+function clamp(value: number, min: number, max: number) {
+  if (!Number.isFinite(value)) {
+    return min;
+  }
+
+  return Math.min(Math.max(value, min), max);
 }

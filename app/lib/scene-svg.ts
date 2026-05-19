@@ -58,7 +58,7 @@ export function sceneToSvgMarkup(scene: Scene): string {
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" viewBox="0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}" role="img" aria-label="Covercast OBS live background">`,
     renderDefs("covercast"),
-    renderBackground(scene.backgroundColor),
+    renderBackground(scene.backgroundColor, scene.backgroundOpacity),
     ...scene.elements.map((element) => renderElement(element, "covercast")),
     "</svg>",
   ].join("");
@@ -88,10 +88,13 @@ export function renderDefs(prefix: string): string {
   `;
 }
 
-export function renderBackground(backgroundColor: string): string {
+export function renderBackground(backgroundColor: string, backgroundOpacity = 1): string {
+  const opacity = clampOpacity(backgroundOpacity);
+  const glowOpacity = Number((0.68 * opacity).toFixed(3));
+
   return `
-    <rect width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" fill="${escapeAttribute(backgroundColor)}" />
-    <rect width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" fill="url(#covercast-bg-glow)" opacity="0.68" />
+    <rect width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" fill="${escapeAttribute(backgroundColor)}" opacity="${opacity}" />
+    <rect width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" fill="url(#covercast-bg-glow)" opacity="${glowOpacity}" />
   `;
 }
 
@@ -177,4 +180,12 @@ function escapeText(value: string): string {
 
 function escapeAttribute(value: string): string {
   return escapeText(value).replace(/"/g, "&quot;");
+}
+
+function clampOpacity(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 1;
+  }
+
+  return Math.min(Math.max(value, 0), 1);
 }

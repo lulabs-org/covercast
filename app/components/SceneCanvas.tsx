@@ -81,12 +81,17 @@ export default function SceneCanvas({
         </linearGradient>
       </defs>
 
-      <rect width={CANVAS_WIDTH} height={CANVAS_HEIGHT} fill={scene.backgroundColor} />
+      <rect
+        width={CANVAS_WIDTH}
+        height={CANVAS_HEIGHT}
+        fill={scene.backgroundColor}
+        opacity={clampOpacity(scene.backgroundOpacity)}
+      />
       <rect
         width={CANVAS_WIDTH}
         height={CANVAS_HEIGHT}
         fill={`url(#${idPrefix}-bg-glow)`}
-        opacity="0.68"
+        opacity={0.68 * clampOpacity(scene.backgroundOpacity)}
       />
 
       {scene.elements.map((element) => (
@@ -373,4 +378,12 @@ function SelectionFrame({
       />
     </g>
   );
+}
+
+function clampOpacity(value: number) {
+  if (!Number.isFinite(value)) {
+    return 1;
+  }
+
+  return Math.min(Math.max(value, 0), 1);
 }

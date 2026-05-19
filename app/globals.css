@@ -360,6 +360,17 @@ h1 {
   padding: 3px;
 }
 
+.opacity-field > div {
+  display: grid;
+  grid-template-columns: 1fr 72px;
+  align-items: center;
+  gap: 8px;
+}
+
+.opacity-field input[type="range"] {
+  padding: 0;
+}
+
 .empty-state {
   color: var(--muted);
   font-size: 14px;

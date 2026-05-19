@@ -401,6 +401,16 @@ export default function SceneEditor() {
               }))
             }
           />
+          <OpacityField
+            label="背景透明度"
+            value={scene.backgroundOpacity}
+            onChange={(value) =>
+              changeScene((currentScene) => ({
+                ...currentScene,
+                backgroundOpacity: value,
+              }))
+            }
+          />
           <div className="live-url">
             <span>OBS 浏览器源</span>
             <a href="/live" target="_blank" rel="noreferrer">
@@ -768,6 +778,47 @@ function NumberField({
           }
         }}
       />
+    </label>
+  );
+}
+
+function OpacityField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  const opacity = clamp(value, 0, 1);
+
+  return (
+    <label className="field opacity-field">
+      <span>{label}</span>
+      <div>
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={opacity}
+          onChange={(event) => onChange(Number(event.currentTarget.value))}
+        />
+        <input
+          type="number"
+          min={0}
+          max={1}
+          step={0.01}
+          value={opacity.toFixed(2)}
+          onChange={(event) => {
+            const nextValue = Number(event.currentTarget.value);
+            if (Number.isFinite(nextValue)) {
+              onChange(clamp(nextValue, 0, 1));
+            }
+          }}
+        />
+      </div>
     </label>
   );
 }

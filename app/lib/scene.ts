@@ -51,6 +51,7 @@ export type SceneElement = TextElement | ShapeElement | ImageElement;
 export type Scene = {
   version: 1;
   backgroundColor: string;
+  backgroundOpacity: number;
   elements: SceneElement[];
 };
 
@@ -108,6 +109,7 @@ export function createImageElement(src: string, name = "自定义素材"): Image
 const defaultScene: Scene = {
   version: 1,
   backgroundColor: "#2845c7",
+  backgroundOpacity: 1,
   elements: [
     {
       id: "avatar",
