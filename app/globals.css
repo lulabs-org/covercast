@@ -27,7 +27,7 @@ body {
 
 body {
   margin: 0;
-  background: var(--background);
+  background: transparent;
   color: var(--foreground);
   font-family:
     "PingFang SC", "Microsoft YaHei", "Noto Sans SC", Arial, Helvetica,
@@ -52,6 +52,7 @@ label.file-button {
   flex-direction: column;
   gap: 16px;
   padding: 18px;
+  background: var(--background);
 }
 
 .editor-toolbar {
@@ -371,6 +372,7 @@ h1 {
   display: grid;
   place-items: center;
   overflow: hidden;
+  background: transparent;
 }
 
 .live-canvas {

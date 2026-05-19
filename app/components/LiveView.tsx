@@ -38,8 +38,11 @@ export default function LiveView() {
   }, []);
 
   return (
-    <main className="live-shell" style={{ backgroundColor: scene.backgroundColor }}>
-      <SceneCanvas scene={scene} className="live-canvas" idPrefix="live" />
-    </main>
+    <>
+      <style>{`html, body { background: transparent !important; }`}</style>
+      <main className="live-shell">
+        <SceneCanvas scene={scene} className="live-canvas" idPrefix="live" />
+      </main>
+    </>
   );
 }
