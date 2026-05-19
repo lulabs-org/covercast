@@ -14,6 +14,7 @@ import {
   BUILT_IN_TEMPLATES,
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
+  DEFAULT_FONT_FAMILY,
   DEFAULT_TEMPLATE_ID,
   cloneScene,
   createDefaultScene,
@@ -59,6 +60,7 @@ type SceneSlotInfo = {
 };
 
 const TEMPLATE_EXPORT_FORMAT = "covercast.template";
+const CUSTOM_FONT_FAMILY_VALUE = "__custom-font-family__";
 
 type SidebarSectionId = "scene" | "sources" | "templates" | "layers";
 type ExportFormat = "png" | "jpeg" | "svg" | "json";
@@ -80,6 +82,48 @@ const EXPORT_FORMAT_OPTIONS: {
   { extension: "jpg", label: "JPG", mimeType: "image/jpeg", value: "jpeg" },
   { extension: "svg", label: "SVG", mimeType: "image/svg+xml;charset=utf-8", value: "svg" },
   { extension: "json", label: "JSON", mimeType: "application/json;charset=utf-8", value: "json" },
+];
+const FONT_FAMILY_OPTIONS = [
+  {
+    label: "系统默认",
+    value: DEFAULT_FONT_FAMILY,
+  },
+  {
+    label: "苹方 / PingFang SC",
+    value: '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+  },
+  {
+    label: "微软雅黑",
+    value: '"Microsoft YaHei", "PingFang SC", sans-serif',
+  },
+  {
+    label: "思源黑体 / Noto Sans SC",
+    value: '"Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif',
+  },
+  {
+    label: "阿里巴巴普惠体",
+    value: '"Alibaba PuHuiTi", "Alibaba PuHuiTi 2.0", "PingFang SC", sans-serif',
+  },
+  {
+    label: "黑体 / SimHei",
+    value: 'SimHei, "Microsoft YaHei", sans-serif',
+  },
+  {
+    label: "宋体 / SimSun",
+    value: 'SimSun, "Songti SC", serif',
+  },
+  {
+    label: "楷体 / KaiTi",
+    value: 'KaiTi, "Kaiti SC", serif',
+  },
+  {
+    label: "Arial",
+    value: "Arial, Helvetica, sans-serif",
+  },
+  {
+    label: "Georgia",
+    value: 'Georgia, "Times New Roman", serif',
+  },
 ];
 
 export default function SceneEditor() {
@@ -1401,8 +1445,8 @@ function TextInspector({
         value={element.fill}
         onChange={(value) => onPatch({ fill: value } as Partial<TextElement>)}
       />
-      <TextField
-        label="字体"
+      <FontFamilyField
+        key={element.id}
         value={element.fontFamily}
         onChange={(value) => onPatch({ fontFamily: value } as Partial<TextElement>)}
       />
@@ -1445,6 +1489,61 @@ function TextInspector({
         </label>
       </div>
     </>
+  );
+}
+
+function FontFamilyField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const [customOpen, setCustomOpen] = useState(false);
+  const matchedOption = findFontFamilyOption(value);
+  const usesCustomFont = customOpen || !matchedOption;
+  const selectedValue = usesCustomFont
+    ? CUSTOM_FONT_FAMILY_VALUE
+    : matchedOption.value;
+
+  return (
+    <div className="font-family-field">
+      <label className="field">
+        <span>字体</span>
+        <select
+          value={selectedValue}
+          onChange={(event) => {
+            const nextValue = event.currentTarget.value;
+
+            if (nextValue === CUSTOM_FONT_FAMILY_VALUE) {
+              setCustomOpen(true);
+              return;
+            }
+
+            setCustomOpen(false);
+            onChange(nextValue);
+          }}
+        >
+          {FONT_FAMILY_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+          <option value={CUSTOM_FONT_FAMILY_VALUE}>自定义字体栈</option>
+        </select>
+      </label>
+      {usesCustomFont ? (
+        <TextField
+          label="自定义字体栈"
+          value={value}
+          placeholder={DEFAULT_FONT_FAMILY}
+          onChange={onChange}
+        />
+      ) : null}
+      <div className="font-preview" style={{ fontFamily: value }}>
+        直播背景 Aa 123
+      </div>
+    </div>
   );
 }
 
@@ -1993,6 +2092,12 @@ function uniqueTemplateName(name: string, templates: CustomSceneTemplate[]) {
   }
 
   return candidate;
+}
+
+function findFontFamilyOption(value: string) {
+  const normalizedValue = value.trim();
+
+  return FONT_FAMILY_OPTIONS.find((option) => option.value.trim() === normalizedValue) ?? null;
 }
 
 function isScene(value: unknown): value is Scene {
