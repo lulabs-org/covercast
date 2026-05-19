@@ -22,6 +22,7 @@
 
 html,
 body {
+  height: 100%;
   min-height: 100%;
 }
 
@@ -47,15 +48,18 @@ label.file-button {
 }
 
 .editor-shell {
-  min-height: 100vh;
+  height: 100dvh;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  overflow: hidden;
   padding: 18px;
   background: var(--background);
 }
 
 .editor-toolbar {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -152,11 +156,12 @@ h1 {
 }
 
 .editor-grid {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(240px, 300px) minmax(360px, 1fr) minmax(270px, 340px);
   gap: 16px;
+  overflow: hidden;
 }
 
 .left-panel,
