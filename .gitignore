@@ -20,6 +20,9 @@
 # production
 /build
 
+# local runtime data
+/.covercast/
+
 # misc
 .DS_Store
 *.pem
