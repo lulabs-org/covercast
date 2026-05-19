@@ -57,9 +57,20 @@ type SceneSlotInfo = {
 };
 
 type SidebarSectionId = "scene" | "sources" | "templates" | "layers";
+type ExportFormat = "png" | "jpeg" | "svg";
 
 const CUSTOM_TEMPLATE_STORAGE_KEY = "covercast.customTemplates.v1";
 const SLOT_NAMES_STORAGE_KEY = "covercast.slotNames.v1";
+const EXPORT_FORMAT_OPTIONS: {
+  extension: string;
+  label: string;
+  mimeType: string;
+  value: ExportFormat;
+}[] = [
+  { extension: "png", label: "PNG", mimeType: "image/png", value: "png" },
+  { extension: "jpg", label: "JPG", mimeType: "image/jpeg", value: "jpeg" },
+  { extension: "svg", label: "SVG", mimeType: "image/svg+xml;charset=utf-8", value: "svg" },
+];
 
 export default function SceneEditor() {
   const [scene, setScene] = useState<Scene>(() => createDefaultScene());
@@ -69,6 +80,7 @@ export default function SceneEditor() {
   const [customTemplateName, setCustomTemplateName] = useState("");
   const [activeTemplateId, setActiveTemplateId] = useState<string>(DEFAULT_TEMPLATE_ID);
   const [showTemplateForm, setShowTemplateForm] = useState(false);
+  const [exportFormat, setExportFormat] = useState<ExportFormat>("png");
   const [drag, setDrag] = useState<DragState | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [activeSlotId, setActiveSlotId] = useState<string>("default");
@@ -479,13 +491,6 @@ export default function SceneEditor() {
     applyTemplate(template);
   }
 
-  function resetTemplate() {
-    const defaultTemplate = BUILT_IN_TEMPLATES.find((template) => template.id === DEFAULT_TEMPLATE_ID);
-    if (defaultTemplate) {
-      applyTemplate(defaultTemplate);
-    }
-  }
-
   function saveCustomTemplate() {
     const templateName =
       customTemplateName.trim() || `自定义模板 ${customTemplates.length + 1}`;
@@ -616,40 +621,29 @@ export default function SceneEditor() {
     setSelectedId(scene.elements.find((element) => element.id !== selectedElement.id)?.id ?? "");
   }
 
-  async function exportPng() {
-    setStatus("正在导出 PNG...");
+  async function exportScene(format: ExportFormat) {
+    const formatOption = EXPORT_FORMAT_OPTIONS.find((option) => option.value === format)
+      ?? EXPORT_FORMAT_OPTIONS[0];
+    setStatus(`正在导出 ${formatOption.label}...`);
 
     try {
       const exportScene = await inlineSceneAssets(scene);
       const svgMarkup = sceneToSvgMarkup(exportScene);
-      const svgBlob = new Blob([svgMarkup], { type: "image/svg+xml;charset=utf-8" });
-      const svgUrl = URL.createObjectURL(svgBlob);
+      const filename = `covercast-${new Date().toISOString().slice(0, 10)}.${formatOption.extension}`;
 
-      await new Promise<void>((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => {
-          const canvas = document.createElement("canvas");
-          canvas.width = CANVAS_WIDTH;
-          canvas.height = CANVAS_HEIGHT;
-          const context = canvas.getContext("2d");
-          if (!context) {
-            reject(new Error("Canvas context unavailable"));
-            return;
-          }
+      if (format === "svg") {
+        downloadBlob(new Blob([svgMarkup], { type: formatOption.mimeType }), filename);
+      } else {
+        const canvas = await renderSvgToCanvas(svgMarkup, format === "jpeg" ? "#ffffff" : null);
+        const blob = await canvasToBlob(
+          canvas,
+          formatOption.mimeType,
+          format === "jpeg" ? 0.92 : undefined,
+        );
+        downloadBlob(blob, filename);
+      }
 
-          context.drawImage(image, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-          const download = document.createElement("a");
-          download.href = canvas.toDataURL("image/png");
-          download.download = `covercast-${new Date().toISOString().slice(0, 10)}.png`;
-          download.click();
-          resolve();
-        };
-        image.onerror = () => reject(new Error("SVG render failed"));
-        image.src = svgUrl;
-      });
-
-      URL.revokeObjectURL(svgUrl);
-      setStatus("PNG 已导出，尺寸 941×1672");
+      setStatus(`${formatOption.label} 已导出，尺寸 ${CANVAS_WIDTH}×${CANVAS_HEIGHT}`);
     } catch {
       setStatus("导出失败，请确认所有素材都能正常显示");
     }
@@ -680,9 +674,6 @@ export default function SceneEditor() {
               onChange={(event) => handleAssetInput(event, "add")}
             />
           </label>
-          <button type="button" className="secondary-button" onClick={resetTemplate}>
-            重置模板
-          </button>
           <button
             type="button"
             className={`secondary-button toolbar-template-button${showTemplateForm ? " active" : ""}`}
@@ -692,9 +683,27 @@ export default function SceneEditor() {
           >
             保存为模板
           </button>
-          <button type="button" className="primary-button muted" onClick={() => void exportPng()}>
-            导出 PNG
-          </button>
+          <div className="export-control" aria-label="导出场景">
+            <select
+              className="export-format-select"
+              value={exportFormat}
+              onChange={(event) => setExportFormat(event.currentTarget.value as ExportFormat)}
+              title="选择导出格式"
+            >
+              {EXPORT_FORMAT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="primary-button muted"
+              onClick={() => void exportScene(exportFormat)}
+            >
+              导出
+            </button>
+          </div>
         </div>
       </section>
 
@@ -1771,6 +1780,74 @@ function blobToDataUrl(blob: Blob): Promise<string> {
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(blob);
   });
+}
+
+async function renderSvgToCanvas(
+  svgMarkup: string,
+  backgroundColor: string | null,
+): Promise<HTMLCanvasElement> {
+  const svgBlob = new Blob([svgMarkup], { type: "image/svg+xml;charset=utf-8" });
+  const svgUrl = URL.createObjectURL(svgBlob);
+
+  try {
+    return await new Promise<HTMLCanvasElement>((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = CANVAS_WIDTH;
+        canvas.height = CANVAS_HEIGHT;
+        const context = canvas.getContext("2d");
+        if (!context) {
+          reject(new Error("Canvas context unavailable"));
+          return;
+        }
+
+        if (backgroundColor) {
+          context.fillStyle = backgroundColor;
+          context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        }
+
+        context.drawImage(image, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        resolve(canvas);
+      };
+      image.onerror = () => reject(new Error("SVG render failed"));
+      image.src = svgUrl;
+    });
+  } finally {
+    URL.revokeObjectURL(svgUrl);
+  }
+}
+
+function canvasToBlob(
+  canvas: HTMLCanvasElement,
+  mimeType: string,
+  quality?: number,
+): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error("Canvas export failed"));
+          return;
+        }
+
+        resolve(blob);
+      },
+      mimeType,
+      quality,
+    );
+  });
+}
+
+function downloadBlob(blob: Blob, filename: string) {
+  const objectUrl = URL.createObjectURL(blob);
+  const download = document.createElement("a");
+  download.href = objectUrl;
+  download.download = filename;
+  document.body.appendChild(download);
+  download.click();
+  download.remove();
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
 }
 
 function getSvgPoint(svg: SVGSVGElement, clientX: number, clientY: number) {
