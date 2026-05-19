@@ -140,6 +140,7 @@ export default function SceneEditor() {
   const [customTemplates, setCustomTemplates] = useState<CustomSceneTemplate[]>([]);
   const [customTemplateName, setCustomTemplateName] = useState("");
   const [activeTemplateId, setActiveTemplateId] = useState<string>(DEFAULT_TEMPLATE_ID);
+  const [appOrigin, setAppOrigin] = useState("");
   const [showTemplateForm, setShowTemplateForm] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat>("png");
   const [canvasZoom, setCanvasZoom] = useState(1);
@@ -174,6 +175,7 @@ export default function SceneEditor() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setCustomTemplates(readCustomTemplatesFromStorage());
+      setAppOrigin(window.location.origin);
     }, 0);
 
     return () => {
@@ -313,7 +315,8 @@ export default function SceneEditor() {
   }, [activeBuiltInTemplate, activeCustomTemplate]);
 
   function getSlotUrl(templateId: string, slotId: string) {
-    return `http://localhost:3000/live?t=${encodeURIComponent(templateId)}&s=${encodeURIComponent(slotId)}`;
+    const origin = appOrigin || "";
+    return `${origin}/live?t=${encodeURIComponent(templateId)}&s=${encodeURIComponent(slotId)}`;
   }
 
   function readSlotNamesFromStorage(): Record<string, string> {
