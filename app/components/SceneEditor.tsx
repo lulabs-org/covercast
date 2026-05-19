@@ -4,6 +4,7 @@ import {
   type ChangeEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -91,8 +92,13 @@ export default function SceneEditor() {
   const [exportFormat, setExportFormat] = useState<ExportFormat>("png");
   const [drag, setDrag] = useState<DragState | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const elementClipboardRef = useRef<SceneElement | null>(null);
+  const pasteOffsetRef = useRef(1);
+  const sceneElementsRef = useRef<SceneElement[]>(scene.elements);
+  const selectedElementRef = useRef<SceneElement | null>(null);
   const [activeSlotId, setActiveSlotId] = useState<string>("default");
   const [templateSlots, setTemplateSlots] = useState<SceneSlotInfo[]>([]);
+  const [canPasteElement, setCanPasteElement] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<Record<SidebarSectionId, boolean>>({
     scene: false,
     sources: false,
@@ -104,6 +110,11 @@ export default function SceneEditor() {
     () => scene.elements.find((element) => element.id === selectedId) ?? null,
     [scene.elements, selectedId],
   );
+
+  useEffect(() => {
+    sceneElementsRef.current = scene.elements;
+    selectedElementRef.current = selectedElement;
+  }, [scene.elements, selectedElement]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -359,6 +370,73 @@ export default function SceneEditor() {
       window.removeEventListener("pointerup", handlePointerUp);
     };
   }, [drag]);
+
+  const copySelectedElement = useCallback(() => {
+    const element = selectedElementRef.current;
+
+    if (!element) {
+      setStatus("请先选择一个画布组件");
+      return;
+    }
+
+    elementClipboardRef.current = cloneSceneElement(element);
+    pasteOffsetRef.current = 1;
+    setCanPasteElement(true);
+    setStatus(`已复制「${element.name}」`);
+  }, []);
+
+  const pasteCopiedElement = useCallback(() => {
+    const sourceElement = elementClipboardRef.current;
+
+    if (!sourceElement) {
+      setStatus("没有可粘贴的组件");
+      return;
+    }
+
+    const pastedElement = createPastedSceneElement(
+      sourceElement,
+      sceneElementsRef.current,
+      pasteOffsetRef.current,
+    );
+    pasteOffsetRef.current += 1;
+    sceneElementsRef.current = [...sceneElementsRef.current, pastedElement];
+    selectedElementRef.current = pastedElement;
+
+    setScene((currentScene) => ({
+      ...currentScene,
+      elements: [...currentScene.elements, pastedElement],
+    }));
+    setSelectedId(pastedElement.id);
+    setActiveTemplateId("");
+    setStatus(`已粘贴「${pastedElement.name}」`);
+  }, []);
+
+  useEffect(() => {
+    function handleEditorKeyDown(event: KeyboardEvent) {
+      if (!isCopyPasteModifier(event) || isEditableTarget(event.target)) {
+        return;
+      }
+
+      const key = event.key.toLowerCase();
+
+      if (key === "c" && selectedElementRef.current) {
+        event.preventDefault();
+        copySelectedElement();
+        return;
+      }
+
+      if (key === "v" && elementClipboardRef.current) {
+        event.preventDefault();
+        pasteCopiedElement();
+      }
+    }
+
+    window.addEventListener("keydown", handleEditorKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleEditorKeyDown);
+    };
+  }, [copySelectedElement, pasteCopiedElement]);
 
   function changeScene(updater: (currentScene: Scene) => Scene) {
     setScene(updater);
@@ -1125,6 +1203,9 @@ export default function SceneEditor() {
             <ElementInspector
               element={selectedElement}
               onPatch={patchSelected}
+              onCopy={copySelectedElement}
+              onPaste={pasteCopiedElement}
+              canPaste={canPasteElement}
               onDelete={deleteSelected}
               onReplaceImage={(event) => handleAssetInput(event, "replace")}
             />
@@ -1140,11 +1221,17 @@ export default function SceneEditor() {
 function ElementInspector({
   element,
   onPatch,
+  onCopy,
+  onPaste,
+  canPaste,
   onDelete,
   onReplaceImage,
 }: {
   element: SceneElement;
   onPatch: (patch: Partial<SceneElement>) => void;
+  onCopy: () => void;
+  onPaste: () => void;
+  canPaste: boolean;
   onDelete: () => void;
   onReplaceImage: (event: ChangeEvent<HTMLInputElement>) => void;
 }) {
@@ -1196,6 +1283,20 @@ function ElementInspector({
           onReplaceImage={onReplaceImage}
         />
       ) : null}
+
+      <div className="inspector-action-row">
+        <button type="button" className="secondary-button" onClick={onCopy}>
+          复制元素
+        </button>
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={onPaste}
+          disabled={!canPaste}
+        >
+          粘贴副本
+        </button>
+      </div>
 
       <button type="button" className="danger-button" onClick={onDelete}>
         删除当前元素
@@ -1883,6 +1984,65 @@ function findMatchingBuiltInTemplateId(scene: Scene) {
   const sceneValue = JSON.stringify(scene);
   return (
     BUILT_IN_TEMPLATES.find((template) => JSON.stringify(template.scene) === sceneValue)?.id ?? ""
+  );
+}
+
+function cloneSceneElement(element: SceneElement): SceneElement {
+  return JSON.parse(JSON.stringify(element)) as SceneElement;
+}
+
+function createPastedSceneElement(
+  element: SceneElement,
+  elements: SceneElement[],
+  offsetMultiplier: number,
+): SceneElement {
+  const offset = 24 * offsetMultiplier;
+
+  return {
+    ...cloneSceneElement(element),
+    id: createSceneElementId(element.type),
+    name: uniqueSceneElementName(`${element.name} 副本`, elements),
+    x: clamp(element.x + offset, -element.width + 24, CANVAS_WIDTH - 24),
+    y: clamp(element.y + offset, -element.height + 24, CANVAS_HEIGHT - 24),
+  } as SceneElement;
+}
+
+function createSceneElementId(type: SceneElement["type"]) {
+  return `${type}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function uniqueSceneElementName(name: string, elements: SceneElement[]) {
+  const existingNames = new Set(elements.map((element) => element.name));
+
+  if (!existingNames.has(name)) {
+    return name;
+  }
+
+  let suffix = 2;
+  let candidate = `${name} ${suffix}`;
+
+  while (existingNames.has(candidate)) {
+    suffix += 1;
+    candidate = `${name} ${suffix}`;
+  }
+
+  return candidate;
+}
+
+function isCopyPasteModifier(event: KeyboardEvent) {
+  return (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey;
+}
+
+function isEditableTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  return (
+    target.isContentEditable ||
+    target.tagName === "INPUT" ||
+    target.tagName === "TEXTAREA" ||
+    target.tagName === "SELECT"
   );
 }
 

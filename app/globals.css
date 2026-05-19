@@ -133,6 +133,13 @@ h1 {
   background: #e4ecf8;
 }
 
+.secondary-button:disabled {
+  color: #8a96aa;
+  background: #eef2f7;
+  border-color: #dbe3f0;
+  cursor: not-allowed;
+}
+
 .toolbar-template-button.active {
   border-color: var(--accent);
   color: var(--accent);
@@ -369,6 +376,12 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.inspector-action-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .element-row {
