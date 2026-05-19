@@ -8,7 +8,13 @@ import {
   type ShapeElement,
   type TextElement,
 } from "../lib/scene";
-import { elementBounds, resolvePaint, textAnchorForAlign, textX } from "../lib/scene-svg";
+import {
+  elementBounds,
+  gradientVector,
+  resolvePaint,
+  textAnchorForAlign,
+  textX,
+} from "../lib/scene-svg";
 
 type SceneCanvasProps = {
   scene: Scene;
@@ -79,6 +85,27 @@ export default function SceneCanvas({
           <stop offset="0%" stopColor="#73f08c" />
           <stop offset="100%" stopColor="#2859d7" />
         </linearGradient>
+        {scene.elements
+          .filter((element): element is ShapeElement & {
+            gradient: NonNullable<ShapeElement["gradient"]>;
+          } => isGradientShape(element))
+          .map((element) => {
+            const vector = gradientVector(element.gradient.direction);
+
+            return (
+              <linearGradient
+                key={element.id}
+                id={shapeGradientId(idPrefix, element.id)}
+                x1={vector.x1}
+                y1={vector.y1}
+                x2={vector.x2}
+                y2={vector.y2}
+              >
+                <stop offset="0%" stopColor={element.gradient.startColor} />
+                <stop offset="100%" stopColor={element.gradient.endColor} />
+              </linearGradient>
+            );
+          })}
       </defs>
 
       <rect
@@ -170,7 +197,7 @@ function ShapeElementView({
   idPrefix: string;
 }) {
   const commonProps = {
-    fill: resolvePaint(element.fill, idPrefix),
+    fill: resolveShapeFill(element, idPrefix),
     stroke: element.stroke,
     strokeWidth: element.strokeWidth,
     opacity: element.opacity ?? 1,
@@ -386,4 +413,26 @@ function clampOpacity(value: number) {
   }
 
   return Math.min(Math.max(value, 0), 1);
+}
+
+function resolveShapeFill(element: ShapeElement, idPrefix: string) {
+  if (isGradientShape(element)) {
+    return `url(#${shapeGradientId(idPrefix, element.id)})`;
+  }
+
+  return resolvePaint(element.fill, idPrefix);
+}
+
+function isGradientShape(element: SceneElement): element is ShapeElement & {
+  gradient: NonNullable<ShapeElement["gradient"]>;
+} {
+  return (
+    (element.type === "rect" || element.type === "ellipse") &&
+    element.fillMode === "gradient" &&
+    Boolean(element.gradient)
+  );
+}
+
+function shapeGradientId(prefix: string, elementId: string): string {
+  return `${prefix}-shape-gradient-${elementId}`;
 }

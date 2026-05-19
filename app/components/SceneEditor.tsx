@@ -13,14 +13,17 @@ import {
   CANVAS_WIDTH,
   createDefaultScene,
   createImageElement,
+  createRectElement,
   createTextElement,
   isImageElement,
   isShapeElement,
   isTextElement,
   type ImageElement,
+  type GradientDirection,
   type Scene,
   type SceneElement,
   type ShapeElement,
+  type ShapeFillMode,
   type TextAlign,
   type TextElement,
 } from "../lib/scene";
@@ -251,6 +254,15 @@ export default function SceneEditor() {
     setSelectedId(element.id);
   }
 
+  function addRectElement() {
+    const element = createRectElement();
+    changeScene((currentScene) => ({
+      ...currentScene,
+      elements: [...currentScene.elements, element],
+    }));
+    setSelectedId(element.id);
+  }
+
   async function uploadAsset(file: File, mode: "add" | "replace") {
     setStatus("正在上传素材...");
 
@@ -367,6 +379,9 @@ export default function SceneEditor() {
         <div className="toolbar-actions">
           <button type="button" className="secondary-button" onClick={addTextElement}>
             添加文字
+          </button>
+          <button type="button" className="secondary-button" onClick={addRectElement}>
+            添加矩形
           </button>
           <label className="secondary-button file-button">
             添加图片
@@ -616,13 +631,81 @@ function ShapeInspector({
   element: ShapeElement;
   onPatch: (patch: Partial<SceneElement>) => void;
 }) {
+  const fillMode = element.fillMode ?? "solid";
+  const gradient = element.gradient ?? defaultShapeGradient(element);
+
   return (
     <>
-      <ColorField
-        label="填充"
-        value={element.fill}
-        onChange={(value) => onPatch({ fill: value } as Partial<ShapeElement>)}
-      />
+      <label className="field">
+        <span>填充类型</span>
+        <select
+          value={fillMode}
+          onChange={(event) => {
+            const nextMode = event.currentTarget.value as ShapeFillMode;
+            onPatch({
+              fillMode: nextMode,
+              gradient: nextMode === "gradient" ? gradient : element.gradient,
+            } as Partial<ShapeElement>);
+          }}
+        >
+          <option value="solid">纯色</option>
+          <option value="gradient">渐变</option>
+        </select>
+      </label>
+
+      {fillMode === "gradient" ? (
+        <>
+          <ColorField
+            label="渐变起点"
+            value={gradient.startColor}
+            onChange={(value) =>
+              onPatch({
+                fill: value,
+                fillMode: "gradient",
+                gradient: { ...gradient, startColor: value },
+              } as Partial<ShapeElement>)
+            }
+          />
+          <ColorField
+            label="渐变终点"
+            value={gradient.endColor}
+            onChange={(value) =>
+              onPatch({
+                fillMode: "gradient",
+                gradient: { ...gradient, endColor: value },
+              } as Partial<ShapeElement>)
+            }
+          />
+          <label className="field">
+            <span>渐变方向</span>
+            <select
+              value={gradient.direction}
+              onChange={(event) =>
+                onPatch({
+                  fillMode: "gradient",
+                  gradient: {
+                    ...gradient,
+                    direction: event.currentTarget.value as GradientDirection,
+                  },
+                } as Partial<ShapeElement>)
+              }
+            >
+              <option value="horizontal">水平</option>
+              <option value="vertical">垂直</option>
+              <option value="diagonal-down">左上到右下</option>
+              <option value="diagonal-up">左下到右上</option>
+            </select>
+          </label>
+        </>
+      ) : (
+        <ColorField
+          label="填充"
+          value={element.fill}
+          onChange={(value) =>
+            onPatch({ fill: value, fillMode: "solid" } as Partial<ShapeElement>)
+          }
+        />
+      )}
       <ColorField
         label="描边"
         value={element.stroke ?? "#ffffff"}
@@ -646,6 +729,14 @@ function ShapeInspector({
       </div>
     </>
   );
+}
+
+function defaultShapeGradient(element: ShapeElement) {
+  return {
+    startColor: isHexColor(element.fill) ? element.fill : "#ffffff",
+    endColor: "#99f19c",
+    direction: "horizontal" as GradientDirection,
+  };
 }
 
 function ImageInspector({

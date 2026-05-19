@@ -7,6 +7,14 @@ export const DEFAULT_FONT_FAMILY =
 export type TextAlign = "left" | "center" | "right";
 export type ImageFit = "cover" | "contain";
 export type ImageShape = "rect" | "circle";
+export type ShapeFillMode = "solid" | "gradient";
+export type GradientDirection = "horizontal" | "vertical" | "diagonal-down" | "diagonal-up";
+
+export type ShapeGradient = {
+  startColor: string;
+  endColor: string;
+  direction: GradientDirection;
+};
 
 type ElementBase = {
   id: string;
@@ -32,6 +40,8 @@ export type TextElement = ElementBase & {
 export type ShapeElement = ElementBase & {
   type: "rect" | "ellipse";
   fill: string;
+  fillMode?: ShapeFillMode;
+  gradient?: ShapeGradient;
   stroke?: string;
   strokeWidth?: number;
   radius?: number;
@@ -87,6 +97,29 @@ export function createTextElement(): TextElement {
     fontWeight: 800,
     align: "center",
     lineHeight: 1.18,
+  };
+}
+
+export function createRectElement(): ShapeElement {
+  return {
+    id: `rect-${Date.now()}`,
+    name: "自定义矩形",
+    type: "rect",
+    x: 320,
+    y: 720,
+    width: 300,
+    height: 180,
+    fill: "#ffffff",
+    fillMode: "gradient",
+    gradient: {
+      startColor: "#ffffff",
+      endColor: "#99f19c",
+      direction: "horizontal",
+    },
+    stroke: "#ffffff",
+    strokeWidth: 0,
+    radius: 16,
+    opacity: 1,
   };
 }
 

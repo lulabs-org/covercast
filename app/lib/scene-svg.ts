@@ -57,14 +57,24 @@ export function elementBounds(element: SceneElement) {
 export function sceneToSvgMarkup(scene: Scene): string {
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" viewBox="0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}" role="img" aria-label="Covercast OBS live background">`,
-    renderDefs("covercast"),
+    renderDefs("covercast", scene),
     renderBackground(scene.backgroundColor, scene.backgroundOpacity),
     ...scene.elements.map((element) => renderElement(element, "covercast")),
     "</svg>",
   ].join("");
 }
 
-export function renderDefs(prefix: string): string {
+export function renderDefs(prefix: string, scene?: Scene): string {
+  const customGradients =
+    scene?.elements
+      .filter(
+        (element): element is ShapeElement & {
+          gradient: NonNullable<ShapeElement["gradient"]>;
+        } => isGradientShape(element),
+      )
+      .map((element) => renderShapeGradient(element, prefix))
+      .join("") ?? "";
+
   return `
     <defs>
       <radialGradient id="${prefix}-bg-glow" cx="48%" cy="28%" r="72%">
@@ -84,6 +94,7 @@ export function renderDefs(prefix: string): string {
       <filter id="${prefix}-soft-shadow" x="-20%" y="-20%" width="140%" height="140%">
         <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#142070" flood-opacity="0.28" />
       </filter>
+      ${customGradients}
     </defs>
   `;
 }
@@ -112,7 +123,7 @@ function renderElement(element: SceneElement, prefix: string): string {
 
 function renderShapeElement(element: ShapeElement, prefix: string): string {
   const opacity = element.opacity ?? 1;
-  const common = `fill="${escapeAttribute(resolvePaint(element.fill, prefix))}" opacity="${opacity}"`;
+  const common = `fill="${escapeAttribute(resolveShapeFill(element, prefix))}" opacity="${opacity}"`;
   const stroke = element.stroke
     ? ` stroke="${escapeAttribute(element.stroke)}" stroke-width="${element.strokeWidth ?? 1}"`
     : "";
@@ -122,6 +133,59 @@ function renderShapeElement(element: ShapeElement, prefix: string): string {
   }
 
   return `<rect x="${element.x}" y="${element.y}" width="${element.width}" height="${element.height}" rx="${element.radius ?? 0}" ${common}${stroke} />`;
+}
+
+function resolveShapeFill(element: ShapeElement, prefix: string): string {
+  if (isGradientShape(element)) {
+    return `url(#${shapeGradientId(prefix, element.id)})`;
+  }
+
+  return resolvePaint(element.fill, prefix);
+}
+
+function renderShapeGradient(
+  element: ShapeElement & { gradient: NonNullable<ShapeElement["gradient"]> },
+  prefix: string,
+): string {
+  const gradient = element.gradient;
+  const vector = gradientVector(gradient.direction);
+
+  return `
+    <linearGradient id="${shapeGradientId(prefix, element.id)}" x1="${vector.x1}" y1="${vector.y1}" x2="${vector.x2}" y2="${vector.y2}">
+      <stop offset="0%" stop-color="${escapeAttribute(gradient.startColor)}" />
+      <stop offset="100%" stop-color="${escapeAttribute(gradient.endColor)}" />
+    </linearGradient>
+  `;
+}
+
+function isGradientShape(element: SceneElement): element is ShapeElement & {
+  gradient: NonNullable<ShapeElement["gradient"]>;
+} {
+  return (
+    (element.type === "rect" || element.type === "ellipse") &&
+    element.fillMode === "gradient" &&
+    Boolean(element.gradient)
+  );
+}
+
+function shapeGradientId(prefix: string, elementId: string): string {
+  return `${prefix}-shape-gradient-${elementId}`;
+}
+
+export function gradientVector(direction: NonNullable<ShapeElement["gradient"]>["direction"]) {
+  if (direction === "vertical") {
+    return { x1: "0%", y1: "0%", x2: "0%", y2: "100%" };
+  }
+
+  if (direction === "diagonal-down") {
+    return { x1: "0%", y1: "0%", x2: "100%", y2: "100%" };
+  }
+
+  if (direction === "diagonal-up") {
+    return { x1: "0%", y1: "100%", x2: "100%", y2: "0%" };
+  }
+
+  return { x1: "0%", y1: "0%", x2: "100%", y2: "0%" };
 }
 
 function renderTextElement(element: TextElement): string {
