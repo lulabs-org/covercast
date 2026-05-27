@@ -36,6 +36,7 @@ import {
   type TextElement,
 } from "../lib/scene";
 import { sceneToSvgMarkup } from "../lib/scene-svg";
+import { computeGuides, computeResizeSnap, computeSnap, createResizeSnapState, createSnapState, computeSpacingGuides, type GuideLine, type MeasurementGuide, type ResizeLabel, type ResizeSnapState, type SnapState } from "../lib/smart-guide";
 import SceneCanvas from "./SceneCanvas";
 
 type DragState = {
@@ -146,12 +147,19 @@ export default function SceneEditor() {
   const [canvasZoom, setCanvasZoom] = useState(1);
   const [canvasFitWidth, setCanvasFitWidth] = useState(CANVAS_PREVIEW_MAX_WIDTH);
   const [drag, setDrag] = useState<DragState | null>(null);
+  const [guides, setGuides] = useState<GuideLine[]>([]);
+  const [spacingGuides, setSpacingGuides] = useState<MeasurementGuide[]>([]);
+  const [resizeLabel, setResizeLabel] = useState<ResizeLabel | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const stageViewportRef = useRef<HTMLDivElement>(null);
   const elementClipboardRef = useRef<SceneElement | null>(null);
   const pasteOffsetRef = useRef(1);
   const sceneElementsRef = useRef<SceneElement[]>(scene.elements);
   const selectedElementRef = useRef<SceneElement | null>(null);
+  const snapStateRef = useRef<SnapState>(createSnapState());
+  const resizeSnapStateRef = useRef<ResizeSnapState>(createResizeSnapState());
+  const rafHandleRef = useRef<number>(0);
+  const latestMoveRef = useRef<{ dx: number; dy: number } | null>(null);
   const [activeSlotId, setActiveSlotId] = useState<string>("default");
   const [templateSlots, setTemplateSlots] = useState<SceneSlotInfo[]>([]);
   const [canPasteElement, setCanPasteElement] = useState(false);
@@ -445,6 +453,12 @@ export default function SceneEditor() {
 
     const activeDrag = drag;
 
+    if (activeDrag.mode === "move") {
+      snapStateRef.current = createSnapState();
+    } else {
+      resizeSnapStateRef.current = createResizeSnapState();
+    }
+
     function handlePointerMove(event: PointerEvent) {
       const svg = svgRef.current;
       if (!svg) {
@@ -452,8 +466,127 @@ export default function SceneEditor() {
       }
 
       const point = getSvgPoint(svg, event.clientX, event.clientY);
-      const dx = point.x - activeDrag.startX;
-      const dy = point.y - activeDrag.startY;
+      latestMoveRef.current = {
+        dx: point.x - activeDrag.startX,
+        dy: point.y - activeDrag.startY,
+      };
+
+      if (rafHandleRef.current === 0) {
+        rafHandleRef.current = requestAnimationFrame(processMoveFrame);
+      }
+    }
+
+    function processMoveFrame() {
+      rafHandleRef.current = 0;
+
+      const latest = latestMoveRef.current;
+      if (!latest) {
+        return;
+      }
+
+      if (activeDrag.mode === "move") {
+        setResizeLabel(null);
+        const rawX = clamp(
+          activeDrag.element.x + latest.dx,
+          -activeDrag.element.width + 24,
+          CANVAS_WIDTH - 24,
+        );
+        const rawY = clamp(
+          activeDrag.element.y + latest.dy,
+          -activeDrag.element.height + 24,
+          CANVAS_HEIGHT - 24,
+        );
+
+        const otherElements = sceneElementsRef.current.filter(
+          (el) => el.id !== activeDrag.id && el.hidden !== true,
+        );
+
+        const result = computeSnap(
+          { x: rawX, y: rawY, width: activeDrag.element.width, height: activeDrag.element.height },
+          otherElements,
+          snapStateRef.current,
+        );
+
+        snapStateRef.current = result.snapState;
+        setGuides(result.guides);
+
+        const spacing = computeSpacingGuides(
+          result.snappedRect,
+          otherElements,
+        );
+        setSpacingGuides(spacing);
+
+        setScene((currentScene) => ({
+          ...currentScene,
+          elements: currentScene.elements.map((element) => {
+            if (element.id !== activeDrag.id) {
+              return element;
+            }
+
+            return {
+              ...element,
+              x: result.snappedRect.x,
+              y: result.snappedRect.y,
+            } as SceneElement;
+          }),
+        }));
+        markSceneEdited();
+        return;
+      }
+
+      const rawWidth = clamp(
+        activeDrag.element.width + latest.dx,
+        minimumWidth(activeDrag.element),
+        CANVAS_WIDTH - activeDrag.element.x,
+      );
+      const rawHeight = clamp(
+        activeDrag.element.height + latest.dy,
+        minimumHeight(activeDrag.element),
+        CANVAS_HEIGHT - activeDrag.element.y,
+      );
+
+      const otherElements = sceneElementsRef.current.filter(
+        (el) => el.id !== activeDrag.id && el.hidden !== true,
+      );
+
+      const resizeSnap = computeResizeSnap(
+        { x: activeDrag.element.x, y: activeDrag.element.y, width: rawWidth, height: rawHeight },
+        otherElements,
+        resizeSnapStateRef.current,
+      );
+
+      resizeSnapStateRef.current = resizeSnap.snapState;
+
+      const snappedWidth = clamp(
+        resizeSnap.snappedWidth,
+        minimumWidth(activeDrag.element),
+        CANVAS_WIDTH - activeDrag.element.x,
+      );
+      const snappedHeight = clamp(
+        resizeSnap.snappedHeight,
+        minimumHeight(activeDrag.element),
+        CANVAS_HEIGHT - activeDrag.element.y,
+      );
+
+      const snappedRect = {
+        x: activeDrag.element.x,
+        y: activeDrag.element.y,
+        width: snappedWidth,
+        height: snappedHeight,
+      };
+
+      const resizeGuides = computeGuides(snappedRect, otherElements);
+      setGuides(resizeGuides);
+
+      const resizeSpacing = computeSpacingGuides(snappedRect, otherElements);
+      setSpacingGuides(resizeSpacing);
+
+      setResizeLabel({
+        x: activeDrag.element.x + snappedWidth / 2,
+        y: activeDrag.element.y + snappedHeight,
+        w: Math.round(snappedWidth),
+        h: Math.round(snappedHeight),
+      });
 
       setScene((currentScene) => ({
         ...currentScene,
@@ -462,34 +595,10 @@ export default function SceneEditor() {
             return element;
           }
 
-          if (activeDrag.mode === "move") {
-            return {
-              ...element,
-              x: clamp(
-                activeDrag.element.x + dx,
-                -activeDrag.element.width + 24,
-                CANVAS_WIDTH - 24,
-              ),
-              y: clamp(
-                activeDrag.element.y + dy,
-                -activeDrag.element.height + 24,
-                CANVAS_HEIGHT - 24,
-              ),
-            } as SceneElement;
-          }
-
           return {
             ...element,
-            width: clamp(
-              activeDrag.element.width + dx,
-              minimumWidth(activeDrag.element),
-              CANVAS_WIDTH - activeDrag.element.x,
-            ),
-            height: clamp(
-              activeDrag.element.height + dy,
-              minimumHeight(activeDrag.element),
-              CANVAS_HEIGHT - activeDrag.element.y,
-            ),
+            width: snappedWidth,
+            height: snappedHeight,
           } as SceneElement;
         }),
       }));
@@ -497,13 +606,25 @@ export default function SceneEditor() {
     }
 
     function handlePointerUp() {
+      if (rafHandleRef.current !== 0) {
+        cancelAnimationFrame(rafHandleRef.current);
+        rafHandleRef.current = 0;
+      }
+      latestMoveRef.current = null;
       setDrag(null);
+      setGuides([]);
+      setSpacingGuides([]);
+      setResizeLabel(null);
     }
 
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp, { once: true });
 
     return () => {
+      if (rafHandleRef.current !== 0) {
+        cancelAnimationFrame(rafHandleRef.current);
+        rafHandleRef.current = 0;
+      }
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     };
@@ -1432,6 +1553,9 @@ export default function SceneEditor() {
                   idPrefix="editor"
                   interactive
                   selectedId={selectedId}
+                  guides={guides}
+                  spacingGuides={spacingGuides}
+                  resizeLabel={resizeLabel}
                   svgRef={svgRef}
                   onCanvasPointerDown={() => setSelectedId("")}
                   onElementPointerDown={handleElementPointerDown}
