@@ -17,6 +17,71 @@ import {
 } from "../lib/scene-svg";
 import type { GuideLine, MeasurementGuide, ResizeLabel } from "../lib/smart-guide";
 
+type ArrowCapLine = {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+};
+
+type ArrowCap = {
+  line1: ArrowCapLine;
+  line2: ArrowCapLine;
+};
+
+type ArrowDirection = "left" | "right" | "top" | "bottom";
+
+function computeArrowCap(
+  x: number,
+  y: number,
+  orientation: "horizontal" | "vertical",
+  direction: ArrowDirection,
+  arrowLen: number,
+  arrowW: number
+): ArrowCap {
+  if (orientation === "horizontal") {
+    if (direction === "left") {
+      return {
+        line1: { x1: x, y1: y, x2: x + arrowLen, y2: y - arrowW },
+        line2: { x1: x, y1: y, x2: x + arrowLen, y2: y + arrowW },
+      };
+    } else {
+      return {
+        line1: { x1: x, y1: y, x2: x - arrowLen, y2: y - arrowW },
+        line2: { x1: x, y1: y, x2: x - arrowLen, y2: y + arrowW },
+      };
+    }
+  } else {
+    if (direction === "top") {
+      return {
+        line1: { x1: x, y1: y, x2: x - arrowW, y2: y + arrowLen },
+        line2: { x1: x, y1: y, x2: x + arrowW, y2: y + arrowLen },
+      };
+    } else {
+      return {
+        line1: { x1: x, y1: y, x2: x - arrowW, y2: y - arrowLen },
+        line2: { x1: x, y1: y, x2: x + arrowW, y2: y - arrowLen },
+      };
+    }
+  }
+}
+
+type CrossMarker = {
+  line1: ArrowCapLine;
+  line2: ArrowCapLine;
+};
+
+function computeCrossMarker(
+  x: number,
+  y: number,
+  size: number
+): CrossMarker {
+  return {
+    line1: { x1: x - size, y1: y - size, x2: x + size, y2: y + size },
+    line2: { x1: x - size, y1: y + size, x2: x + size, y2: y - size },
+  };
+}
+
 type SceneCanvasProps = {
   scene: Scene;
   className?: string;
@@ -188,17 +253,56 @@ export default function SceneCanvas({
 
       {guides && guides.length > 0 ? (
         <g className="smart-guides-overlay" pointerEvents="none">
-          {guides.map((guide, index) => (
-            <line
-              key={`guide-${guide.type}-${index}`}
-              x1={guide.x1}
-              y1={guide.y1}
-              x2={guide.x2}
-              y2={guide.y2}
-              stroke="#ff5c8a"
-              strokeWidth="2"
-            />
-          ))}
+          {guides.map((guide, index) => {
+            const crossSize = 6;
+            const cross1 = computeCrossMarker(guide.x1, guide.y1, crossSize);
+            const cross2 = computeCrossMarker(guide.x2, guide.y2, crossSize);
+
+            return (
+              <g key={`guide-${guide.type}-${index}`}>
+                <line
+                  x1={guide.x1}
+                  y1={guide.y1}
+                  x2={guide.x2}
+                  y2={guide.y2}
+                  stroke="#ff5c8a"
+                  strokeWidth="2"
+                />
+                <line
+                  x1={cross1.line1.x1}
+                  y1={cross1.line1.y1}
+                  x2={cross1.line1.x2}
+                  y2={cross1.line1.y2}
+                  stroke="#ff5c8a"
+                  strokeWidth="2"
+                />
+                <line
+                  x1={cross1.line2.x1}
+                  y1={cross1.line2.y1}
+                  x2={cross1.line2.x2}
+                  y2={cross1.line2.y2}
+                  stroke="#ff5c8a"
+                  strokeWidth="2"
+                />
+                <line
+                  x1={cross2.line1.x1}
+                  y1={cross2.line1.y1}
+                  x2={cross2.line1.x2}
+                  y2={cross2.line1.y2}
+                  stroke="#ff5c8a"
+                  strokeWidth="2"
+                />
+                <line
+                  x1={cross2.line2.x1}
+                  y1={cross2.line2.y1}
+                  x2={cross2.line2.x2}
+                  y2={cross2.line2.y2}
+                  stroke="#ff5c8a"
+                  strokeWidth="2"
+                />
+              </g>
+            );
+          })}
         </g>
       ) : null}
 
@@ -207,25 +311,24 @@ export default function SceneCanvas({
           {spacingGuides.map((mg, index) => {
             const { measurementLine, extensionLines, label, direction } = mg;
             const isHorizontal = direction === "horizontal";
-            const arrowLen = 8;
-            const arrowW = 6;
+            const arrowSize = 6;
 
-            const dx = measurementLine.x2 - measurementLine.x1;
-            const dy = measurementLine.y2 - measurementLine.y1;
-
-            const a1x1 = isHorizontal ? measurementLine.x1 : measurementLine.x1 - arrowW;
-            const a1y1 = isHorizontal ? measurementLine.y1 - arrowW : measurementLine.y1;
-            const a1x2 = isHorizontal ? measurementLine.x1 + arrowLen * Math.sign(dx) : measurementLine.x1;
-            const a1y2 = isHorizontal ? measurementLine.y1 : measurementLine.y1 + arrowLen * Math.sign(dy);
-            const a1x3 = isHorizontal ? measurementLine.x1 : measurementLine.x1 + arrowW;
-            const a1y3 = isHorizontal ? measurementLine.y1 + arrowW : measurementLine.y1;
-
-            const a2x1 = isHorizontal ? measurementLine.x2 : measurementLine.x2 - arrowW;
-            const a2y1 = isHorizontal ? measurementLine.y2 - arrowW : measurementLine.y2;
-            const a2x2 = isHorizontal ? measurementLine.x2 - arrowLen * Math.sign(dx) : measurementLine.x2;
-            const a2y2 = isHorizontal ? measurementLine.y2 : measurementLine.y2 - arrowLen * Math.sign(dy);
-            const a2x3 = isHorizontal ? measurementLine.x2 : measurementLine.x2 + arrowW;
-            const a2y3 = isHorizontal ? measurementLine.y2 + arrowW : measurementLine.y2;
+            const cap1 = computeArrowCap(
+              measurementLine.x1,
+              measurementLine.y1,
+              direction,
+              isHorizontal ? "left" : "top",
+              arrowSize,
+              arrowSize
+            );
+            const cap2 = computeArrowCap(
+              measurementLine.x2,
+              measurementLine.y2,
+              direction,
+              isHorizontal ? "right" : "bottom",
+              arrowSize,
+              arrowSize
+            );
 
             const labelText = String(label.value);
             const labelW = labelText.length * 10 + 10;
@@ -262,13 +365,37 @@ export default function SceneCanvas({
                   stroke="#ff5c8a"
                   strokeWidth="2"
                 />
-                <polygon
-                  points={`${a1x1},${a1y1} ${a1x2},${a1y2} ${a1x3},${a1y3}`}
-                  fill="#ff5c8a"
+                <line
+                  x1={cap1.line1.x1}
+                  y1={cap1.line1.y1}
+                  x2={cap1.line1.x2}
+                  y2={cap1.line1.y2}
+                  stroke="#ff5c8a"
+                  strokeWidth="2"
                 />
-                <polygon
-                  points={`${a2x1},${a2y1} ${a2x2},${a2y2} ${a2x3},${a2y3}`}
-                  fill="#ff5c8a"
+                <line
+                  x1={cap1.line2.x1}
+                  y1={cap1.line2.y1}
+                  x2={cap1.line2.x2}
+                  y2={cap1.line2.y2}
+                  stroke="#ff5c8a"
+                  strokeWidth="2"
+                />
+                <line
+                  x1={cap2.line1.x1}
+                  y1={cap2.line1.y1}
+                  x2={cap2.line1.x2}
+                  y2={cap2.line1.y2}
+                  stroke="#ff5c8a"
+                  strokeWidth="2"
+                />
+                <line
+                  x1={cap2.line2.x1}
+                  y1={cap2.line2.y1}
+                  x2={cap2.line2.x2}
+                  y2={cap2.line2.y2}
+                  stroke="#ff5c8a"
+                  strokeWidth="2"
                 />
                 {label.value > 0 ? (
                   <>
