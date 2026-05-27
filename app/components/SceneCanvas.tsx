@@ -15,6 +15,7 @@ import {
   textAnchorForAlign,
   textX,
 } from "../lib/scene-svg";
+import type { GuideLine, ResizeLabel, SpacingGuide } from "../lib/smart-guide";
 
 type SceneCanvasProps = {
   scene: Scene;
@@ -22,6 +23,9 @@ type SceneCanvasProps = {
   idPrefix?: string;
   interactive?: boolean;
   selectedId?: string | null;
+  guides?: GuideLine[];
+  spacingGuides?: SpacingGuide[];
+  resizeLabel?: ResizeLabel | null;
   svgRef?: Ref<SVGSVGElement>;
   onCanvasPointerDown?: (event: PointerEvent<SVGSVGElement>) => void;
   onElementPointerDown?: (
@@ -40,6 +44,9 @@ export default function SceneCanvas({
   idPrefix = "scene",
   interactive = false,
   selectedId,
+  guides,
+  spacingGuides,
+  resizeLabel,
   svgRef,
   onCanvasPointerDown,
   onElementPointerDown,
@@ -178,6 +185,137 @@ export default function SceneCanvas({
           onResizePointerDown={onResizePointerDown}
         />
       ) : null}
+
+      {guides && guides.length > 0 ? (
+        <g className="smart-guides-overlay" pointerEvents="none">
+          {guides.map((guide, index) => (
+            <line
+              key={`guide-${guide.type}-${index}`}
+              x1={guide.x1}
+              y1={guide.y1}
+              x2={guide.x2}
+              y2={guide.y2}
+              stroke="#ff5c8a"
+              strokeWidth="2"
+            />
+          ))}
+        </g>
+      ) : null}
+
+      {spacingGuides && spacingGuides.length > 0 ? (
+        <g className="spacing-guides-overlay" pointerEvents="none">
+          {spacingGuides.map((sg, index) => {
+            const arrowLen = 8;
+            const arrowW = 6;
+            const isHorizontal = sg.direction === "horizontal";
+
+            const dx = sg.x2 - sg.x1;
+            const dy = sg.y2 - sg.y1;
+
+            const a1x1 = isHorizontal ? sg.x1 : sg.x1 - arrowW;
+            const a1y1 = isHorizontal ? sg.y1 - arrowW : sg.y1;
+            const a1x2 = isHorizontal ? sg.x1 + arrowLen * Math.sign(dx) : sg.x1;
+            const a1y2 = isHorizontal ? sg.y1 : sg.y1 + arrowLen * Math.sign(dy);
+            const a1x3 = isHorizontal ? sg.x1 : sg.x1 + arrowW;
+            const a1y3 = isHorizontal ? sg.y1 + arrowW : sg.y1;
+
+            const a2x1 = isHorizontal ? sg.x2 : sg.x2 - arrowW;
+            const a2y1 = isHorizontal ? sg.y2 - arrowW : sg.y2;
+            const a2x2 = isHorizontal ? sg.x2 - arrowLen * Math.sign(dx) : sg.x2;
+            const a2y2 = isHorizontal ? sg.y2 : sg.y2 - arrowLen * Math.sign(dy);
+            const a2x3 = isHorizontal ? sg.x2 : sg.x2 + arrowW;
+            const a2y3 = isHorizontal ? sg.y2 + arrowW : sg.y2;
+
+            const labelText = String(sg.value);
+            const labelW = labelText.length * 10 + 10;
+            const labelH = 22;
+            const labelGap = 5;
+
+            const labelRx = isHorizontal
+              ? (sg.x1 + sg.x2) / 2 - labelW / 2
+              : sg.x1 + labelGap;
+            const labelRy = isHorizontal
+              ? sg.y1 - labelGap - labelH
+              : (sg.y1 + sg.y2) / 2 - labelH / 2;
+            const textCx = isHorizontal
+              ? (sg.x1 + sg.x2) / 2
+              : labelRx + labelW / 2;
+            const textCy = isHorizontal
+              ? labelRy + labelH / 2
+              : (sg.y1 + sg.y2) / 2;
+
+            return (
+              <g key={`spacing-${sg.direction}-${index}`}>
+                <line
+                  x1={sg.x1}
+                  y1={sg.y1}
+                  x2={sg.x2}
+                  y2={sg.y2}
+                  stroke="#ff5c8a"
+                  strokeWidth="2"
+                />
+                <polygon
+                  points={`${a1x1},${a1y1} ${a1x2},${a1y2} ${a1x3},${a1y3}`}
+                  fill="#ff5c8a"
+                />
+                <polygon
+                  points={`${a2x1},${a2y1} ${a2x2},${a2y2} ${a2x3},${a2y3}`}
+                  fill="#ff5c8a"
+                />
+                <rect
+                  x={labelRx} y={labelRy}
+                  width={labelW} height={labelH}
+                  rx={3} ry={3}
+                  fill="#ff5c8a"
+                />
+                <text
+                  x={textCx}
+                  y={textCy}
+                  fill="#ffffff"
+                  fontSize="16"
+                  fontFamily="PingFang SC, Microsoft YaHei, Arial, sans-serif"
+                  fontWeight="600"
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                >
+                  {labelText}
+                </text>
+              </g>
+            );
+          })}
+        </g>
+      ) : null}
+
+      {resizeLabel ? (() => {
+        const labelText = `${resizeLabel.w} × ${resizeLabel.h}`;
+        const labelW = labelText.length * 10 + 10;
+        const labelH = 22;
+        const labelGap = 5;
+        const labelRx = resizeLabel.x - labelW / 2;
+        const labelRy = resizeLabel.y + labelGap;
+        return (
+          <g className="resize-label-overlay" pointerEvents="none">
+            <rect
+              x={labelRx} y={labelRy}
+              width={labelW} height={labelH}
+              rx={3} ry={3}
+              fill="#ff5c8a"
+            />
+            <text
+              x={resizeLabel.x}
+              y={labelRy + labelH / 2}
+              fill="#ffffff"
+              fontSize="16"
+              fontFamily="PingFang SC, Microsoft YaHei, Arial, sans-serif"
+              fontWeight="600"
+              textAnchor="middle"
+              dominantBaseline="central"
+            >
+              {labelText}
+            </text>
+          </g>
+        );
+      })() : null}
     </svg>
   );
 }
