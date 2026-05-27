@@ -36,7 +36,7 @@ import {
   type TextElement,
 } from "../lib/scene";
 import { sceneToSvgMarkup } from "../lib/scene-svg";
-import { computeGuides, computeResizeSnap, computeSnap, createResizeSnapState, createSnapState, computeSpacingGuides, type GuideLine, type ResizeLabel, type ResizeSnapState, type SnapState, type SpacingGuide } from "../lib/smart-guide";
+import { computeGuides, computeResizeSnap, computeSnap, createResizeSnapState, createSnapState, computeSpacingGuides, type GuideLine, type MeasurementGuide, type ResizeLabel, type ResizeSnapState, type SnapState } from "../lib/smart-guide";
 import SceneCanvas from "./SceneCanvas";
 
 type DragState = {
@@ -148,7 +148,7 @@ export default function SceneEditor() {
   const [canvasFitWidth, setCanvasFitWidth] = useState(CANVAS_PREVIEW_MAX_WIDTH);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [guides, setGuides] = useState<GuideLine[]>([]);
-  const [spacingGuides, setSpacingGuides] = useState<SpacingGuide[]>([]);
+  const [spacingGuides, setSpacingGuides] = useState<MeasurementGuide[]>([]);
   const [resizeLabel, setResizeLabel] = useState<ResizeLabel | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const stageViewportRef = useRef<HTMLDivElement>(null);

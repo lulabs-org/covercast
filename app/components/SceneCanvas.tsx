@@ -15,7 +15,7 @@ import {
   textAnchorForAlign,
   textX,
 } from "../lib/scene-svg";
-import type { GuideLine, ResizeLabel, SpacingGuide } from "../lib/smart-guide";
+import type { GuideLine, MeasurementGuide, ResizeLabel } from "../lib/smart-guide";
 
 type SceneCanvasProps = {
   scene: Scene;
@@ -24,7 +24,7 @@ type SceneCanvasProps = {
   interactive?: boolean;
   selectedId?: string | null;
   guides?: GuideLine[];
-  spacingGuides?: SpacingGuide[];
+  spacingGuides?: MeasurementGuide[];
   resizeLabel?: ResizeLabel | null;
   svgRef?: Ref<SVGSVGElement>;
   onCanvasPointerDown?: (event: PointerEvent<SVGSVGElement>) => void;
@@ -204,53 +204,61 @@ export default function SceneCanvas({
 
       {spacingGuides && spacingGuides.length > 0 ? (
         <g className="spacing-guides-overlay" pointerEvents="none">
-          {spacingGuides.map((sg, index) => {
+          {spacingGuides.map((mg, index) => {
+            const { measurementLine, extensionLines, label, direction } = mg;
+            const isHorizontal = direction === "horizontal";
             const arrowLen = 8;
             const arrowW = 6;
-            const isHorizontal = sg.direction === "horizontal";
 
-            const dx = sg.x2 - sg.x1;
-            const dy = sg.y2 - sg.y1;
+            const dx = measurementLine.x2 - measurementLine.x1;
+            const dy = measurementLine.y2 - measurementLine.y1;
 
-            const a1x1 = isHorizontal ? sg.x1 : sg.x1 - arrowW;
-            const a1y1 = isHorizontal ? sg.y1 - arrowW : sg.y1;
-            const a1x2 = isHorizontal ? sg.x1 + arrowLen * Math.sign(dx) : sg.x1;
-            const a1y2 = isHorizontal ? sg.y1 : sg.y1 + arrowLen * Math.sign(dy);
-            const a1x3 = isHorizontal ? sg.x1 : sg.x1 + arrowW;
-            const a1y3 = isHorizontal ? sg.y1 + arrowW : sg.y1;
+            const a1x1 = isHorizontal ? measurementLine.x1 : measurementLine.x1 - arrowW;
+            const a1y1 = isHorizontal ? measurementLine.y1 - arrowW : measurementLine.y1;
+            const a1x2 = isHorizontal ? measurementLine.x1 + arrowLen * Math.sign(dx) : measurementLine.x1;
+            const a1y2 = isHorizontal ? measurementLine.y1 : measurementLine.y1 + arrowLen * Math.sign(dy);
+            const a1x3 = isHorizontal ? measurementLine.x1 : measurementLine.x1 + arrowW;
+            const a1y3 = isHorizontal ? measurementLine.y1 + arrowW : measurementLine.y1;
 
-            const a2x1 = isHorizontal ? sg.x2 : sg.x2 - arrowW;
-            const a2y1 = isHorizontal ? sg.y2 - arrowW : sg.y2;
-            const a2x2 = isHorizontal ? sg.x2 - arrowLen * Math.sign(dx) : sg.x2;
-            const a2y2 = isHorizontal ? sg.y2 : sg.y2 - arrowLen * Math.sign(dy);
-            const a2x3 = isHorizontal ? sg.x2 : sg.x2 + arrowW;
-            const a2y3 = isHorizontal ? sg.y2 + arrowW : sg.y2;
+            const a2x1 = isHorizontal ? measurementLine.x2 : measurementLine.x2 - arrowW;
+            const a2y1 = isHorizontal ? measurementLine.y2 - arrowW : measurementLine.y2;
+            const a2x2 = isHorizontal ? measurementLine.x2 - arrowLen * Math.sign(dx) : measurementLine.x2;
+            const a2y2 = isHorizontal ? measurementLine.y2 : measurementLine.y2 - arrowLen * Math.sign(dy);
+            const a2x3 = isHorizontal ? measurementLine.x2 : measurementLine.x2 + arrowW;
+            const a2y3 = isHorizontal ? measurementLine.y2 + arrowW : measurementLine.y2;
 
-            const labelText = String(sg.value);
+            const labelText = String(label.value);
             const labelW = labelText.length * 10 + 10;
             const labelH = 22;
             const labelGap = 5;
 
             const labelRx = isHorizontal
-              ? (sg.x1 + sg.x2) / 2 - labelW / 2
-              : sg.x1 + labelGap;
+              ? label.x - labelW / 2
+              : label.x + labelGap;
             const labelRy = isHorizontal
-              ? sg.y1 - labelGap - labelH
-              : (sg.y1 + sg.y2) / 2 - labelH / 2;
-            const textCx = isHorizontal
-              ? (sg.x1 + sg.x2) / 2
-              : labelRx + labelW / 2;
-            const textCy = isHorizontal
-              ? labelRy + labelH / 2
-              : (sg.y1 + sg.y2) / 2;
+              ? label.y - labelGap - labelH
+              : label.y - labelH / 2;
 
             return (
-              <g key={`spacing-${sg.direction}-${index}`}>
+              <g key={`measurement-${direction}-${index}`}>
+                {extensionLines.map((ext, extIndex) => (
+                  <line
+                    key={`ext-${extIndex}`}
+                    x1={ext.x1}
+                    y1={ext.y1}
+                    x2={ext.x2}
+                    y2={ext.y2}
+                    stroke="#ff5c8a"
+                    strokeWidth="2"
+                    strokeDasharray="4 4"
+                    opacity="0.6"
+                  />
+                ))}
                 <line
-                  x1={sg.x1}
-                  y1={sg.y1}
-                  x2={sg.x2}
-                  y2={sg.y2}
+                  x1={measurementLine.x1}
+                  y1={measurementLine.y1}
+                  x2={measurementLine.x2}
+                  y2={measurementLine.y2}
                   stroke="#ff5c8a"
                   strokeWidth="2"
                 />
@@ -262,24 +270,31 @@ export default function SceneCanvas({
                   points={`${a2x1},${a2y1} ${a2x2},${a2y2} ${a2x3},${a2y3}`}
                   fill="#ff5c8a"
                 />
-                <rect
-                  x={labelRx} y={labelRy}
-                  width={labelW} height={labelH}
-                  rx={3} ry={3}
-                  fill="#ff5c8a"
-                />
-                <text
-                  x={textCx}
-                  y={textCy}
-                  fill="#ffffff"
-                  fontSize="16"
-                  fontFamily="PingFang SC, Microsoft YaHei, Arial, sans-serif"
-                  fontWeight="600"
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                >
-                  {labelText}
-                </text>
+                {label.value > 0 ? (
+                  <>
+                    <rect
+                      x={labelRx}
+                      y={labelRy}
+                      width={labelW}
+                      height={labelH}
+                      rx={3}
+                      ry={3}
+                      fill="#ff5c8a"
+                    />
+                    <text
+                      x={labelRx + labelW / 2}
+                      y={labelRy + labelH / 2}
+                      fill="#ffffff"
+                      fontSize="16"
+                      fontFamily="PingFang SC, Microsoft YaHei, Arial, sans-serif"
+                      fontWeight="600"
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                    >
+                      {labelText}
+                    </text>
+                  </>
+                ) : null}
               </g>
             );
           })}
