@@ -344,19 +344,51 @@ export default function SceneCanvas({
 
             return (
               <g key={`measurement-${direction}-${index}`}>
-                {extensionLines.map((ext, extIndex) => (
-                  <line
-                    key={`ext-${extIndex}`}
-                    x1={ext.x1}
-                    y1={ext.y1}
-                    x2={ext.x2}
-                    y2={ext.y2}
-                    stroke="#ff5c8a"
-                    strokeWidth="2"
-                    strokeDasharray="4 4"
-                    opacity="0.6"
-                  />
-                ))}
+                {extensionLines.map((ext, extIndex) => {
+                  const extTickLen = 6;
+                  const extIsVertical = ext.x1 === ext.x2;
+                  const extTick1x1 = extIsVertical ? ext.x1 - extTickLen : ext.x1;
+                  const extTick1y1 = extIsVertical ? ext.y1 : ext.y1 - extTickLen;
+                  const extTick1x2 = extIsVertical ? ext.x1 + extTickLen : ext.x1;
+                  const extTick1y2 = extIsVertical ? ext.y1 : ext.y1 + extTickLen;
+                  const extTick2x1 = extIsVertical ? ext.x2 - extTickLen : ext.x2;
+                  const extTick2y1 = extIsVertical ? ext.y2 : ext.y2 - extTickLen;
+                  const extTick2x2 = extIsVertical ? ext.x2 + extTickLen : ext.x2;
+                  const extTick2y2 = extIsVertical ? ext.y2 : ext.y2 + extTickLen;
+
+                  return (
+                    <g key={`ext-group-${extIndex}`}>
+                      <line
+                        x1={ext.x1}
+                        y1={ext.y1}
+                        x2={ext.x2}
+                        y2={ext.y2}
+                        stroke="#ff5c8a"
+                        strokeWidth="2"
+                        strokeDasharray="4 4"
+                        opacity="0.6"
+                      />
+                      <line
+                        x1={extTick1x1}
+                        y1={extTick1y1}
+                        x2={extTick1x2}
+                        y2={extTick1y2}
+                        stroke="#ff5c8a"
+                        strokeWidth="2"
+                        opacity="0.6"
+                      />
+                      <line
+                        x1={extTick2x1}
+                        y1={extTick2y1}
+                        x2={extTick2x2}
+                        y2={extTick2y2}
+                        stroke="#ff5c8a"
+                        strokeWidth="2"
+                        opacity="0.6"
+                      />
+                    </g>
+                  );
+                })}
                 <line
                   x1={measurementLine.x1}
                   y1={measurementLine.y1}
