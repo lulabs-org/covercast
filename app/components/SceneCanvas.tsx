@@ -95,6 +95,7 @@ type SceneCanvasProps = {
   resizeLabel?: ResizeLabel | null;
   svgRef?: Ref<SVGSVGElement>;
   marquee?: MarqueeState;
+  editingTextId?: string | null;
   onCanvasPointerDown?: (event: PointerEvent<SVGSVGElement>) => void;
   onElementPointerDown?: (
     elementId: string,
@@ -104,6 +105,7 @@ type SceneCanvasProps = {
     elementId: string,
     event: PointerEvent<SVGRectElement>,
   ) => void;
+  onTextElementDoubleClick?: (elementId: string) => void;
 };
 
 export default function SceneCanvas({
@@ -117,9 +119,11 @@ export default function SceneCanvas({
   resizeLabel,
   svgRef,
   marquee,
+  editingTextId,
   onCanvasPointerDown,
   onElementPointerDown,
   onResizePointerDown,
+  onTextElementDoubleClick,
 }: SceneCanvasProps) {
   const visibleElements = scene.elements.filter((element) => element.hidden !== true);
   const selectedElements = visibleElements.filter((element) => selectedIds.includes(element.id));
@@ -244,7 +248,9 @@ export default function SceneCanvas({
           element={element}
           idPrefix={idPrefix}
           interactive={interactive}
+          editingTextId={editingTextId}
           onPointerDown={onElementPointerDown}
+          onDoubleClick={onTextElementDoubleClick}
         />
       ))}
 
@@ -514,15 +520,19 @@ function ElementView({
   element,
   idPrefix,
   interactive,
+  editingTextId,
   onPointerDown,
+  onDoubleClick,
 }: {
   element: SceneElement;
   idPrefix: string;
   interactive: boolean;
+  editingTextId?: string | null;
   onPointerDown?: (
     elementId: string,
     event: PointerEvent<SVGGElement>,
   ) => void;
+  onDoubleClick?: (elementId: string) => void;
 }) {
   return (
     <g
@@ -536,8 +546,15 @@ function ElementView({
         event.stopPropagation();
         onPointerDown?.(element.id, event);
       }}
+      onDoubleClick={() => {
+        if (!interactive || element.type !== "text") {
+          return;
+        }
+        
+        onDoubleClick?.(element.id);
+      }}
     >
-      {renderElement(element, idPrefix, interactive)}
+      {renderElement(element, idPrefix, interactive, editingTextId)}
     </g>
   );
 }
@@ -546,13 +563,14 @@ function renderElement(
   element: SceneElement,
   idPrefix: string,
   interactive: boolean,
+  editingTextId?: string | null,
 ) {
   if (element.type === "text") {
-    return <TextElementView element={element} interactive={interactive} />;
+    return <TextElementView element={element} interactive={interactive} editing={editingTextId === element.id} />;
   }
 
   if (element.type === "image") {
-    return <ImageElementView element={element} idPrefix={idPrefix} />;
+    return <ImageElementView element={element} idPrefix={idPrefix} interactive={interactive} />;
   }
 
   return <ShapeElementView element={element} idPrefix={idPrefix} />;
@@ -599,9 +617,11 @@ function ShapeElementView({
 function TextElementView({
   element,
   interactive,
+  editing,
 }: {
   element: TextElement;
   interactive: boolean;
+  editing?: boolean;
 }) {
   const x = textX(element);
   const lines = element.text.split("\n");
@@ -627,6 +647,10 @@ function TextElementView({
         fontWeight={element.fontWeight}
         textAnchor={textAnchorForAlign(element.align)}
         opacity={element.opacity ?? 1}
+        style={{
+          userSelect: interactive && !editing ? "none" : undefined,
+          pointerEvents: interactive && !editing ? "none" : undefined,
+        }}
       >
         {lines.map((line, index) => (
           <tspan key={`${element.id}-${index}`} x={x} dy={index === 0 ? 0 : lineHeight}>
@@ -641,9 +665,11 @@ function TextElementView({
 function ImageElementView({
   element,
   idPrefix,
+  interactive,
 }: {
   element: ImageElement;
   idPrefix: string;
+  interactive?: boolean;
 }) {
   const opacity = element.opacity ?? 1;
   const preserveAspectRatio =
@@ -674,6 +700,10 @@ function ImageElementView({
           fontFamily="PingFang SC, Microsoft YaHei, Arial, sans-serif"
           fontSize={r * 0.72}
           fontWeight="900"
+          style={{
+            userSelect: interactive ? "none" : undefined,
+            pointerEvents: interactive ? "none" : undefined,
+          }}
         >
           {element.fallbackText || "图"}
         </text>

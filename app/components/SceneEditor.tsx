@@ -200,6 +200,7 @@ export default function SceneEditor() {
     templates: false,
     layers: false,
   });
+  const [editingTextId, setEditingTextId] = useState<string | null>(null);
 
   const selectedElement = useMemo(() => {
     if (selection.selectedIds.length !== 1) {
@@ -849,6 +850,10 @@ export default function SceneEditor() {
     const wasSelected = isSelected(selection, elementId);
 
     setSelection(handleElementClick(selection, elementId, isShiftPressed));
+    
+    if (editingTextId && editingTextId !== elementId) {
+      setEditingTextId(null);
+    }
 
     if (element.locked) {
       return;
@@ -878,6 +883,16 @@ export default function SceneEditor() {
       startY: point.y,
       element: { ...element },
     });
+  }
+
+  function handleTextElementDoubleClick(elementId: string) {
+    const element = scene.elements.find((item) => item.id === elementId);
+    if (!element || element.type !== "text") {
+      return;
+    }
+    
+    setSelection(selectSingle(selection, elementId));
+    setEditingTextId(elementId);
   }
 
   function handleResizePointerDown(
@@ -916,6 +931,10 @@ export default function SceneEditor() {
 
     if (!isShiftPressed) {
       setSelection((prev) => clearSelection(prev));
+    }
+    
+    if (editingTextId) {
+      setEditingTextId(null);
     }
 
     setMarquee((prev) => startMarquee(prev, point.x, point.y));
@@ -1747,9 +1766,11 @@ export default function SceneEditor() {
                   resizeLabel={resizeLabel}
                   svgRef={svgRef}
                   marquee={marquee}
+                  editingTextId={editingTextId}
                   onCanvasPointerDown={handleCanvasPointerDown}
                   onElementPointerDown={handleElementPointerDown}
                   onResizePointerDown={handleResizePointerDown}
+                  onTextElementDoubleClick={handleTextElementDoubleClick}
                 />
               </div>
             </div>
