@@ -7,11 +7,37 @@ export type GroupDragState = {
   elements: SceneElement[];
 };
 
+export type ResizeHandleType =
+  | "nw"
+  | "n"
+  | "ne"
+  | "e"
+  | "se"
+  | "s"
+  | "sw"
+  | "w";
+
+export type GroupResizeState = {
+  mode: "group-resize";
+  handle: ResizeHandleType;
+  startX: number;
+  startY: number;
+  elements: SceneElement[];
+  originalBounds: BoundingBox;
+};
+
 export type BoundingBox = {
   x: number;
   y: number;
   width: number;
   height: number;
+};
+
+export type ScaleMatrix = {
+  scaleX: number;
+  scaleY: number;
+  offsetX: number;
+  offsetY: number;
 };
 
 export function createGroupDragState(
@@ -24,6 +50,22 @@ export function createGroupDragState(
     startX,
     startY,
     elements: elements.map((el) => ({ ...el })),
+  };
+}
+
+export function createGroupResizeState(
+  handle: ResizeHandleType,
+  startX: number,
+  startY: number,
+  elements: SceneElement[]
+): GroupResizeState {
+  return {
+    mode: "group-resize",
+    handle,
+    startX,
+    startY,
+    elements: elements.map((el) => ({ ...el })),
+    originalBounds: computeBoundingBox(elements),
   };
 }
 
@@ -49,6 +91,168 @@ export function computeBoundingBox(elements: SceneElement[]): BoundingBox {
     y: minY,
     width: maxX - minX,
     height: maxY - minY,
+  };
+}
+
+export function computeScaleMatrix(
+  originalBounds: BoundingBox,
+  newBounds: BoundingBox
+): ScaleMatrix {
+  const scaleX = newBounds.width / originalBounds.width;
+  const scaleY = newBounds.height / originalBounds.height;
+
+  return {
+    scaleX,
+    scaleY,
+    offsetX: newBounds.x - originalBounds.x * scaleX,
+    offsetY: newBounds.y - originalBounds.y * scaleY,
+  };
+}
+
+export function applyScaleToElement(
+  element: SceneElement,
+  matrix: ScaleMatrix
+): SceneElement {
+  const newX = element.x * matrix.scaleX + matrix.offsetX;
+  const newY = element.y * matrix.scaleY + matrix.offsetY;
+  const newWidth = element.width * matrix.scaleX;
+  const newHeight = element.height * matrix.scaleY;
+
+  return {
+    ...element,
+    x: newX,
+    y: newY,
+    width: newWidth,
+    height: newHeight,
+  } as SceneElement;
+}
+
+export function applyGroupResize(
+  originalElements: SceneElement[],
+  originalBounds: BoundingBox,
+  newBounds: BoundingBox
+): SceneElement[] {
+  const matrix = computeScaleMatrix(originalBounds, newBounds);
+  return originalElements.map((element) => applyScaleToElement(element, matrix));
+}
+
+export function computeNewBoundsFromHandle(
+  originalBounds: BoundingBox,
+  handle: ResizeHandleType,
+  delta: { dx: number; dy: number },
+  maintainAspectRatio: boolean
+): BoundingBox {
+  const { x, y, width, height } = originalBounds;
+  const aspectRatio = width / height;
+
+  let newX = x;
+  let newY = y;
+  let newWidth = width;
+  let newHeight = height;
+
+  switch (handle) {
+    case "nw":
+      newX = x + delta.dx;
+      newY = y + delta.dy;
+      newWidth = width - delta.dx;
+      newHeight = height - delta.dy;
+      if (maintainAspectRatio) {
+        if (Math.abs(delta.dx) > Math.abs(delta.dy)) {
+          newHeight = newWidth / aspectRatio;
+          newY = y + height - newHeight;
+        } else {
+          newWidth = newHeight * aspectRatio;
+          newX = x + width - newWidth;
+        }
+      }
+      break;
+    case "n":
+      newY = y + delta.dy;
+      newHeight = height - delta.dy;
+      if (maintainAspectRatio) {
+        newWidth = newHeight * aspectRatio;
+        newX = x + (width - newWidth) / 2;
+      }
+      break;
+    case "ne":
+      newY = y + delta.dy;
+      newWidth = width + delta.dx;
+      newHeight = height - delta.dy;
+      if (maintainAspectRatio) {
+        if (Math.abs(delta.dx) > Math.abs(delta.dy)) {
+          newHeight = newWidth / aspectRatio;
+          newY = y + height - newHeight;
+        } else {
+          newWidth = newHeight * aspectRatio;
+        }
+      }
+      break;
+    case "e":
+      newWidth = width + delta.dx;
+      if (maintainAspectRatio) {
+        newHeight = newWidth / aspectRatio;
+        newY = y + (height - newHeight) / 2;
+      }
+      break;
+    case "se":
+      newWidth = width + delta.dx;
+      newHeight = height + delta.dy;
+      if (maintainAspectRatio) {
+        if (Math.abs(delta.dx) > Math.abs(delta.dy)) {
+          newHeight = newWidth / aspectRatio;
+        } else {
+          newWidth = newHeight * aspectRatio;
+        }
+      }
+      break;
+    case "s":
+      newHeight = height + delta.dy;
+      if (maintainAspectRatio) {
+        newWidth = newHeight * aspectRatio;
+        newX = x + (width - newWidth) / 2;
+      }
+      break;
+    case "sw":
+      newX = x + delta.dx;
+      newWidth = width - delta.dx;
+      newHeight = height + delta.dy;
+      if (maintainAspectRatio) {
+        if (Math.abs(delta.dx) > Math.abs(delta.dy)) {
+          newHeight = newWidth / aspectRatio;
+        } else {
+          newWidth = newHeight * aspectRatio;
+          newX = x + width - newWidth;
+        }
+      }
+      break;
+    case "w":
+      newX = x + delta.dx;
+      newWidth = width - delta.dx;
+      if (maintainAspectRatio) {
+        newHeight = newWidth / aspectRatio;
+        newY = y + (height - newHeight) / 2;
+      }
+      break;
+  }
+
+  if (newWidth < 10) {
+    newWidth = 10;
+    if (handle.includes("w")) {
+      newX = x + width - 10;
+    }
+  }
+  if (newHeight < 10) {
+    newHeight = 10;
+    if (handle.includes("n")) {
+      newY = y + height - 10;
+    }
+  }
+
+  return {
+    x: newX,
+    y: newY,
+    width: newWidth,
+    height: newHeight,
   };
 }
 

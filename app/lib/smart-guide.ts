@@ -957,3 +957,46 @@ export function computeResizeSnap(
     snapState: nextSnap,
   };
 }
+
+import { SpatialIndex } from "./spatial-index";
+
+const GUIDE_QUERY_RANGE = 200;
+
+export function computeGuidesOptimized(
+  dragged: Rect,
+  spatialIndex: SpatialIndex,
+  threshold = DEFAULT_THRESHOLD,
+): GuideLine[] {
+  const nearbyElements = spatialIndex.queryNearby(dragged, GUIDE_QUERY_RANGE);
+  return computeGuides(dragged, nearbyElements, threshold);
+}
+
+export function computeSnapOptimized(
+  rawRect: Rect,
+  spatialIndex: SpatialIndex,
+  prevSnap: SnapState | null = null,
+  threshold = SNAP_THRESHOLD,
+  hysteresis = SNAP_HYSTERESIS,
+): SnapResult {
+  const nearbyElements = spatialIndex.queryNearby(rawRect, GUIDE_QUERY_RANGE);
+  return computeSnap(rawRect, nearbyElements, prevSnap, threshold, hysteresis);
+}
+
+export function computeSpacingGuidesOptimized(
+  dragged: Rect,
+  spatialIndex: SpatialIndex,
+): MeasurementGuide[] {
+  const nearbyElements = spatialIndex.queryNearby(dragged, GUIDE_QUERY_RANGE);
+  return computeSpacingGuides(dragged, nearbyElements);
+}
+
+export function computeResizeSnapOptimized(
+  rawRect: Rect,
+  spatialIndex: SpatialIndex,
+  prevSnap: ResizeSnapState | null = null,
+  threshold = SNAP_THRESHOLD,
+  hysteresis = SNAP_HYSTERESIS,
+): ResizeSnapResult {
+  const nearbyElements = spatialIndex.queryNearby(rawRect, GUIDE_QUERY_RANGE);
+  return computeResizeSnap(rawRect, nearbyElements, prevSnap, threshold, hysteresis);
+}

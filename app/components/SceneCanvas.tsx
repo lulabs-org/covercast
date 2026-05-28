@@ -16,8 +16,12 @@ import {
   textX,
 } from "../lib/scene-svg";
 import type { GuideLine, MeasurementGuide, ResizeLabel } from "../lib/smart-guide";
-import { getMarqueeRect, isMarqueeActive, type MarqueeState } from "../lib/marquee";
-import { computeBoundingBox, formatDimension } from "../lib/group-drag";
+import { getMarqueeRect, hasMarqueeSize, hitTestElements, isMarqueeActive, type HitTestStrategy, type MarqueeState } from "../lib/marquee";
+import {
+  computeBoundingBox,
+  formatDimension,
+  type ResizeHandleType,
+} from "../lib/group-drag";
 
 type ArrowCapLine = {
   x1: number;
@@ -95,7 +99,9 @@ type SceneCanvasProps = {
   resizeLabel?: ResizeLabel | null;
   svgRef?: Ref<SVGSVGElement>;
   marquee?: MarqueeState;
+  hitTestStrategy?: HitTestStrategy;
   editingTextId?: string | null;
+  isGroupDragging?: boolean;
   onCanvasPointerDown?: (event: PointerEvent<SVGSVGElement>) => void;
   onElementPointerDown?: (
     elementId: string,
@@ -103,6 +109,11 @@ type SceneCanvasProps = {
   ) => void;
   onResizePointerDown?: (
     elementId: string,
+    event: PointerEvent<SVGRectElement>,
+  ) => void;
+  onGroupDragPointerDown?: (event: PointerEvent<SVGRectElement>) => void;
+  onGroupResizePointerDown?: (
+    handle: ResizeHandleType,
     event: PointerEvent<SVGRectElement>,
   ) => void;
   onTextElementDoubleClick?: (elementId: string) => void;
@@ -119,14 +130,25 @@ export default function SceneCanvas({
   resizeLabel,
   svgRef,
   marquee,
+  hitTestStrategy = "intersection",
   editingTextId,
+  isGroupDragging = false,
   onCanvasPointerDown,
   onElementPointerDown,
   onResizePointerDown,
+  onGroupDragPointerDown,
+  onGroupResizePointerDown,
   onTextElementDoubleClick,
 }: SceneCanvasProps) {
   const visibleElements = scene.elements.filter((element) => element.hidden !== true);
   const selectedElements = visibleElements.filter((element) => selectedIds.includes(element.id));
+
+  let marqueePreviewElements: SceneElement[] = [];
+  if (marquee && isMarqueeActive(marquee) && hasMarqueeSize(marquee, 5)) {
+    const rect = getMarqueeRect(marquee);
+    const hitIds = hitTestElements(rect, visibleElements, hitTestStrategy);
+    marqueePreviewElements = visibleElements.filter((element) => hitIds.includes(element.id));
+  }
 
   return (
     <svg
@@ -137,7 +159,11 @@ export default function SceneCanvas({
       aria-label="Covercast OBS live background"
       preserveAspectRatio="xMidYMid meet"
       onPointerDown={onCanvasPointerDown}
-      style={{ touchAction: interactive ? "none" : undefined }}
+      style={{
+        touchAction: interactive ? "none" : undefined,
+        userSelect: "none",
+        WebkitUserSelect: "none",
+      }}
     >
       <defs>
         <radialGradient id={`${idPrefix}-bg-glow`} cx="48%" cy="28%" r="72%">
@@ -263,14 +289,22 @@ export default function SceneCanvas({
               onResizePointerDown={selectedElements.length === 1 ? onResizePointerDown : undefined}
             />
           ))}
-          {selectedElements.length > 1 ? (
-            <GroupSelectionFrame elements={selectedElements} />
+          {selectedElements.length > 1 && !isGroupDragging ? (
+            <GroupSelectionFrame
+              elements={selectedElements}
+              onDragPointerDown={onGroupDragPointerDown}
+              onResizePointerDown={onGroupResizePointerDown}
+            />
           ) : null}
         </>
       ) : null}
 
       {interactive && marquee && isMarqueeActive(marquee) ? (
         <MarqueeOverlay marquee={marquee} />
+      ) : null}
+
+      {interactive && marqueePreviewElements.length > 0 ? (
+        <GroupSelectionFrame elements={marqueePreviewElements} />
       ) : null}
 
       {guides && guides.length > 0 ? (
@@ -327,6 +361,37 @@ export default function SceneCanvas({
           })}
         </g>
       ) : null}
+
+      {resizeLabel ? (() => {
+        const labelText = `${resizeLabel.w} × ${resizeLabel.h}`;
+        const labelW = labelText.length * 10 + 10;
+        const labelH = 22;
+        const labelGap = 5;
+        const labelRx = resizeLabel.x - labelW / 2;
+        const labelRy = resizeLabel.y + labelGap;
+        return (
+          <g className="resize-label-overlay" pointerEvents="none">
+            <rect
+              x={labelRx} y={labelRy}
+              width={labelW} height={labelH}
+              rx={3} ry={3}
+              fill="#336FFF"
+            />
+            <text
+              x={resizeLabel.x}
+              y={labelRy + labelH / 2}
+              fill="#ffffff"
+              fontSize="16"
+              fontFamily="PingFang SC, Microsoft YaHei, Arial, sans-serif"
+              fontWeight="600"
+              textAnchor="middle"
+              dominantBaseline="central"
+            >
+              {labelText}
+            </text>
+          </g>
+        );
+      })() : null}
 
       {spacingGuides && spacingGuides.length > 0 ? (
         <g className="spacing-guides-overlay" pointerEvents="none">
@@ -481,37 +546,6 @@ export default function SceneCanvas({
           })}
         </g>
       ) : null}
-
-      {resizeLabel ? (() => {
-        const labelText = `${resizeLabel.w} × ${resizeLabel.h}`;
-        const labelW = labelText.length * 10 + 10;
-        const labelH = 22;
-        const labelGap = 5;
-        const labelRx = resizeLabel.x - labelW / 2;
-        const labelRy = resizeLabel.y + labelGap;
-        return (
-          <g className="resize-label-overlay" pointerEvents="none">
-            <rect
-              x={labelRx} y={labelRy}
-              width={labelW} height={labelH}
-              rx={3} ry={3}
-              fill="#ff5c8a"
-            />
-            <text
-              x={resizeLabel.x}
-              y={labelRy + labelH / 2}
-              fill="#ffffff"
-              fontSize="16"
-              fontFamily="PingFang SC, Microsoft YaHei, Arial, sans-serif"
-              fontWeight="600"
-              textAnchor="middle"
-              dominantBaseline="central"
-            >
-              {labelText}
-            </text>
-          </g>
-        );
-      })() : null}
     </svg>
   );
 }
@@ -879,8 +913,15 @@ function MarqueeOverlay({ marquee }: { marquee: MarqueeState }) {
 
 function GroupSelectionFrame({
   elements,
+  onDragPointerDown,
+  onResizePointerDown,
 }: {
   elements: SceneElement[];
+  onDragPointerDown?: (event: PointerEvent<SVGRectElement>) => void;
+  onResizePointerDown?: (
+    handle: ResizeHandleType,
+    event: PointerEvent<SVGRectElement>,
+  ) => void;
 }) {
   const bounds = computeBoundingBox(elements);
   const labelText = formatDimension(bounds.width, bounds.height);
@@ -889,9 +930,34 @@ function GroupSelectionFrame({
   const labelGap = 5;
   const labelRx = bounds.x + bounds.width / 2 - labelW / 2;
   const labelRy = bounds.y + bounds.height + labelGap;
+  const handleSize = 12;
+
+  const handles: { type: ResizeHandleType; x: number; y: number }[] = [
+    { type: "nw", x: bounds.x - handleSize / 2, y: bounds.y - handleSize / 2 },
+    { type: "n", x: bounds.x + bounds.width / 2 - handleSize / 2, y: bounds.y - handleSize / 2 },
+    { type: "ne", x: bounds.x + bounds.width - handleSize / 2, y: bounds.y - handleSize / 2 },
+    { type: "e", x: bounds.x + bounds.width - handleSize / 2, y: bounds.y + bounds.height / 2 - handleSize / 2 },
+    { type: "se", x: bounds.x + bounds.width - handleSize / 2, y: bounds.y + bounds.height - handleSize / 2 },
+    { type: "s", x: bounds.x + bounds.width / 2 - handleSize / 2, y: bounds.y + bounds.height - handleSize / 2 },
+    { type: "sw", x: bounds.x - handleSize / 2, y: bounds.y + bounds.height - handleSize / 2 },
+    { type: "w", x: bounds.x - handleSize / 2, y: bounds.y + bounds.height / 2 - handleSize / 2 },
+  ];
 
   return (
-    <g className="group-selection-frame" pointerEvents="none">
+    <g className="group-selection-frame">
+      <rect
+        className="group-drag-handle"
+        x={bounds.x}
+        y={bounds.y}
+        width={bounds.width}
+        height={bounds.height}
+        fill="transparent"
+        stroke="none"
+        onPointerDown={(event) => {
+          event.stopPropagation();
+          onDragPointerDown?.(event);
+        }}
+      />
       <rect
         x={bounds.x}
         y={bounds.y}
@@ -901,7 +967,27 @@ function GroupSelectionFrame({
         stroke="#336FFF"
         strokeWidth="3"
         vectorEffect="non-scaling-stroke"
+        pointerEvents="none"
       />
+      {handles.map((handle) => (
+        <rect
+          key={handle.type}
+          className="group-resize-handle"
+          x={handle.x}
+          y={handle.y}
+          width={handleSize}
+          height={handleSize}
+          rx={3}
+          fill="#336FFF"
+          stroke="#132060"
+          strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
+          onPointerDown={(event) => {
+            event.stopPropagation();
+            onResizePointerDown?.(handle.type, event);
+          }}
+        />
+      ))}
       <rect
         x={labelRx}
         y={labelRy}
@@ -910,6 +996,7 @@ function GroupSelectionFrame({
         rx={3}
         ry={3}
         fill="#336FFF"
+        pointerEvents="none"
       />
       <text
         x={bounds.x + bounds.width / 2}
@@ -920,6 +1007,7 @@ function GroupSelectionFrame({
         fontFamily="PingFang SC, Microsoft YaHei, Arial, sans-serif"
         fontWeight="600"
         dominantBaseline="central"
+        pointerEvents="none"
       >
         {labelText}
       </text>

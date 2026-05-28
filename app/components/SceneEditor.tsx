@@ -36,7 +36,8 @@ import {
   type TextElement,
 } from "../lib/scene";
 import { sceneToSvgMarkup } from "../lib/scene-svg";
-import { computeGuides, computeResizeSnap, computeSnap, createResizeSnapState, createSnapState, computeSpacingGuides, type GuideLine, type MeasurementGuide, type ResizeLabel, type ResizeSnapState, type SnapState } from "../lib/smart-guide";
+import { computeGuidesOptimized, computeSnapOptimized, computeSpacingGuidesOptimized, computeResizeSnapOptimized, createResizeSnapState, createSnapState, type GuideLine, type MeasurementGuide, type ResizeLabel, type ResizeSnapState, type SnapState } from "../lib/smart-guide";
+import { SpatialIndex, buildSpatialIndex } from "../lib/spatial-index";
 import {
   clearSelection,
   createSelectionState,
@@ -60,7 +61,12 @@ import {
 } from "../lib/marquee";
 import {
   computeBoundingBox,
+  computeNewBoundsFromHandle,
+  createGroupResizeState,
+  type BoundingBox,
   type GroupDragState,
+  type GroupResizeState,
+  type ResizeHandleType,
 } from "../lib/group-drag";
 import SceneCanvas from "./SceneCanvas";
 
@@ -72,7 +78,7 @@ type SingleDragState = {
   element: SceneElement;
 };
 
-type DragState = SingleDragState | GroupDragState;
+type DragState = SingleDragState | GroupDragState | GroupResizeState;
 
 type CustomSceneTemplate = {
   id: string;
@@ -187,8 +193,9 @@ export default function SceneEditor() {
   const selectedElementRef = useRef<SceneElement | null>(null);
   const snapStateRef = useRef<SnapState>(createSnapState());
   const resizeSnapStateRef = useRef<ResizeSnapState>(createResizeSnapState());
+  const spatialIndexRef = useRef<SpatialIndex>(new SpatialIndex());
   const rafHandleRef = useRef<number>(0);
-  const latestMoveRef = useRef<{ dx: number; dy: number } | null>(null);
+  const latestMoveRef = useRef<{ dx: number; dy: number; shiftKey: boolean } | null>(null);
   const marqueeRafRef = useRef<number>(0);
   const latestMarqueeRef = useRef<{ x: number; y: number } | null>(null);
   const [activeSlotId, setActiveSlotId] = useState<string>("default");
@@ -505,6 +512,7 @@ export default function SceneEditor() {
       latestMoveRef.current = {
         dx: point.x - activeDrag.startX,
         dy: point.y - activeDrag.startY,
+        shiftKey: event.shiftKey,
       };
 
       if (rafHandleRef.current === 0) {
@@ -521,10 +529,6 @@ export default function SceneEditor() {
       }
 
       if (activeDrag.mode === "group-move") {
-        setResizeLabel(null);
-        setGuides([]);
-        setSpacingGuides([]);
-
         const groupBox = computeBoundingBox(activeDrag.elements);
         const rawX = clamp(
           groupBox.x + latest.dx,
@@ -537,8 +541,32 @@ export default function SceneEditor() {
           CANVAS_HEIGHT - 24,
         );
 
-        const groupDeltaX = rawX - groupBox.x;
-        const groupDeltaY = rawY - groupBox.y;
+        const groupRect = {
+          x: rawX,
+          y: rawY,
+          width: groupBox.width,
+          height: groupBox.height,
+        };
+
+        const result = computeSnapOptimized(
+          groupRect,
+          spatialIndexRef.current,
+          snapStateRef.current,
+        );
+
+        snapStateRef.current = result.snapState;
+        setGuides(result.guides);
+
+        const spacing = computeSpacingGuidesOptimized(
+          result.snappedRect,
+          spatialIndexRef.current,
+        );
+        setSpacingGuides(spacing);
+
+        setResizeLabel(null);
+
+        const groupDeltaX = result.snappedRect.x - groupBox.x;
+        const groupDeltaY = result.snappedRect.y - groupBox.y;
 
         setScene((currentScene) => ({
           ...currentScene,
@@ -559,6 +587,77 @@ export default function SceneEditor() {
         return;
       }
 
+      if (activeDrag.mode === "group-resize") {
+        const newBounds = computeNewBoundsFromHandle(
+          activeDrag.originalBounds,
+          activeDrag.handle,
+          latest,
+          latest.shiftKey,
+        );
+
+        const clampedBounds: BoundingBox = {
+          x: clamp(newBounds.x, 0, CANVAS_WIDTH - 10),
+          y: clamp(newBounds.y, 0, CANVAS_HEIGHT - 10),
+          width: clamp(newBounds.width, 10, CANVAS_WIDTH - newBounds.x),
+          height: clamp(newBounds.height, 10, CANVAS_HEIGHT - newBounds.y),
+        };
+
+        const resizeSnap = computeResizeSnapOptimized(
+          clampedBounds,
+          spatialIndexRef.current,
+          resizeSnapStateRef.current,
+        );
+
+        resizeSnapStateRef.current = resizeSnap.snapState;
+
+        const snappedBounds: BoundingBox = {
+          x: clampedBounds.x,
+          y: clampedBounds.y,
+          width: clamp(resizeSnap.snappedWidth, 10, CANVAS_WIDTH - clampedBounds.x),
+          height: clamp(resizeSnap.snappedHeight, 10, CANVAS_HEIGHT - clampedBounds.y),
+        };
+
+        const resizeGuides = computeGuidesOptimized(snappedBounds, spatialIndexRef.current);
+        setGuides(resizeGuides);
+
+        const resizeSpacing = computeSpacingGuidesOptimized(snappedBounds, spatialIndexRef.current);
+        setSpacingGuides(resizeSpacing);
+
+        setResizeLabel({
+          x: snappedBounds.x + snappedBounds.width / 2,
+          y: snappedBounds.y + snappedBounds.height,
+          w: Math.round(snappedBounds.width),
+          h: Math.round(snappedBounds.height),
+        });
+
+        const scaleMatrix = {
+          scaleX: snappedBounds.width / activeDrag.originalBounds.width,
+          scaleY: snappedBounds.height / activeDrag.originalBounds.height,
+          offsetX: snappedBounds.x - activeDrag.originalBounds.x * (snappedBounds.width / activeDrag.originalBounds.width),
+          offsetY: snappedBounds.y - activeDrag.originalBounds.y * (snappedBounds.height / activeDrag.originalBounds.height),
+        };
+
+        setScene((currentScene) => ({
+          ...currentScene,
+          elements: currentScene.elements.map((element) => {
+            const dragElement = activeDrag.elements.find((el) => el.id === element.id);
+            if (!dragElement) {
+              return element;
+            }
+
+            return {
+              ...element,
+              x: dragElement.x * scaleMatrix.scaleX + scaleMatrix.offsetX,
+              y: dragElement.y * scaleMatrix.scaleY + scaleMatrix.offsetY,
+              width: dragElement.width * scaleMatrix.scaleX,
+              height: dragElement.height * scaleMatrix.scaleY,
+            } as SceneElement;
+          }),
+        }));
+        markSceneEdited();
+        return;
+      }
+
       if (activeDrag.mode === "move") {
         setResizeLabel(null);
         const rawX = clamp(
@@ -572,22 +671,18 @@ export default function SceneEditor() {
           CANVAS_HEIGHT - 24,
         );
 
-        const otherElements = sceneElementsRef.current.filter(
-          (el) => el.id !== activeDrag.id && el.hidden !== true,
-        );
-
-        const result = computeSnap(
+        const result = computeSnapOptimized(
           { x: rawX, y: rawY, width: activeDrag.element.width, height: activeDrag.element.height },
-          otherElements,
+          spatialIndexRef.current,
           snapStateRef.current,
         );
 
         snapStateRef.current = result.snapState;
         setGuides(result.guides);
 
-        const spacing = computeSpacingGuides(
+        const spacing = computeSpacingGuidesOptimized(
           result.snappedRect,
-          otherElements,
+          spatialIndexRef.current,
         );
         setSpacingGuides(spacing);
 
@@ -620,13 +715,9 @@ export default function SceneEditor() {
         CANVAS_HEIGHT - activeDrag.element.y,
       );
 
-      const otherElements = sceneElementsRef.current.filter(
-        (el) => el.id !== activeDrag.id && el.hidden !== true,
-      );
-
-      const resizeSnap = computeResizeSnap(
+      const resizeSnap = computeResizeSnapOptimized(
         { x: activeDrag.element.x, y: activeDrag.element.y, width: rawWidth, height: rawHeight },
-        otherElements,
+        spatialIndexRef.current,
         resizeSnapStateRef.current,
       );
 
@@ -650,10 +741,10 @@ export default function SceneEditor() {
         height: snappedHeight,
       };
 
-      const resizeGuides = computeGuides(snappedRect, otherElements);
+      const resizeGuides = computeGuidesOptimized(snappedRect, spatialIndexRef.current);
       setGuides(resizeGuides);
 
-      const resizeSpacing = computeSpacingGuides(snappedRect, otherElements);
+      const resizeSpacing = computeSpacingGuidesOptimized(snappedRect, spatialIndexRef.current);
       setSpacingGuides(resizeSpacing);
 
       setResizeLabel({
@@ -866,6 +957,11 @@ export default function SceneEditor() {
         (el) => selection.selectedIds.includes(el.id) && !el.locked
       );
       if (selectedElements.length > 0) {
+        const otherElements = scene.elements.filter(
+          (el) => !selectedElements.some((sel) => sel.id === el.id) && !el.locked && el.hidden !== true
+        );
+        spatialIndexRef.current = buildSpatialIndex(otherElements);
+
         setDrag({
           mode: "group-move",
           startX: point.x,
@@ -875,6 +971,11 @@ export default function SceneEditor() {
         return;
       }
     }
+
+    const otherElements = scene.elements.filter(
+      (el) => el.id !== elementId && !el.locked && el.hidden !== true
+    );
+    spatialIndexRef.current = buildSpatialIndex(otherElements);
 
     setDrag({
       id: elementId,
@@ -910,6 +1011,11 @@ export default function SceneEditor() {
       return;
     }
 
+    const otherElements = scene.elements.filter(
+      (el) => el.id !== elementId && !el.locked && el.hidden !== true
+    );
+    spatialIndexRef.current = buildSpatialIndex(otherElements);
+
     const point = getSvgPoint(svg, event.clientX, event.clientY);
     setDrag({
       id: elementId,
@@ -917,6 +1023,60 @@ export default function SceneEditor() {
       startX: point.x,
       startY: point.y,
       element: { ...element },
+    });
+  }
+
+  function handleGroupResizePointerDown(
+    handle: ResizeHandleType,
+    event: ReactPointerEvent<SVGRectElement>,
+  ) {
+    const svg = svgRef.current;
+    if (!svg) {
+      return;
+    }
+
+    const selectedElements = scene.elements.filter(
+      (el) => selection.selectedIds.includes(el.id) && !el.locked,
+    );
+    if (selectedElements.length === 0) {
+      return;
+    }
+
+    const otherElements = scene.elements.filter(
+      (el) => !selectedElements.some((sel) => sel.id === el.id) && !el.locked && el.hidden !== true
+    );
+    spatialIndexRef.current = buildSpatialIndex(otherElements);
+
+    const point = getSvgPoint(svg, event.clientX, event.clientY);
+    setDrag(createGroupResizeState(handle, point.x, point.y, selectedElements));
+  }
+
+  function handleGroupDragPointerDown(
+    event: ReactPointerEvent<SVGRectElement>,
+  ) {
+    const svg = svgRef.current;
+    if (!svg) {
+      return;
+    }
+
+    const selectedElements = scene.elements.filter(
+      (el) => selection.selectedIds.includes(el.id) && !el.locked,
+    );
+    if (selectedElements.length === 0) {
+      return;
+    }
+
+    const otherElements = scene.elements.filter(
+      (el) => !selectedElements.some((sel) => sel.id === el.id) && !el.locked && el.hidden !== true
+    );
+    spatialIndexRef.current = buildSpatialIndex(otherElements);
+
+    const point = getSvgPoint(svg, event.clientX, event.clientY);
+    setDrag({
+      mode: "group-move",
+      startX: point.x,
+      startY: point.y,
+      elements: selectedElements.map((el) => ({ ...el })),
     });
   }
 
@@ -1766,10 +1926,14 @@ export default function SceneEditor() {
                   resizeLabel={resizeLabel}
                   svgRef={svgRef}
                   marquee={marquee}
+                  hitTestStrategy={hitTestStrategy}
                   editingTextId={editingTextId}
+                  isGroupDragging={drag?.mode === "group-move"}
                   onCanvasPointerDown={handleCanvasPointerDown}
                   onElementPointerDown={handleElementPointerDown}
                   onResizePointerDown={handleResizePointerDown}
+                  onGroupDragPointerDown={handleGroupDragPointerDown}
+                  onGroupResizePointerDown={handleGroupResizePointerDown}
                   onTextElementDoubleClick={handleTextElementDoubleClick}
                 />
               </div>
