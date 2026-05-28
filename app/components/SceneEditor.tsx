@@ -37,15 +37,42 @@ import {
 } from "../lib/scene";
 import { sceneToSvgMarkup } from "../lib/scene-svg";
 import { computeGuides, computeResizeSnap, computeSnap, createResizeSnapState, createSnapState, computeSpacingGuides, type GuideLine, type MeasurementGuide, type ResizeLabel, type ResizeSnapState, type SnapState } from "../lib/smart-guide";
+import {
+  clearSelection,
+  createSelectionState,
+  handleElementClick,
+  isSelected,
+  selectMultiple,
+  selectSingle,
+  type SelectionState,
+} from "../lib/selection";
+import {
+  clearMarquee,
+  createMarqueeState,
+  getMarqueeRect,
+  hasMarqueeSize,
+  hitTestElements,
+  isMarqueeActive,
+  startMarquee,
+  updateMarquee,
+  type HitTestStrategy,
+  type MarqueeState,
+} from "../lib/marquee";
+import {
+  computeBoundingBox,
+  type GroupDragState,
+} from "../lib/group-drag";
 import SceneCanvas from "./SceneCanvas";
 
-type DragState = {
+type SingleDragState = {
   id: string;
   mode: "move" | "resize";
   startX: number;
   startY: number;
   element: SceneElement;
 };
+
+type DragState = SingleDragState | GroupDragState;
 
 type CustomSceneTemplate = {
   id: string;
@@ -136,7 +163,9 @@ const FONT_FAMILY_OPTIONS = [
 
 export default function SceneEditor() {
   const [scene, setScene] = useState<Scene>(() => createDefaultScene());
-  const [selectedId, setSelectedId] = useState<string>("main-title");
+  const [selection, setSelection] = useState<SelectionState>(() => createSelectionState());
+  const [marquee, setMarquee] = useState<MarqueeState>(() => createMarqueeState());
+  const [hitTestStrategy, setHitTestStrategy] = useState<HitTestStrategy>("intersection");
   const [status, setStatus] = useState("正在读取本地场景...");
   const [customTemplates, setCustomTemplates] = useState<CustomSceneTemplate[]>([]);
   const [customTemplateName, setCustomTemplateName] = useState("");
@@ -160,6 +189,8 @@ export default function SceneEditor() {
   const resizeSnapStateRef = useRef<ResizeSnapState>(createResizeSnapState());
   const rafHandleRef = useRef<number>(0);
   const latestMoveRef = useRef<{ dx: number; dy: number } | null>(null);
+  const marqueeRafRef = useRef<number>(0);
+  const latestMarqueeRef = useRef<{ x: number; y: number } | null>(null);
   const [activeSlotId, setActiveSlotId] = useState<string>("default");
   const [templateSlots, setTemplateSlots] = useState<SceneSlotInfo[]>([]);
   const [canPasteElement, setCanPasteElement] = useState(false);
@@ -170,10 +201,12 @@ export default function SceneEditor() {
     layers: false,
   });
 
-  const selectedElement = useMemo(
-    () => scene.elements.find((element) => element.id === selectedId) ?? null,
-    [scene.elements, selectedId],
-  );
+  const selectedElement = useMemo(() => {
+    if (selection.selectedIds.length !== 1) {
+      return null;
+    }
+    return scene.elements.find((element) => element.id === selection.selectedIds[0]) ?? null;
+  }, [scene.elements, selection.selectedIds]);
 
   useEffect(() => {
     sceneElementsRef.current = scene.elements;
@@ -206,7 +239,9 @@ export default function SceneEditor() {
           setScene(nextScene);
           setStatus("已读取本地场景");
           setActiveTemplateId(findMatchingBuiltInTemplateId(nextScene));
-          setSelectedId(nextScene.elements[0]?.id ?? "");
+          if (nextScene.elements[0]?.id) {
+            setSelection((prev) => selectSingle(prev, nextScene.elements[0].id));
+          }
         }
       } catch {
         if (active) {
@@ -453,7 +488,7 @@ export default function SceneEditor() {
 
     const activeDrag = drag;
 
-    if (activeDrag.mode === "move") {
+    if (activeDrag.mode === "move" || activeDrag.mode === "group-move") {
       snapStateRef.current = createSnapState();
     } else {
       resizeSnapStateRef.current = createResizeSnapState();
@@ -481,6 +516,45 @@ export default function SceneEditor() {
 
       const latest = latestMoveRef.current;
       if (!latest) {
+        return;
+      }
+
+      if (activeDrag.mode === "group-move") {
+        setResizeLabel(null);
+        setGuides([]);
+        setSpacingGuides([]);
+
+        const groupBox = computeBoundingBox(activeDrag.elements);
+        const rawX = clamp(
+          groupBox.x + latest.dx,
+          -groupBox.width + 24,
+          CANVAS_WIDTH - 24,
+        );
+        const rawY = clamp(
+          groupBox.y + latest.dy,
+          -groupBox.height + 24,
+          CANVAS_HEIGHT - 24,
+        );
+
+        const groupDeltaX = rawX - groupBox.x;
+        const groupDeltaY = rawY - groupBox.y;
+
+        setScene((currentScene) => ({
+          ...currentScene,
+          elements: currentScene.elements.map((element) => {
+            const dragElement = activeDrag.elements.find((el) => el.id === element.id);
+            if (!dragElement) {
+              return element;
+            }
+
+            return {
+              ...element,
+              x: dragElement.x + groupDeltaX,
+              y: dragElement.y + groupDeltaY,
+            } as SceneElement;
+          }),
+        }));
+        markSceneEdited();
         return;
       }
 
@@ -665,7 +739,7 @@ export default function SceneEditor() {
       ...currentScene,
       elements: [...currentScene.elements, pastedElement],
     }));
-    setSelectedId(pastedElement.id);
+    setSelection((prev) => selectSingle(prev, pastedElement.id));
     markSceneEdited();
     setStatus(`已粘贴「${pastedElement.name}」`);
   }, [markSceneEdited]);
@@ -758,7 +832,7 @@ export default function SceneEditor() {
       [elements[currentIndex], elements[nextIndex]] = [elements[nextIndex], elements[currentIndex]];
       return { ...currentScene, elements };
     });
-    setSelectedId(elementId);
+    setSelection(selectSingle(selection, elementId));
   }
 
   function handleElementPointerDown(
@@ -771,12 +845,32 @@ export default function SceneEditor() {
       return;
     }
 
-    setSelectedId(elementId);
+    const isShiftPressed = event.shiftKey;
+    const wasSelected = isSelected(selection, elementId);
+
+    setSelection(handleElementClick(selection, elementId, isShiftPressed));
+
     if (element.locked) {
       return;
     }
 
     const point = getSvgPoint(svg, event.clientX, event.clientY);
+
+    if (wasSelected && selection.selectedIds.length > 1 && !isShiftPressed) {
+      const selectedElements = scene.elements.filter(
+        (el) => selection.selectedIds.includes(el.id) && !el.locked
+      );
+      if (selectedElements.length > 0) {
+        setDrag({
+          mode: "group-move",
+          startX: point.x,
+          startY: point.y,
+          elements: selectedElements.map((el) => ({ ...el })),
+        });
+        return;
+      }
+    }
+
     setDrag({
       id: elementId,
       mode: "move",
@@ -796,7 +890,7 @@ export default function SceneEditor() {
       return;
     }
 
-    setSelectedId(elementId);
+    setSelection(selectSingle(selection, elementId));
     if (element.locked) {
       return;
     }
@@ -811,10 +905,96 @@ export default function SceneEditor() {
     });
   }
 
+  function handleCanvasPointerDown(event: ReactPointerEvent<SVGSVGElement>) {
+    const svg = svgRef.current;
+    if (!svg) {
+      return;
+    }
+
+    const point = getSvgPoint(svg, event.clientX, event.clientY);
+    const isShiftPressed = event.shiftKey;
+
+    if (!isShiftPressed) {
+      setSelection((prev) => clearSelection(prev));
+    }
+
+    setMarquee((prev) => startMarquee(prev, point.x, point.y));
+  }
+
+  useEffect(() => {
+    if (!isMarqueeActive(marquee)) {
+      return;
+    }
+
+    function handlePointerMove(event: PointerEvent) {
+      const svg = svgRef.current;
+      if (!svg) {
+        return;
+      }
+
+      const point = getSvgPoint(svg, event.clientX, event.clientY);
+      latestMarqueeRef.current = { x: point.x, y: point.y };
+
+      if (marqueeRafRef.current === 0) {
+        marqueeRafRef.current = requestAnimationFrame(processMarqueeFrame);
+      }
+    }
+
+    function processMarqueeFrame() {
+      marqueeRafRef.current = 0;
+
+      const latest = latestMarqueeRef.current;
+      if (!latest) {
+        return;
+      }
+
+      setMarquee((prev) => updateMarquee(prev, latest.x, latest.y));
+    }
+
+    function handlePointerUp(event: PointerEvent) {
+      const svg = svgRef.current;
+      if (!svg) {
+        setMarquee((prev) => clearMarquee(prev));
+        return;
+      }
+
+      const isShiftPressed = event.shiftKey;
+
+      setMarquee((prevMarquee) => {
+        if (hasMarqueeSize(prevMarquee, 5)) {
+          const rect = getMarqueeRect(prevMarquee);
+          const hitIds = hitTestElements(rect, sceneElementsRef.current, hitTestStrategy);
+
+          if (hitIds.length > 0) {
+            setSelection((prevSelection) => selectMultiple(prevSelection, hitIds, isShiftPressed));
+          } else if (!isShiftPressed) {
+            setSelection((prevSelection) => clearSelection(prevSelection));
+          }
+        }
+
+        return clearMarquee(prevMarquee);
+      });
+    }
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp, { once: true });
+
+    return () => {
+      if (marqueeRafRef.current !== 0) {
+        cancelAnimationFrame(marqueeRafRef.current);
+        marqueeRafRef.current = 0;
+      }
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [marquee, hitTestStrategy]);
+
   function applyTemplate(template: { id: string; name: string; scene: Scene }) {
     const nextScene = cloneScene(template.scene);
     setScene(nextScene);
-    setSelectedId(nextScene.elements[0]?.id ?? "");
+    if (nextScene.elements[0]?.id) {
+      setSelection(selectSingle(selection, nextScene.elements[0].id));
+    }
     setActiveTemplateId(template.id);
 
     const templateSlot = templateSlots.find((s) => s.templateId === template.id);
@@ -950,7 +1130,9 @@ export default function SceneEditor() {
       writeCustomTemplatesToStorage(nextTemplates);
       setCustomTemplates(nextTemplates);
       setScene(cloneScene(importedTemplate.scene));
-      setSelectedId(importedTemplate.scene.elements[0]?.id ?? "");
+      if (importedTemplate.scene.elements[0]?.id) {
+        setSelection(selectSingle(selection, importedTemplate.scene.elements[0].id));
+      }
       setActiveTemplateId(importedTemplate.id);
       setActiveSlotId("default");
       setStatus(`已导入模板「${importedTemplate.name}」`);
@@ -965,7 +1147,7 @@ export default function SceneEditor() {
       ...currentScene,
       elements: [...currentScene.elements, element],
     }));
-    setSelectedId(element.id);
+    setSelection(selectSingle(selection, element.id));
   }
 
   function addRectElement() {
@@ -974,7 +1156,7 @@ export default function SceneEditor() {
       ...currentScene,
       elements: [...currentScene.elements, element],
     }));
-    setSelectedId(element.id);
+    setSelection(selectSingle(selection, element.id));
   }
 
   function addEllipseElement() {
@@ -983,7 +1165,7 @@ export default function SceneEditor() {
       ...currentScene,
       elements: [...currentScene.elements, element],
     }));
-    setSelectedId(element.id);
+    setSelection(selectSingle(selection, element.id));
   }
 
   async function uploadAsset(file: File, mode: "add" | "replace") {
@@ -1018,7 +1200,7 @@ export default function SceneEditor() {
         ...currentScene,
         elements: [...currentScene.elements, element],
       }));
-      setSelectedId(element.id);
+      setSelection(selectSingle(selection, element.id));
       setStatus("素材已添加到当前画布");
     } catch {
       setStatus("素材上传失败，仅支持 PNG、JPG、WebP");
@@ -1047,17 +1229,24 @@ export default function SceneEditor() {
   }
 
   function deleteSelected() {
-    if (!selectedElement) {
+    if (selection.selectedIds.length === 0) {
       return;
     }
 
     changeScene((currentScene) => {
       const elements = currentScene.elements.filter(
-        (element) => element.id !== selectedElement.id,
+        (element) => !selection.selectedIds.includes(element.id),
       );
       return { ...currentScene, elements };
     });
-    setSelectedId(scene.elements.find((element) => element.id !== selectedElement.id)?.id ?? "");
+    const remainingElement = scene.elements.find(
+      (element) => !selection.selectedIds.includes(element.id),
+    );
+    if (remainingElement?.id) {
+      setSelection(selectSingle(selection, remainingElement.id));
+    } else {
+      setSelection(clearSelection(selection));
+    }
   }
 
   async function exportScene(format: ExportFormat) {
@@ -1423,7 +1612,7 @@ export default function SceneEditor() {
           >
             <div className="layer-list">
               {visualLayers.map(({ element, index }) => {
-                const isActive = element.id === selectedId;
+                const isActive = isSelected(selection, element.id);
                 const isTop = index === scene.elements.length - 1;
                 const isBottom = index === 0;
 
@@ -1440,7 +1629,7 @@ export default function SceneEditor() {
                     <button
                       type="button"
                       className="layer-main"
-                      onClick={() => setSelectedId(element.id)}
+                      onClick={() => setSelection(selectSingle(selection, element.id))}
                     >
                       <span className="layer-type">{elementTypeGlyph(element)}</span>
                       <span className="layer-name">{element.name}</span>
@@ -1552,12 +1741,13 @@ export default function SceneEditor() {
                   className="scene-preview"
                   idPrefix="editor"
                   interactive
-                  selectedId={selectedId}
+                  selectedIds={selection.selectedIds}
                   guides={guides}
                   spacingGuides={spacingGuides}
                   resizeLabel={resizeLabel}
                   svgRef={svgRef}
-                  onCanvasPointerDown={() => setSelectedId("")}
+                  marquee={marquee}
+                  onCanvasPointerDown={handleCanvasPointerDown}
                   onElementPointerDown={handleElementPointerDown}
                   onResizePointerDown={handleResizePointerDown}
                 />

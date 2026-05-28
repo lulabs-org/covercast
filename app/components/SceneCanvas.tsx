@@ -16,6 +16,8 @@ import {
   textX,
 } from "../lib/scene-svg";
 import type { GuideLine, MeasurementGuide, ResizeLabel } from "../lib/smart-guide";
+import { getMarqueeRect, isMarqueeActive, type MarqueeState } from "../lib/marquee";
+import { computeBoundingBox, formatDimension } from "../lib/group-drag";
 
 type ArrowCapLine = {
   x1: number;
@@ -87,11 +89,12 @@ type SceneCanvasProps = {
   className?: string;
   idPrefix?: string;
   interactive?: boolean;
-  selectedId?: string | null;
+  selectedIds?: string[];
   guides?: GuideLine[];
   spacingGuides?: MeasurementGuide[];
   resizeLabel?: ResizeLabel | null;
   svgRef?: Ref<SVGSVGElement>;
+  marquee?: MarqueeState;
   onCanvasPointerDown?: (event: PointerEvent<SVGSVGElement>) => void;
   onElementPointerDown?: (
     elementId: string,
@@ -108,17 +111,18 @@ export default function SceneCanvas({
   className,
   idPrefix = "scene",
   interactive = false,
-  selectedId,
+  selectedIds = [],
   guides,
   spacingGuides,
   resizeLabel,
   svgRef,
+  marquee,
   onCanvasPointerDown,
   onElementPointerDown,
   onResizePointerDown,
 }: SceneCanvasProps) {
   const visibleElements = scene.elements.filter((element) => element.hidden !== true);
-  const selectedElement = visibleElements.find((element) => element.id === selectedId);
+  const selectedElements = visibleElements.filter((element) => selectedIds.includes(element.id));
 
   return (
     <svg
@@ -244,11 +248,23 @@ export default function SceneCanvas({
         />
       ))}
 
-      {interactive && selectedElement ? (
-        <SelectionFrame
-          element={selectedElement}
-          onResizePointerDown={onResizePointerDown}
-        />
+      {interactive && selectedElements.length > 0 ? (
+        <>
+          {selectedElements.map((element) => (
+            <SelectionFrame
+              key={element.id}
+              element={element}
+              onResizePointerDown={selectedElements.length === 1 ? onResizePointerDown : undefined}
+            />
+          ))}
+          {selectedElements.length > 1 ? (
+            <GroupSelectionFrame elements={selectedElements} />
+          ) : null}
+        </>
+      ) : null}
+
+      {interactive && marquee && isMarqueeActive(marquee) ? (
+        <MarqueeOverlay marquee={marquee} />
       ) : null}
 
       {guides && guides.length > 0 ? (
@@ -805,4 +821,78 @@ function hasBackgroundCutouts(elements: SceneElement[]) {
 
 function backgroundMaskId(prefix: string) {
   return `${prefix}-background-mask`;
+}
+
+function MarqueeOverlay({ marquee }: { marquee: MarqueeState }) {
+  const rect = getMarqueeRect(marquee);
+
+  if (rect.width === 0 && rect.height === 0) {
+    return null;
+  }
+
+  return (
+    <g className="marquee-overlay" pointerEvents="none">
+      <rect
+        x={rect.x}
+        y={rect.y}
+        width={rect.width}
+        height={rect.height}
+        fill="#336FFF"
+        fillOpacity="0.15"
+        stroke="#336FFF"
+        strokeWidth="3"
+        vectorEffect="non-scaling-stroke"
+      />
+    </g>
+  );
+}
+
+function GroupSelectionFrame({
+  elements,
+}: {
+  elements: SceneElement[];
+}) {
+  const bounds = computeBoundingBox(elements);
+  const labelText = formatDimension(bounds.width, bounds.height);
+  const labelW = labelText.length * 10 + 10;
+  const labelH = 22;
+  const labelGap = 5;
+  const labelRx = bounds.x + bounds.width / 2 - labelW / 2;
+  const labelRy = bounds.y + bounds.height + labelGap;
+
+  return (
+    <g className="group-selection-frame" pointerEvents="none">
+      <rect
+        x={bounds.x}
+        y={bounds.y}
+        width={bounds.width}
+        height={bounds.height}
+        fill="none"
+        stroke="#336FFF"
+        strokeWidth="3"
+        vectorEffect="non-scaling-stroke"
+      />
+      <rect
+        x={labelRx}
+        y={labelRy}
+        width={labelW}
+        height={labelH}
+        rx={3}
+        ry={3}
+        fill="#336FFF"
+      />
+      <text
+        x={bounds.x + bounds.width / 2}
+        y={labelRy + labelH / 2}
+        textAnchor="middle"
+        fill="#ffffff"
+        fontSize="16"
+        fontFamily="PingFang SC, Microsoft YaHei, Arial, sans-serif"
+        fontWeight="600"
+        dominantBaseline="central"
+      >
+        {labelText}
+      </text>
+    </g>
+  );
 }
