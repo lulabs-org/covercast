@@ -838,6 +838,65 @@ export default function SceneEditor() {
 
   useEffect(() => {
     function handleEditorKeyDown(event: KeyboardEvent) {
+      const arrowKeys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+      
+      if (arrowKeys.includes(event.key)) {
+        if (isEditableTarget(event.target) || editingTextId) {
+          return;
+        }
+        
+        if (selection.selectedIds.length === 0) {
+          return;
+        }
+        
+        event.preventDefault();
+        
+        const selectedElements = scene.elements.filter(
+          (el) => selection.selectedIds.includes(el.id) && !el.locked
+        );
+        
+        if (selectedElements.length === 0) {
+          return;
+        }
+        
+        const movementStep = event.shiftKey ? 10 : 1;
+        
+        let dx = 0;
+        let dy = 0;
+        
+        switch (event.key) {
+          case "ArrowUp":
+            dy = -movementStep;
+            break;
+          case "ArrowDown":
+            dy = movementStep;
+            break;
+          case "ArrowLeft":
+            dx = -movementStep;
+            break;
+          case "ArrowRight":
+            dx = movementStep;
+            break;
+        }
+        
+        setScene((currentScene) => ({
+          ...currentScene,
+          elements: currentScene.elements.map((element) => {
+            if (!selection.selectedIds.includes(element.id) || element.locked) {
+              return element;
+            }
+            
+            return {
+              ...element,
+              x: element.x + dx,
+              y: element.y + dy,
+            } as SceneElement;
+          }),
+        }));
+        markSceneEdited();
+        return;
+      }
+
       if (!isCopyPasteModifier(event) || isEditableTarget(event.target)) {
         return;
       }
@@ -861,7 +920,7 @@ export default function SceneEditor() {
     return () => {
       window.removeEventListener("keydown", handleEditorKeyDown);
     };
-  }, [copySelectedElement, pasteCopiedElement]);
+  }, [copySelectedElement, pasteCopiedElement, selection.selectedIds, editingTextId, scene.elements, markSceneEdited]);
 
   function changeScene(updater: (currentScene: Scene) => Scene) {
     setScene(updater);
