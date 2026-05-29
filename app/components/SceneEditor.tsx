@@ -69,9 +69,22 @@ const CANVAS_ZOOM_MAX = 3;
 const CANVAS_ZOOM_STEP = 0.1;
 const CANVAS_PREVIEW_MAX_WIDTH = 560;
 const STAGE_VIEWPORT_PADDING = 36;
+const MAX_HISTORY_SIZE = 50;
 
 type SidebarSectionId = "scene" | "sources" | "templates" | "layers";
 type ExportFormat = "png" | "jpeg" | "svg" | "json";
+
+type HistoryEntry = {
+  scene: Scene;
+  selectedId: string;
+  description: string;
+  timestamp: number;
+};
+
+type HistoryState = {
+  past: HistoryEntry[];
+  future: HistoryEntry[];
+};
 type TemplateExportPayload = {
   format: typeof TEMPLATE_EXPORT_FORMAT;
   version: 1;
@@ -150,6 +163,7 @@ export default function SceneEditor() {
   const [guides, setGuides] = useState<GuideLine[]>([]);
   const [spacingGuides, setSpacingGuides] = useState<MeasurementGuide[]>([]);
   const [resizeLabel, setResizeLabel] = useState<ResizeLabel | null>(null);
+  const [history, setHistory] = useState<HistoryState>({ past: [], future: [] });
   const svgRef = useRef<SVGSVGElement>(null);
   const stageViewportRef = useRef<HTMLDivElement>(null);
   const elementClipboardRef = useRef<SceneElement | null>(null);
@@ -446,6 +460,78 @@ export default function SceneEditor() {
     setCanvasZoom((value) => clampZoom(value + direction * CANVAS_ZOOM_STEP));
   }
 
+  function handleZoomSliderWheel(event: ReactWheelEvent<HTMLDivElement>) {
+    event.preventDefault();
+    const direction = event.deltaY < 0 ? 1 : -1;
+    setCanvasZoom((value) => clampZoom(value + direction * CANVAS_ZOOM_STEP));
+  }
+
+  const saveHistory = useCallback((description: string, sceneToSave?: Scene) => {
+    const entry: HistoryEntry = {
+      scene: cloneScene(sceneToSave ?? scene),
+      selectedId: selectedId,
+      description,
+      timestamp: Date.now(),
+    };
+
+    setHistory((prev) => ({
+      past: [...prev.past, entry].slice(-MAX_HISTORY_SIZE),
+      future: [],
+    }));
+  }, [scene, selectedId]);
+
+  const undo = useCallback(() => {
+    if (history.past.length === 0) {
+      setStatus("没有可撤销的操作");
+      return;
+    }
+
+    const previous = history.past[history.past.length - 1];
+
+    setHistory((prev) => ({
+      past: prev.past.slice(0, -1),
+      future: [
+        {
+          scene: cloneScene(scene),
+          selectedId: selectedId,
+          description: "当前状态",
+          timestamp: Date.now(),
+        },
+        ...prev.future,
+      ],
+    }));
+
+    setScene(previous.scene);
+    setSelectedId(previous.selectedId);
+    setStatus(`已撤销：${previous.description}`);
+  }, [history.past, scene, selectedId]);
+
+  const redo = useCallback(() => {
+    if (history.future.length === 0) {
+      setStatus("没有可重做的操作");
+      return;
+    }
+
+    const next = history.future[0];
+
+    setHistory((prev) => ({
+      past: [
+        ...prev.past,
+        {
+          scene: cloneScene(scene),
+          selectedId: selectedId,
+          description: "当前状态",
+          timestamp: Date.now(),
+        },
+      ],
+      future: prev.future.slice(1),
+    }));
+
+    setScene(next.scene);
+    setSelectedId(next.selectedId);
+    setStatus(`已重做：${next.description}`);
+  }, [history.future, scene, selectedId]);
+
   useEffect(() => {
     if (!drag) {
       return;
@@ -630,6 +716,15 @@ export default function SceneEditor() {
     };
   }, [drag, markSceneEdited]);
 
+  const changeScene = useCallback((updater: (currentScene: Scene) => Scene, description?: string) => {
+    if (description) {
+      const currentSceneSnapshot = cloneScene(scene);
+      saveHistory(description, currentSceneSnapshot);
+    }
+    setScene(updater);
+    markSceneEdited();
+  }, [scene, saveHistory, markSceneEdited]);
+
   const copySelectedElement = useCallback(() => {
     const element = selectedElementRef.current;
 
@@ -661,22 +756,41 @@ export default function SceneEditor() {
     sceneElementsRef.current = [...sceneElementsRef.current, pastedElement];
     selectedElementRef.current = pastedElement;
 
-    setScene((currentScene) => ({
+    changeScene((currentScene) => ({
       ...currentScene,
       elements: [...currentScene.elements, pastedElement],
-    }));
+    }), `粘贴元素「${pastedElement.name}」`);
     setSelectedId(pastedElement.id);
-    markSceneEdited();
     setStatus(`已粘贴「${pastedElement.name}」`);
-  }, [markSceneEdited]);
+  }, [changeScene]);
 
   useEffect(() => {
     function handleEditorKeyDown(event: KeyboardEvent) {
-      if (!isCopyPasteModifier(event) || isEditableTarget(event.target)) {
+      if (isEditableTarget(event.target)) {
         return;
       }
 
       const key = event.key.toLowerCase();
+
+      if ((event.metaKey || event.ctrlKey) && key === "z") {
+        event.preventDefault();
+        if (event.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+        return;
+      }
+
+      if ((event.metaKey || event.ctrlKey) && key === "y") {
+        event.preventDefault();
+        redo();
+        return;
+      }
+
+      if (!isCopyPasteModifier(event)) {
+        return;
+      }
 
       if (key === "c" && selectedElementRef.current) {
         event.preventDefault();
@@ -695,12 +809,7 @@ export default function SceneEditor() {
     return () => {
       window.removeEventListener("keydown", handleEditorKeyDown);
     };
-  }, [copySelectedElement, pasteCopiedElement]);
-
-  function changeScene(updater: (currentScene: Scene) => Scene) {
-    setScene(updater);
-    markSceneEdited();
-  }
+  }, [copySelectedElement, pasteCopiedElement, undo, redo]);
 
   function patchElement(elementId: string, patch: Partial<SceneElement>) {
     changeScene((currentScene) => ({
@@ -708,7 +817,7 @@ export default function SceneEditor() {
       elements: currentScene.elements.map((element) =>
         element.id === elementId ? ({ ...element, ...patch } as SceneElement) : element,
       ),
-    }));
+    }), `修改元素属性`);
   }
 
   function patchSelected(patch: Partial<SceneElement>) {
@@ -727,7 +836,7 @@ export default function SceneEditor() {
           ? ({ ...element, hidden: !element.hidden } as SceneElement)
           : element,
       ),
-    }));
+    }), `切换元素显示状态`);
   }
 
   function toggleElementLocked(elementId: string) {
@@ -738,7 +847,7 @@ export default function SceneEditor() {
           ? ({ ...element, locked: !element.locked } as SceneElement)
           : element,
       ),
-    }));
+    }), `切换元素锁定状态`);
   }
 
   function moveElementLayer(elementId: string, direction: "forward" | "backward") {
@@ -757,7 +866,7 @@ export default function SceneEditor() {
       const elements = [...currentScene.elements];
       [elements[currentIndex], elements[nextIndex]] = [elements[nextIndex], elements[currentIndex]];
       return { ...currentScene, elements };
-    });
+    }, `调整图层顺序`);
     setSelectedId(elementId);
   }
 
@@ -776,6 +885,7 @@ export default function SceneEditor() {
       return;
     }
 
+    saveHistory(`移动元素「${element.name}」`);
     const point = getSvgPoint(svg, event.clientX, event.clientY);
     setDrag({
       id: elementId,
@@ -801,6 +911,7 @@ export default function SceneEditor() {
       return;
     }
 
+    saveHistory(`调整元素大小「${element.name}」`);
     const point = getSvgPoint(svg, event.clientX, event.clientY);
     setDrag({
       id: elementId,
@@ -964,7 +1075,7 @@ export default function SceneEditor() {
     changeScene((currentScene) => ({
       ...currentScene,
       elements: [...currentScene.elements, element],
-    }));
+    }), `添加文字元素`);
     setSelectedId(element.id);
   }
 
@@ -973,7 +1084,7 @@ export default function SceneEditor() {
     changeScene((currentScene) => ({
       ...currentScene,
       elements: [...currentScene.elements, element],
-    }));
+    }), `添加矩形元素`);
     setSelectedId(element.id);
   }
 
@@ -982,7 +1093,7 @@ export default function SceneEditor() {
     changeScene((currentScene) => ({
       ...currentScene,
       elements: [...currentScene.elements, element],
-    }));
+    }), `添加椭圆元素`);
     setSelectedId(element.id);
   }
 
@@ -1056,7 +1167,7 @@ export default function SceneEditor() {
         (element) => element.id !== selectedElement.id,
       );
       return { ...currentScene, elements };
-    });
+    }, `删除元素「${selectedElement.name}」`);
     setSelectedId(scene.elements.find((element) => element.id !== selectedElement.id)?.id ?? "");
   }
 
@@ -1101,6 +1212,24 @@ export default function SceneEditor() {
           <h1>直播背景编辑器</h1>
         </div>
         <div className="toolbar-actions">
+          <button 
+            type="button" 
+            className="secondary-button"
+            onClick={undo}
+            disabled={history.past.length === 0}
+            title="撤销 (Ctrl+Z)"
+          >
+            ↶
+          </button>
+          <button 
+            type="button" 
+            className="secondary-button"
+            onClick={redo}
+            disabled={history.future.length === 0}
+            title="重做 (Ctrl+Shift+Z 或 Ctrl+Y)"
+          >
+            ↷
+          </button>
           <button type="button" className="secondary-button" onClick={addTextElement}>
             添加文字
           </button>
@@ -1494,7 +1623,7 @@ export default function SceneEditor() {
             <span className="stage-status">{status}</span>
             <div className="stage-header-tools">
               <span>拖拽移动，右下角黄点缩放</span>
-              <div className="canvas-zoom-controls" aria-label="画布缩放">
+              <div className="canvas-zoom-controls" aria-label="画布缩放" onWheel={handleZoomSliderWheel}>
                 <button
                   type="button"
                   className="zoom-button"
