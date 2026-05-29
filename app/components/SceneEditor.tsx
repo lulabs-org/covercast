@@ -36,7 +36,7 @@ import {
   type TextElement,
 } from "../lib/scene";
 import { sceneToSvgMarkup } from "../lib/scene-svg";
-import { computeGuidesOptimized, computeSnapOptimized, computeSpacingGuidesOptimized, computeResizeSnapOptimized, createResizeSnapState, createSnapState, type GuideLine, type MeasurementGuide, type ResizeLabel, type ResizeSnapState, type SnapState } from "../lib/smart-guide";
+import { computeGuidesOptimized, computeSnapOptimized, computeSpacingGuidesOptimized, computeResizeSnapOptimized, createResizeSnapState, createSnapState, type GuideLine, type MeasurementGuide, type ResizeLabel, type ResizeSnapState, type SnapState, type GuideContext } from "../lib/smart-guide";
 import { SpatialIndex, buildSpatialIndex } from "../lib/spatial-index";
 import {
   clearSelection,
@@ -185,6 +185,7 @@ export default function SceneEditor() {
   const [guides, setGuides] = useState<GuideLine[]>([]);
   const [spacingGuides, setSpacingGuides] = useState<MeasurementGuide[]>([]);
   const [resizeLabel, setResizeLabel] = useState<ResizeLabel | null>(null);
+  const guidesSelectedIdsRef = useRef<string[]>([]);
   const svgRef = useRef<SVGSVGElement>(null);
   const stageViewportRef = useRef<HTMLDivElement>(null);
   const elementClipboardRef = useRef<SceneElement | null>(null);
@@ -215,6 +216,44 @@ export default function SceneEditor() {
     }
     return scene.elements.find((element) => element.id === selection.selectedIds[0]) ?? null;
   }, [scene.elements, selection.selectedIds]);
+
+  const visibleGuides = useMemo(() => {
+    const guidesIds = guidesSelectedIdsRef.current;
+    const currentIds = selection.selectedIds;
+    
+    return guides.filter(guide => {
+      if (!guide.mode) {
+        return true;
+      }
+      
+      if (guide.mode === "keyboard") {
+        const idsMatch = guidesIds.length === currentIds.length && 
+          guidesIds.every(id => currentIds.includes(id));
+        return idsMatch;
+      }
+      
+      return true;
+    });
+  }, [guides, selection.selectedIds]);
+
+  const visibleSpacingGuides = useMemo(() => {
+    const guidesIds = guidesSelectedIdsRef.current;
+    const currentIds = selection.selectedIds;
+    
+    return spacingGuides.filter(guide => {
+      if (!guide.mode) {
+        return true;
+      }
+      
+      if (guide.mode === "keyboard") {
+        const idsMatch = guidesIds.length === currentIds.length && 
+          guidesIds.every(id => currentIds.includes(id));
+        return idsMatch;
+      }
+      
+      return true;
+    });
+  }, [spacingGuides, selection.selectedIds]);
 
   useEffect(() => {
     sceneElementsRef.current = scene.elements;
@@ -879,9 +918,15 @@ export default function SceneEditor() {
             break;
         }
         
-        setScene((currentScene) => ({
-          ...currentScene,
-          elements: currentScene.elements.map((element) => {
+        const otherElements = scene.elements.filter(
+          (el) => !selection.selectedIds.includes(el.id) && !el.locked && el.hidden !== true
+        );
+        spatialIndexRef.current = buildSpatialIndex(otherElements);
+        
+        const keyboardContext: GuideContext = { mode: "keyboard" };
+        
+        setScene((currentScene) => {
+          const updatedElements = currentScene.elements.map((element) => {
             if (!selection.selectedIds.includes(element.id) || element.locked) {
               return element;
             }
@@ -891,8 +936,27 @@ export default function SceneEditor() {
               x: element.x + dx,
               y: element.y + dy,
             } as SceneElement;
-          }),
-        }));
+          });
+          
+          const updatedSelectedElements = updatedElements.filter(
+            (el) => selection.selectedIds.includes(el.id) && !el.locked
+          );
+          
+          if (updatedSelectedElements.length > 0) {
+            const movedBounds = computeBoundingBox(updatedSelectedElements);
+            const guides = computeGuidesOptimized(movedBounds, spatialIndexRef.current, undefined, keyboardContext);
+            const spacingGuides = computeSpacingGuidesOptimized(movedBounds, spatialIndexRef.current, keyboardContext);
+            
+            guidesSelectedIdsRef.current = selection.selectedIds;
+            setGuides(guides);
+            setSpacingGuides(spacingGuides);
+          }
+          
+          return {
+            ...currentScene,
+            elements: updatedElements,
+          };
+        });
         markSceneEdited();
         return;
       }
@@ -1980,8 +2044,8 @@ export default function SceneEditor() {
                   idPrefix="editor"
                   interactive
                   selectedIds={selection.selectedIds}
-                  guides={guides}
-                  spacingGuides={spacingGuides}
+                  guides={visibleGuides}
+                  spacingGuides={visibleSpacingGuides}
                   resizeLabel={resizeLabel}
                   svgRef={svgRef}
                   marquee={marquee}

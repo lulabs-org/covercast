@@ -1,5 +1,11 @@
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from "./scene";
 
+export type GuideMode = "drag" | "keyboard";
+
+export type GuideContext = {
+  mode: GuideMode;
+};
+
 export type GuideDirection = "horizontal" | "vertical";
 
 export type GuideType =
@@ -17,6 +23,7 @@ export type GuideLine = {
   y1: number;
   x2: number;
   y2: number;
+  mode?: GuideMode;
 };
 
 export type Rect = {
@@ -47,6 +54,7 @@ export type MeasurementGuide = {
     y: number;
     value: number;
   };
+  mode?: GuideMode;
 };
 
 export type ResizeLabel = {
@@ -966,9 +974,17 @@ export function computeGuidesOptimized(
   dragged: Rect,
   spatialIndex: SpatialIndex,
   threshold = DEFAULT_THRESHOLD,
+  context?: GuideContext,
 ): GuideLine[] {
   const nearbyElements = spatialIndex.queryNearby(dragged, GUIDE_QUERY_RANGE);
-  return computeGuides(dragged, nearbyElements, threshold);
+  const effectiveThreshold = context?.mode === "keyboard" ? 1 : threshold;
+  const guides = computeGuides(dragged, nearbyElements, effectiveThreshold);
+  
+  if (context?.mode) {
+    return guides.map(guide => ({ ...guide, mode: context.mode }));
+  }
+  
+  return guides;
 }
 
 export function computeSnapOptimized(
@@ -977,17 +993,35 @@ export function computeSnapOptimized(
   prevSnap: SnapState | null = null,
   threshold = SNAP_THRESHOLD,
   hysteresis = SNAP_HYSTERESIS,
+  context?: GuideContext,
 ): SnapResult {
   const nearbyElements = spatialIndex.queryNearby(rawRect, GUIDE_QUERY_RANGE);
-  return computeSnap(rawRect, nearbyElements, prevSnap, threshold, hysteresis);
+  const result = computeSnap(rawRect, nearbyElements, prevSnap, threshold, hysteresis);
+  
+  if (context?.mode) {
+    return {
+      ...result,
+      guides: result.guides.map(guide => ({ ...guide, mode: context.mode })),
+    };
+  }
+  
+  return result;
 }
 
 export function computeSpacingGuidesOptimized(
   dragged: Rect,
   spatialIndex: SpatialIndex,
+  context?: GuideContext,
 ): MeasurementGuide[] {
   const nearbyElements = spatialIndex.queryNearby(dragged, GUIDE_QUERY_RANGE);
-  return computeSpacingGuides(dragged, nearbyElements);
+  const alignThreshold = context?.mode === "keyboard" ? 1 : SPACING_ALIGN_THRESHOLD;
+  const spacingGuides = computeSpacingGuides(dragged, nearbyElements, alignThreshold);
+  
+  if (context?.mode) {
+    return spacingGuides.map(guide => ({ ...guide, mode: context.mode }));
+  }
+  
+  return spacingGuides;
 }
 
 export function computeResizeSnapOptimized(
