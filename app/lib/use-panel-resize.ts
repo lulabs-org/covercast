@@ -15,7 +15,13 @@ type PanelWidths = {
   rightPanel: number;
 };
 
-function loadPanelWidths(): PanelWidths {
+const DEFAULT_PANEL_WIDTHS: PanelWidths = {
+  leftPanel: LEFT_PANEL_DEFAULT_WIDTH,
+  rightPanel: RIGHT_PANEL_DEFAULT_WIDTH,
+};
+
+function loadPanelWidths(): PanelWidths | null {
+  if (typeof window === "undefined") return null;
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -27,10 +33,7 @@ function loadPanelWidths(): PanelWidths {
     }
   } catch {
   }
-  return {
-    leftPanel: LEFT_PANEL_DEFAULT_WIDTH,
-    rightPanel: RIGHT_PANEL_DEFAULT_WIDTH,
-  };
+  return null;
 }
 
 function savePanelWidths(widths: PanelWidths): void {
@@ -47,11 +50,18 @@ type ResizeState = {
 };
 
 export function usePanelResize() {
-  const [panelWidths, setPanelWidths] = useState<PanelWidths>(() => loadPanelWidths());
+  const [panelWidths, setPanelWidths] = useState<PanelWidths>(DEFAULT_PANEL_WIDTHS);
   const [isDragging, setIsDragging] = useState(false);
   const resizeStateRef = useRef<ResizeState | null>(null);
   const resizerLeftRef = useRef<HTMLDivElement>(null);
   const resizerRightRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const storedWidths = loadPanelWidths();
+    if (storedWidths) {
+      setPanelWidths(storedWidths);
+    }
+  }, []);
 
   const handleMouseDown = useCallback((panel: "left" | "right", event: React.MouseEvent) => {
     event.preventDefault();

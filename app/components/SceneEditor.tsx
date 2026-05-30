@@ -1826,7 +1826,7 @@ export default function SceneEditor() {
           ref={leftPanelRef}
           className="left-panel"
           aria-label="Scene settings"
-          style={{ width: panelWidths.leftPanel }}
+          style={{ width: `${panelWidths.leftPanel}px` }}
         >
           <div className="sidebar-context">
             <span className="context-label">当前编辑</span>
@@ -2216,7 +2216,7 @@ export default function SceneEditor() {
           ref={rightPanelRef}
           className="right-panel"
           aria-label="Selected element settings"
-          style={{ width: panelWidths.rightPanel }}
+          style={{ width: `${panelWidths.rightPanel}px` }}
         >
           <PanelTitle
             title={selectedElement ? selectedElement.name : "未选择元素"}
