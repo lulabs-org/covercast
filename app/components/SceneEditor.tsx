@@ -68,6 +68,8 @@ import {
   type GroupResizeState,
   type ResizeHandleType,
 } from "../lib/group-drag";
+import { useScrollVisibility } from "../lib/use-scroll-visibility";
+import { usePanelResize } from "../lib/use-panel-resize";
 import SceneCanvas from "./SceneCanvas";
 
 type SingleDragState = {
@@ -201,7 +203,6 @@ export default function SceneEditor() {
   const [history, setHistory] = useState<HistoryState>({ past: [], future: [] });
   const guidesSelectedIdsRef = useRef<string[]>([]);
   const svgRef = useRef<SVGSVGElement>(null);
-  const stageViewportRef = useRef<HTMLDivElement>(null);
   const elementClipboardRef = useRef<SceneElement | null>(null);
   const pasteOffsetRef = useRef(1);
   const sceneElementsRef = useRef<SceneElement[]>(scene.elements);
@@ -223,6 +224,9 @@ export default function SceneEditor() {
     layers: false,
   });
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
+
+  const { leftPanelRef, rightPanelRef, stageViewportRef } = useScrollVisibility();
+  const { panelWidths, resizerLeftRef, resizerRightRef, handleMouseDown } = usePanelResize();
 
   const selectedElement = useMemo(() => {
     if (selection.selectedIds.length !== 1) {
@@ -1818,7 +1822,12 @@ export default function SceneEditor() {
       )}
 
       <section className="editor-grid">
-        <aside className="left-panel" aria-label="Scene settings">
+        <aside
+          ref={leftPanelRef}
+          className="left-panel"
+          aria-label="Scene settings"
+          style={{ width: panelWidths.leftPanel }}
+        >
           <div className="sidebar-context">
             <span className="context-label">当前编辑</span>
             <strong>
@@ -2107,6 +2116,12 @@ export default function SceneEditor() {
           </SidebarSection>
         </aside>
 
+        <div
+          ref={resizerLeftRef}
+          className="panel-resizer"
+          onMouseDown={(e) => handleMouseDown("left", e)}
+        />
+
         <section className="stage-panel" aria-label="Canvas preview">
           <div className="stage-header">
             <span className="stage-status">{status}</span>
@@ -2191,7 +2206,18 @@ export default function SceneEditor() {
           </div>
         </section>
 
-        <aside className="right-panel" aria-label="Selected element settings">
+        <div
+          ref={resizerRightRef}
+          className="panel-resizer"
+          onMouseDown={(e) => handleMouseDown("right", e)}
+        />
+
+        <aside
+          ref={rightPanelRef}
+          className="right-panel"
+          aria-label="Selected element settings"
+          style={{ width: panelWidths.rightPanel }}
+        >
           <PanelTitle
             title={selectedElement ? selectedElement.name : "未选择元素"}
             caption={selectedElement ? selectedElement.id : "点击画布元素进行编辑"}

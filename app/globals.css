@@ -35,6 +35,69 @@ body {
     sans-serif;
 }
 
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+  border: 0;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.left-panel:hover::-webkit-scrollbar-thumb,
+.right-panel:hover::-webkit-scrollbar-thumb,
+.stage-viewport:hover::-webkit-scrollbar-thumb,
+.sidebar-scrollable:hover::-webkit-scrollbar-thumb,
+.modal-scrollable:hover::-webkit-scrollbar-thumb,
+.left-panel.scrolling::-webkit-scrollbar-thumb,
+.right-panel.scrolling::-webkit-scrollbar-thumb,
+.stage-viewport.scrolling::-webkit-scrollbar-thumb,
+.sidebar-scrollable.scrolling::-webkit-scrollbar-thumb,
+.modal-scrollable.scrolling::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.25);
+}
+
+.left-panel::-webkit-scrollbar-thumb:hover,
+.right-panel::-webkit-scrollbar-thumb:hover,
+.stage-viewport::-webkit-scrollbar-thumb:hover,
+.sidebar-scrollable::-webkit-scrollbar-thumb:hover,
+.modal-scrollable::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.45);
+}
+
+.left-panel,
+.right-panel,
+.stage-viewport,
+.sidebar-scrollable,
+.modal-scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.left-panel:hover,
+.right-panel:hover,
+.stage-viewport:hover,
+.sidebar-scrollable:hover,
+.modal-scrollable:hover,
+.left-panel.scrolling,
+.right-panel.scrolling,
+.stage-viewport.scrolling,
+.sidebar-scrollable.scrolling,
+.modal-scrollable.scrolling {
+  scrollbar-color: rgba(100, 116, 139, 0.25) transparent;
+}
+
 button,
 input,
 textarea,
@@ -52,9 +115,9 @@ label.file-button {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
   overflow: hidden;
-  padding: 18px;
+  padding: 0;
   background: var(--background);
 }
 
@@ -64,10 +127,10 @@ label.file-button {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 16px;
+  padding: 10px 12px;
   background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-radius: 8px;
+  border-bottom: 1px solid var(--panel-border);
+  border-radius: 0;
 }
 
 .eyebrow {
@@ -229,9 +292,7 @@ h1 {
 .editor-grid {
   flex: 1 1 auto;
   min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(240px, 300px) minmax(360px, 1fr) minmax(270px, 340px);
-  gap: 16px;
+  display: flex;
   overflow: hidden;
 }
 
@@ -240,14 +301,57 @@ h1 {
 .stage-panel {
   min-height: 0;
   background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-radius: 8px;
+  border-radius: 0;
+  flex-shrink: 0;
+}
+
+.left-panel {
+  border-right: 1px solid var(--panel-border);
+}
+
+.stage-panel {
+  flex: 1 1 auto;
+  min-width: 360px;
+  border-right: 1px solid var(--panel-border);
 }
 
 .left-panel,
 .right-panel {
   overflow: auto;
-  padding: 14px;
+  padding: 12px;
+}
+
+.panel-resizer {
+  width: 1px;
+  min-height: 0;
+  background: var(--panel-border);
+  cursor: col-resize;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+
+.panel-resizer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -3px;
+  right: -3px;
+  bottom: 0;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.panel-resizer:hover {
+  background: rgba(100, 116, 139, 0.15);
+}
+
+.panel-resizer.dragging {
+  background: rgba(100, 116, 139, 0.25);
+}
+
+.panel-resizer.dragging {
+  cursor: col-resize;
 }
 
 .sidebar-context {
@@ -970,7 +1074,7 @@ h1 {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 10px 14px;
+  padding: 8px 12px;
   color: var(--muted);
   border-bottom: 1px solid var(--panel-border);
   font-size: 13px;
@@ -1047,7 +1151,7 @@ h1 {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: 18px;
+  padding: 12px;
   background:
     linear-gradient(45deg, #dfe5ef 25%, transparent 25%) 0 0 / 24px 24px,
     linear-gradient(45deg, transparent 75%, #dfe5ef 75%) 0 0 / 24px 24px,
@@ -1216,17 +1320,35 @@ h1 {
 
 @media (max-width: 1180px) {
   .editor-grid {
-    grid-template-columns: minmax(220px, 280px) minmax(360px, 1fr);
+    flex-wrap: wrap;
+  }
+
+  .stage-panel {
+    order: 2;
+    flex: 1 1 100%;
+    min-width: 0;
+    border-right: 0;
+  }
+
+  .left-panel {
+    order: 1;
+    width: 260px !important;
+  }
+
+  .panel-resizer {
+    display: none;
   }
 
   .right-panel {
-    grid-column: 1 / -1;
+    order: 3;
+    width: 100% !important;
+    border-top: 1px solid var(--panel-border);
   }
 }
 
 @media (max-width: 820px) {
   .editor-shell {
-    padding: 10px;
+    padding: 0;
   }
 
   .editor-toolbar {
@@ -1244,7 +1366,19 @@ h1 {
   }
 
   .editor-grid {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .left-panel,
+  .right-panel,
+  .stage-panel {
+    width: 100% !important;
+    border-right: 0;
+    border-bottom: 1px solid var(--panel-border);
+  }
+
+  .panel-resizer {
+    display: none;
   }
 
   .stage-header {
