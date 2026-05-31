@@ -1,6 +1,25 @@
 export const CANVAS_WIDTH = 941;
 export const CANVAS_HEIGHT = 1672;
 
+export type CanvasSize = {
+  width: number;
+  height: number;
+  label: string;
+  ratio: string;
+};
+
+export const CANVAS_SIZE_PRESETS: CanvasSize[] = [
+  { width: CANVAS_WIDTH, height: CANVAS_HEIGHT, label: `${CANVAS_WIDTH} × ${CANVAS_HEIGHT}`, ratio: "默认" },
+  { width: 1080, height: 1920, label: "1080 × 1920", ratio: "9:16" },
+  { width: 1080, height: 1440, label: "1080 × 1440", ratio: "3:4" },
+  { width: 1080, height: 1080, label: "1080 × 1080", ratio: "1:1" },
+  { width: 1440, height: 1080, label: "1440 × 1080", ratio: "4:3" },
+  { width: 1920, height: 1080, label: "1920 × 1080", ratio: "16:9" },
+  { width: 1080, height: 460, label: "1080 × 460", ratio: "2.35:1" },
+];
+
+export const DEFAULT_CANVAS_SIZE: CanvasSize = CANVAS_SIZE_PRESETS[0];
+
 export const DEFAULT_FONT_FAMILY =
   '"PingFang SC", "Microsoft YaHei", "Noto Sans SC", Arial, sans-serif';
 
@@ -63,6 +82,8 @@ export type SceneElement = TextElement | ShapeElement | ImageElement;
 
 export type Scene = {
   version: 1;
+  width?: number;
+  height?: number;
   backgroundColor: string;
   backgroundOpacity: number;
   elements: SceneElement[];
@@ -90,6 +111,18 @@ export function createSceneFromTemplate(templateId: string): Scene {
 
 export function cloneScene(scene: Scene): Scene {
   return JSON.parse(JSON.stringify(scene)) as Scene;
+}
+
+export function getSceneSize(scene: Scene): { width: number; height: number } {
+  return {
+    width: scene.width ?? CANVAS_WIDTH,
+    height: scene.height ?? CANVAS_HEIGHT,
+  };
+}
+
+export function getSceneAspectRatio(scene: Scene): number {
+  const { width, height } = getSceneSize(scene);
+  return width / height;
 }
 
 export function isTextElement(element: SceneElement): element is TextElement {
@@ -186,6 +219,8 @@ export function createImageElement(src: string, name = "自定义素材"): Image
 
 const defaultScene: Scene = {
   version: 1,
+  width: CANVAS_WIDTH,
+  height: CANVAS_HEIGHT,
   backgroundColor: "#2845c7",
   backgroundOpacity: 1,
   elements: [
@@ -422,6 +457,8 @@ const defaultScene: Scene = {
 
 const soloInterviewScene: Scene = {
   version: 1,
+  width: CANVAS_WIDTH,
+  height: CANVAS_HEIGHT,
   backgroundColor: "#0f766e",
   backgroundOpacity: 1,
   elements: [
@@ -583,6 +620,8 @@ const soloInterviewScene: Scene = {
 
 const roundtableScene: Scene = {
   version: 1,
+  width: CANVAS_WIDTH,
+  height: CANVAS_HEIGHT,
   backgroundColor: "#2f244f",
   backgroundOpacity: 1,
   elements: [
@@ -746,6 +785,8 @@ const roundtableScene: Scene = {
 
 const launchPosterScene: Scene = {
   version: 1,
+  width: CANVAS_WIDTH,
+  height: CANVAS_HEIGHT,
   backgroundColor: "#f8fafc",
   backgroundOpacity: 1,
   elements: [
@@ -875,6 +916,8 @@ const launchPosterScene: Scene = {
 
 const courseSprintScene: Scene = {
   version: 1,
+  width: CANVAS_WIDTH,
+  height: CANVAS_HEIGHT,
   backgroundColor: "#4c1d95",
   backgroundOpacity: 1,
   elements: [
@@ -1034,7 +1077,22 @@ const courseSprintScene: Scene = {
   ],
 };
 
+const blankPosterScene: Scene = {
+  version: 1,
+  width: DEFAULT_CANVAS_SIZE.width,
+  height: DEFAULT_CANVAS_SIZE.height,
+  backgroundColor: "#f8fafc",
+  backgroundOpacity: 1,
+  elements: [],
+};
+
 export const BUILT_IN_TEMPLATES = [
+  {
+    id: "blank-poster",
+    name: "空白海报",
+    description: "从零开始创建海报",
+    scene: blankPosterScene,
+  },
   {
     id: DEFAULT_TEMPLATE_ID,
     name: "双讲师课程",
