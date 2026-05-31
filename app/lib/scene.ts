@@ -1034,7 +1034,20 @@ const courseSprintScene: Scene = {
   ],
 };
 
+const blankPosterScene: Scene = {
+  version: 1,
+  backgroundColor: "#f8fafc",
+  backgroundOpacity: 1,
+  elements: [],
+};
+
 export const BUILT_IN_TEMPLATES = [
+  {
+    id: "blank-poster",
+    name: "空白海报",
+    description: "从零开始创建海报",
+    scene: blankPosterScene,
+  },
   {
     id: DEFAULT_TEMPLATE_ID,
     name: "双讲师课程",
