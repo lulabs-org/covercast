@@ -948,6 +948,88 @@ h1 {
   transform: scale(1.05);
 }
 
+.template-card-menu-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.template-card-menu-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0;
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.template-card-menu-button:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #243247;
+}
+
+.template-card-menu {
+  background: #fff;
+  border: 1px solid #d9e0ee;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  padding: 4px 0;
+  min-width: 120px;
+}
+
+.template-card-menu-item {
+  display: block;
+  width: 100%;
+  border: 0;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #243247;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.template-card-menu-item:hover {
+  background: #f1f5f9;
+}
+
+.template-card-menu-item-danger {
+  color: var(--danger);
+}
+
+.template-card-menu-item-danger:hover {
+  background: #fff1f0;
+}
+
+.template-rename-input {
+  width: 100%;
+  min-width: 0;
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #243247;
+  background: #fff;
+  outline: none;
+}
+
+.template-rename-input:focus {
+  box-shadow: 0 0 0 2px rgba(39, 100, 246, 0.2);
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;

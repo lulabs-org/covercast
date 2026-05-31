@@ -11,6 +11,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import {
   BUILT_IN_TEMPLATES,
   CANVAS_HEIGHT,
@@ -1384,6 +1385,48 @@ export default function SceneEditor() {
     }
   }
 
+  function renameCustomTemplate(templateId: string, newName: string) {
+    const nextTemplates = customTemplates.map((template) =>
+      template.id === templateId
+        ? { ...template, name: newName, updatedAt: new Date().toISOString() }
+        : template,
+    );
+
+    try {
+      writeCustomTemplatesToStorage(nextTemplates);
+      setCustomTemplates(nextTemplates);
+      setStatus(`已重命名为「${newName}」`);
+    } catch {
+      setStatus("模板重命名失败，请检查浏览器缓存权限");
+    }
+  }
+
+  function duplicateCustomTemplate(templateId: string) {
+    const template = customTemplates.find((t) => t.id === templateId);
+    if (!template) {
+      return;
+    }
+
+    const timestamp = new Date().toISOString();
+    const duplicatedName = uniqueTemplateName(`${template.name} 副本`, customTemplates);
+    const duplicatedTemplate: CustomSceneTemplate = {
+      id: createCustomTemplateId(),
+      name: duplicatedName,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      scene: cloneScene(template.scene),
+    };
+    const nextTemplates = [duplicatedTemplate, ...customTemplates];
+
+    try {
+      writeCustomTemplatesToStorage(nextTemplates);
+      setCustomTemplates(nextTemplates);
+      setStatus(`已创建副本「${duplicatedName}」`);
+    } catch {
+      setStatus("创建副本失败，浏览器缓存空间可能不足");
+    }
+  }
+
   function exportTemplateJson() {
     const payload = createTemplateExportPayload(
       activeTemplate?.name ?? "自定义场景",
@@ -1896,6 +1939,8 @@ export default function SceneEditor() {
                         active={activeTemplateId === template.id}
                         dirty={activeTemplateId === template.id && hasUnsavedCustomTemplateChanges}
                         onApply={() => applyTemplate(template)}
+                        onDuplicate={() => duplicateCustomTemplate(template.id)}
+                        onRename={(newName) => renameCustomTemplate(template.id, newName)}
                         onDelete={() => deleteCustomTemplate(template.id)}
                       />
                     ))}
@@ -2488,6 +2533,8 @@ function TemplateCard({
   active,
   dirty = false,
   onApply,
+  onDuplicate,
+  onRename,
   onDelete,
 }: {
   name: string;
@@ -2496,8 +2543,94 @@ function TemplateCard({
   active: boolean;
   dirty?: boolean;
   onApply: () => void;
+  onDuplicate?: () => void;
+  onRename?: (newName: string) => void;
   onDelete?: () => void;
 }) {
+  const [showMenu, setShowMenu] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(name);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const calculateMenuPosition = useCallback(() => {
+    if (menuButtonRef.current) {
+      const buttonRect = menuButtonRef.current.getBoundingClientRect();
+      const menuWidth = 120;
+      const menuHeight = 100;
+      
+      let top = buttonRect.bottom + 4;
+      let left = buttonRect.right - menuWidth;
+      
+      if (top + menuHeight > window.innerHeight) {
+        top = buttonRect.top - menuHeight - 4;
+      }
+      
+      if (left < 0) {
+        left = buttonRect.left;
+      }
+      
+      return { top, left };
+    }
+    return { top: 0, left: 0 };
+  }, []);
+
+  useEffect(() => {
+    if (showMenu) {
+      const handleClickOutside = (e: MouseEvent) => {
+        if (
+          menuRef.current &&
+          !menuRef.current.contains(e.target as Node) &&
+          menuButtonRef.current &&
+          !menuButtonRef.current.contains(e.target as Node)
+        ) {
+          setShowMenu(false);
+        }
+      };
+      
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showMenu]);
+
+  if (editing) {
+    return (
+      <div className={["template-card", active ? "active" : "", dirty ? "dirty" : ""].filter(Boolean).join(" ")}>
+        <input
+          className="template-rename-input"
+          type="text"
+          value={draft}
+          onChange={(e) => setDraft(e.currentTarget.value)}
+          onBlur={() => {
+            const trimmed = draft.trim();
+            if (trimmed && trimmed !== name && onRename) {
+              onRename(trimmed);
+            }
+            setEditing(false);
+            setDraft(name);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              const trimmed = draft.trim();
+              if (trimmed && trimmed !== name && onRename) {
+                onRename(trimmed);
+              }
+              setEditing(false);
+              setDraft(name);
+            }
+            if (e.key === "Escape") {
+              setEditing(false);
+              setDraft(name);
+            }
+          }}
+          autoFocus
+          onClick={(e) => e.stopPropagation()}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={[
       "template-card",
@@ -2511,16 +2644,79 @@ function TemplateCard({
         </div>
         <span className="template-card-badge">{badge}</span>
       </button>
-      {onDelete ? (
-        <button
-          type="button"
-          className="template-card-delete"
-          aria-label={`删除模板 ${name}`}
-          onClick={onDelete}
-          title="删除模板"
-        >
-          ×
-        </button>
+      {(onDuplicate || onRename || onDelete) ? (
+        <div className="template-card-menu-wrapper">
+          <button
+            ref={menuButtonRef}
+            type="button"
+            className="template-card-menu-button"
+            aria-label="更多操作"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!showMenu) {
+                setMenuPosition(calculateMenuPosition());
+              }
+              setShowMenu(!showMenu);
+            }}
+            title="更多操作"
+          >
+            ⋯
+          </button>
+          {showMenu && createPortal(
+            <div
+              ref={menuRef}
+              className="template-card-menu"
+              style={{
+                position: 'fixed',
+                top: menuPosition.top,
+                left: menuPosition.left,
+                zIndex: 9999,
+              }}
+            >
+              {onDuplicate && (
+                <button
+                  type="button"
+                  className="template-card-menu-item"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMenu(false);
+                    onDuplicate();
+                  }}
+                >
+                  创建副本
+                </button>
+              )}
+              {onRename && (
+                <button
+                  type="button"
+                  className="template-card-menu-item"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMenu(false);
+                    setDraft(name);
+                    setEditing(true);
+                  }}
+                >
+                  重命名
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  type="button"
+                  className="template-card-menu-item template-card-menu-item-danger"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMenu(false);
+                    onDelete();
+                  }}
+                >
+                  删除
+                </button>
+              )}
+            </div>,
+            document.body
+          )}
+        </div>
       ) : null}
     </div>
   );
