@@ -13,8 +13,7 @@ import {
 } from "react";
 import {
   BUILT_IN_TEMPLATES,
-  CANVAS_HEIGHT,
-  CANVAS_WIDTH,
+  CANVAS_SIZE_PRESETS,
   DEFAULT_FONT_FAMILY,
   DEFAULT_TEMPLATE_ID,
   cloneScene,
@@ -23,6 +22,8 @@ import {
   createImageElement,
   createRectElement,
   createTextElement,
+  getSceneSize,
+  getSceneAspectRatio,
   isImageElement,
   isShapeElement,
   isTextElement,
@@ -96,7 +97,6 @@ type SceneSlotInfo = {
 
 const TEMPLATE_EXPORT_FORMAT = "covercast.template";
 const CUSTOM_FONT_FAMILY_VALUE = "__custom-font-family__";
-const CANVAS_ASPECT_RATIO = CANVAS_WIDTH / CANVAS_HEIGHT;
 const CANVAS_ZOOM_MIN = 0.25;
 const CANVAS_ZOOM_MAX = 3;
 const CANVAS_ZOOM_STEP = 0.1;
@@ -209,6 +209,9 @@ export default function SceneEditor() {
     layers: false,
   });
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
+  const [customCanvasWidth, setCustomCanvasWidth] = useState<number>(800);
+  const [customCanvasHeight, setCustomCanvasHeight] = useState<number>(600);
+  const [isCustomSizeMode, setIsCustomSizeMode] = useState<boolean>(false);
 
   const selectedElement = useMemo(() => {
     if (selection.selectedIds.length !== 1) {
@@ -216,6 +219,9 @@ export default function SceneEditor() {
     }
     return scene.elements.find((element) => element.id === selection.selectedIds[0]) ?? null;
   }, [scene.elements, selection.selectedIds]);
+
+  const canvasSize = useMemo(() => getSceneSize(scene), [scene]);
+  const canvasAspectRatio = useMemo(() => getSceneAspectRatio(scene), [scene]);
 
   const visibleGuides = useMemo(() => {
     const guidesIds = guidesSelectedIdsRef.current;
@@ -355,7 +361,7 @@ export default function SceneEditor() {
       const availableHeight = Math.max(280, currentViewport.clientHeight - STAGE_VIEWPORT_PADDING);
       const nextFitWidth = Math.min(
         availableWidth,
-        availableHeight * CANVAS_ASPECT_RATIO,
+        availableHeight * canvasAspectRatio,
         CANVAS_PREVIEW_MAX_WIDTH,
       );
 
@@ -372,7 +378,7 @@ export default function SceneEditor() {
       observer.disconnect();
       window.removeEventListener("resize", updateFitWidth);
     };
-  }, []);
+  }, [canvasAspectRatio]);
 
   const activeBuiltInTemplate =
     BUILT_IN_TEMPLATES.find((template) => template.id === activeTemplateId) ?? null;
@@ -572,12 +578,12 @@ export default function SceneEditor() {
         const rawX = clamp(
           groupBox.x + latest.dx,
           -groupBox.width + 24,
-          CANVAS_WIDTH - 24,
+          canvasSize.width - 24,
         );
         const rawY = clamp(
           groupBox.y + latest.dy,
           -groupBox.height + 24,
-          CANVAS_HEIGHT - 24,
+          canvasSize.height - 24,
         );
 
         const groupRect = {
@@ -635,10 +641,10 @@ export default function SceneEditor() {
         );
 
         const clampedBounds: BoundingBox = {
-          x: clamp(newBounds.x, 0, CANVAS_WIDTH - 10),
-          y: clamp(newBounds.y, 0, CANVAS_HEIGHT - 10),
-          width: clamp(newBounds.width, 10, CANVAS_WIDTH - newBounds.x),
-          height: clamp(newBounds.height, 10, CANVAS_HEIGHT - newBounds.y),
+          x: clamp(newBounds.x, 0, canvasSize.width - 10),
+          y: clamp(newBounds.y, 0, canvasSize.height - 10),
+          width: clamp(newBounds.width, 10, canvasSize.width - newBounds.x),
+          height: clamp(newBounds.height, 10, canvasSize.height - newBounds.y),
         };
 
         const resizeSnap = computeResizeSnapOptimized(
@@ -652,8 +658,8 @@ export default function SceneEditor() {
         const snappedBounds: BoundingBox = {
           x: clampedBounds.x,
           y: clampedBounds.y,
-          width: clamp(resizeSnap.snappedWidth, 10, CANVAS_WIDTH - clampedBounds.x),
-          height: clamp(resizeSnap.snappedHeight, 10, CANVAS_HEIGHT - clampedBounds.y),
+          width: clamp(resizeSnap.snappedWidth, 10, canvasSize.width - clampedBounds.x),
+          height: clamp(resizeSnap.snappedHeight, 10, canvasSize.height - clampedBounds.y),
         };
 
         const resizeGuides = computeGuidesOptimized(snappedBounds, spatialIndexRef.current);
@@ -702,12 +708,12 @@ export default function SceneEditor() {
         const rawX = clamp(
           activeDrag.element.x + latest.dx,
           -activeDrag.element.width + 24,
-          CANVAS_WIDTH - 24,
+          canvasSize.width - 24,
         );
         const rawY = clamp(
           activeDrag.element.y + latest.dy,
           -activeDrag.element.height + 24,
-          CANVAS_HEIGHT - 24,
+          canvasSize.height - 24,
         );
 
         const result = computeSnapOptimized(
@@ -746,12 +752,12 @@ export default function SceneEditor() {
       const rawWidth = clamp(
         activeDrag.element.width + latest.dx,
         minimumWidth(activeDrag.element),
-        CANVAS_WIDTH - activeDrag.element.x,
+        canvasSize.width - activeDrag.element.x,
       );
       const rawHeight = clamp(
         activeDrag.element.height + latest.dy,
         minimumHeight(activeDrag.element),
-        CANVAS_HEIGHT - activeDrag.element.y,
+        canvasSize.height - activeDrag.element.y,
       );
 
       const resizeSnap = computeResizeSnapOptimized(
@@ -765,12 +771,12 @@ export default function SceneEditor() {
       const snappedWidth = clamp(
         resizeSnap.snappedWidth,
         minimumWidth(activeDrag.element),
-        CANVAS_WIDTH - activeDrag.element.x,
+        canvasSize.width - activeDrag.element.x,
       );
       const snappedHeight = clamp(
         resizeSnap.snappedHeight,
         minimumHeight(activeDrag.element),
-        CANVAS_HEIGHT - activeDrag.element.y,
+        canvasSize.height - activeDrag.element.y,
       );
 
       const snappedRect = {
@@ -833,7 +839,7 @@ export default function SceneEditor() {
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     };
-  }, [drag, markSceneEdited]);
+  }, [drag, markSceneEdited, canvasSize]);
 
   const copySelectedElement = useCallback(() => {
     const element = selectedElementRef.current;
@@ -861,6 +867,7 @@ export default function SceneEditor() {
       sourceElement,
       sceneElementsRef.current,
       pasteOffsetRef.current,
+      canvasSize,
     );
     pasteOffsetRef.current += 1;
     sceneElementsRef.current = [...sceneElementsRef.current, pastedElement];
@@ -873,7 +880,7 @@ export default function SceneEditor() {
     setSelection((prev) => selectSingle(prev, pastedElement.id));
     markSceneEdited();
     setStatus(`已粘贴「${pastedElement.name}」`);
-  }, [markSceneEdited]);
+  }, [markSceneEdited, canvasSize]);
 
   useEffect(() => {
     function handleEditorKeyDown(event: KeyboardEvent) {
@@ -1569,7 +1576,7 @@ export default function SceneEditor() {
       if (format === "svg") {
         downloadBlob(new Blob([svgMarkup], { type: formatOption.mimeType }), filename);
       } else {
-        const canvas = await renderSvgToCanvas(svgMarkup, format === "jpeg" ? "#ffffff" : null);
+        const canvas = await renderSvgToCanvas(svgMarkup, format === "jpeg" ? "#ffffff" : null, canvasSize);
         const blob = await canvasToBlob(
           canvas,
           formatOption.mimeType,
@@ -1578,7 +1585,7 @@ export default function SceneEditor() {
         downloadBlob(blob, filename);
       }
 
-      setStatus(`${formatOption.label} 已导出，尺寸 ${CANVAS_WIDTH}×${CANVAS_HEIGHT}`);
+      setStatus(`${formatOption.label} 已导出，尺寸 ${canvasSize.width}×${canvasSize.height}`);
     } catch {
       setStatus("导出失败，请确认所有素材都能正常显示");
     }
@@ -1705,11 +1712,89 @@ export default function SceneEditor() {
 
           <SidebarSection
             title="场景"
-            caption="941×1672 竖屏"
+            caption={`${canvasSize.width}×${canvasSize.height}`}
             collapsed={collapsedSections.scene}
             onToggle={() => toggleSidebarSection("scene")}
           >
             <div className="section-fields">
+              <div className="field-row">
+                <label className="field-label">画布尺寸</label>
+                <select
+                  className="field-select"
+                  value={isCustomSizeMode ? "custom" : `${canvasSize.width}-${canvasSize.height}`}
+                  onChange={(e) => {
+                    if (e.currentTarget.value === "custom") {
+                      setIsCustomSizeMode(true);
+                      changeScene((currentScene) => ({
+                        ...currentScene,
+                        width: customCanvasWidth,
+                        height: customCanvasHeight,
+                      }));
+                    } else {
+                      setIsCustomSizeMode(false);
+                      const selectedPreset = CANVAS_SIZE_PRESETS.find(
+                        preset => `${preset.width}-${preset.height}` === e.currentTarget.value
+                      );
+                      if (selectedPreset) {
+                        changeScene((currentScene) => ({
+                          ...currentScene,
+                          width: selectedPreset.width,
+                          height: selectedPreset.height,
+                        }));
+                      }
+                    }
+                  }}
+                >
+                  {CANVAS_SIZE_PRESETS.map(preset => (
+                    <option key={`${preset.width}-${preset.height}`} value={`${preset.width}-${preset.height}`}>
+                      {preset.label} ({preset.ratio})
+                    </option>
+                  ))}
+                  <option value="custom">自定义尺寸</option>
+                </select>
+              </div>
+              {isCustomSizeMode ? (
+                <div className="custom-size-row">
+                  <label className="field-label">宽度</label>
+                  <input
+                    type="number"
+                    className="field-input"
+                    value={customCanvasWidth}
+                    min={100}
+                    max={4096}
+                    onChange={(e) => {
+                      const value = Math.max(100, Math.min(4096, parseInt(e.currentTarget.value) || 100));
+                      setCustomCanvasWidth(value);
+                      changeScene((currentScene) => ({
+                        ...currentScene,
+                        width: value,
+                      }));
+                    }}
+                  />
+                  <span className="size-unit">px</span>
+                </div>
+              ) : null}
+              {isCustomSizeMode ? (
+                <div className="custom-size-row">
+                  <label className="field-label">高度</label>
+                  <input
+                    type="number"
+                    className="field-input"
+                    value={customCanvasHeight}
+                    min={100}
+                    max={4096}
+                    onChange={(e) => {
+                      const value = Math.max(100, Math.min(4096, parseInt(e.currentTarget.value) || 100));
+                      setCustomCanvasHeight(value);
+                      changeScene((currentScene) => ({
+                        ...currentScene,
+                        height: value,
+                      }));
+                    }}
+                  />
+                  <span className="size-unit">px</span>
+                </div>
+              ) : null}
               <ColorField
                 label="背景颜色"
                 value={scene.backgroundColor}
@@ -2041,6 +2126,7 @@ export default function SceneEditor() {
                 <SceneCanvas
                   scene={scene}
                   className="scene-preview"
+                  style={{ aspectRatio: `${canvasSize.width} / ${canvasSize.height}` }}
                   idPrefix="editor"
                   interactive
                   selectedIds={selection.selectedIds}
@@ -2940,6 +3026,7 @@ function createPastedSceneElement(
   element: SceneElement,
   elements: SceneElement[],
   offsetMultiplier: number,
+  canvasSize: { width: number; height: number },
 ): SceneElement {
   const offset = 24 * offsetMultiplier;
 
@@ -2947,8 +3034,8 @@ function createPastedSceneElement(
     ...cloneSceneElement(element),
     id: createSceneElementId(element.type),
     name: uniqueSceneElementName(`${element.name} 副本`, elements),
-    x: clamp(element.x + offset, -element.width + 24, CANVAS_WIDTH - 24),
-    y: clamp(element.y + offset, -element.height + 24, CANVAS_HEIGHT - 24),
+    x: clamp(element.x + offset, -element.width + 24, canvasSize.width - 24),
+    y: clamp(element.y + offset, -element.height + 24, canvasSize.height - 24),
   } as SceneElement;
 }
 
@@ -3024,6 +3111,7 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 async function renderSvgToCanvas(
   svgMarkup: string,
   backgroundColor: string | null,
+  canvasSize: { width: number; height: number },
 ): Promise<HTMLCanvasElement> {
   const svgBlob = new Blob([svgMarkup], { type: "image/svg+xml;charset=utf-8" });
   const svgUrl = URL.createObjectURL(svgBlob);
@@ -3033,8 +3121,8 @@ async function renderSvgToCanvas(
       const image = new Image();
       image.onload = () => {
         const canvas = document.createElement("canvas");
-        canvas.width = CANVAS_WIDTH;
-        canvas.height = CANVAS_HEIGHT;
+        canvas.width = canvasSize.width;
+        canvas.height = canvasSize.height;
         const context = canvas.getContext("2d");
         if (!context) {
           reject(new Error("Canvas context unavailable"));
@@ -3043,10 +3131,10 @@ async function renderSvgToCanvas(
 
         if (backgroundColor) {
           context.fillStyle = backgroundColor;
-          context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+          context.fillRect(0, 0, canvasSize.width, canvasSize.height);
         }
 
-        context.drawImage(image, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        context.drawImage(image, 0, 0, canvasSize.width, canvasSize.height);
         resolve(canvas);
       };
       image.onerror = () => reject(new Error("SVG render failed"));

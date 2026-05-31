@@ -1,6 +1,7 @@
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
+  getSceneSize,
   type ImageElement,
   type Scene,
   type SceneElement,
@@ -57,9 +58,10 @@ export function elementBounds(element: SceneElement) {
 export function sceneToSvgMarkup(scene: Scene): string {
   const visibleElements = scene.elements.filter((element) => element.hidden !== true);
   const visibleScene = { ...scene, elements: visibleElements };
+  const { width, height } = getSceneSize(scene);
 
   return [
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" viewBox="0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}" role="img" aria-label="Covercast OBS live background">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Covercast OBS live background">`,
     renderDefs("covercast", visibleScene),
     renderBackground(scene.backgroundColor, scene.backgroundOpacity, "covercast", visibleScene),
     ...visibleElements.map((element) => renderElement(element, "covercast")),
@@ -116,11 +118,12 @@ export function renderBackground(
   const mask = hasBackgroundCutouts(scene)
     ? ` mask="url(#${backgroundMaskId(prefix)})"`
     : "";
+  const { width, height } = scene ? getSceneSize(scene) : { width: CANVAS_WIDTH, height: CANVAS_HEIGHT };
 
   return `
     <g${mask}>
-      <rect width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" fill="${escapeAttribute(backgroundColor)}" opacity="${opacity}" />
-      <rect width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" fill="url(#${prefix}-bg-glow)" opacity="${glowOpacity}" />
+      <rect width="${width}" height="${height}" fill="${escapeAttribute(backgroundColor)}" opacity="${opacity}" />
+      <rect width="${width}" height="${height}" fill="url(#${prefix}-bg-glow)" opacity="${glowOpacity}" />
     </g>
   `;
 }
@@ -204,9 +207,11 @@ function renderBackgroundMask(prefix: string, scene?: Scene): string {
     return "";
   }
 
+  const { width, height } = scene ? getSceneSize(scene) : { width: CANVAS_WIDTH, height: CANVAS_HEIGHT };
+
   return `
     <mask id="${backgroundMaskId(prefix)}" maskUnits="userSpaceOnUse">
-      <rect width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" fill="#ffffff" />
+      <rect width="${width}" height="${height}" fill="#ffffff" />
       ${cutouts}
     </mask>
   `;

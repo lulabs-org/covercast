@@ -1071,7 +1071,6 @@ h1 {
 .scene-preview {
   width: 100%;
   height: auto;
-  aspect-ratio: 941 / 1672;
   display: block;
   border-radius: 4px;
   box-shadow: 0 18px 50px rgba(15, 23, 42, 0.26);
@@ -1125,6 +1124,71 @@ h1 {
 .field select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(39, 100, 246, 0.14);
+}
+
+.custom-size-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.custom-size-row .field-label {
+  color: #39485f;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.custom-size-row .field-input {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid #cfd8e8;
+  border-radius: 6px;
+  padding: 8px 9px;
+  color: #142033;
+  background: #ffffff;
+  outline: none;
+}
+
+.custom-size-row .field-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(39, 100, 246, 0.14);
+}
+
+.custom-size-row .size-unit {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.field-select {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid #cfd8e8;
+  border-radius: 6px;
+  padding: 8px 9px;
+  color: #142033;
+  background: #ffffff;
+  outline: none;
+  cursor: pointer;
+}
+
+.field-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(39, 100, 246, 0.14);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-row .field-label {
+  color: #39485f;
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .checkbox-field {

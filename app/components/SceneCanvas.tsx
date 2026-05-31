@@ -1,7 +1,6 @@
 import type { PointerEvent, Ref } from "react";
 import {
-  CANVAS_HEIGHT,
-  CANVAS_WIDTH,
+  getSceneSize,
   type ImageElement,
   type Scene,
   type SceneElement,
@@ -91,6 +90,7 @@ function computeCrossMarker(
 type SceneCanvasProps = {
   scene: Scene;
   className?: string;
+  style?: React.CSSProperties;
   idPrefix?: string;
   interactive?: boolean;
   selectedIds?: string[];
@@ -122,6 +122,7 @@ type SceneCanvasProps = {
 export default function SceneCanvas({
   scene,
   className,
+  style,
   idPrefix = "scene",
   interactive = false,
   selectedIds = [],
@@ -142,6 +143,7 @@ export default function SceneCanvas({
 }: SceneCanvasProps) {
   const visibleElements = scene.elements.filter((element) => element.hidden !== true);
   const selectedElements = visibleElements.filter((element) => selectedIds.includes(element.id));
+  const { width: canvasWidth, height: canvasHeight } = getSceneSize(scene);
 
   let marqueePreviewElements: SceneElement[] = [];
   if (marquee && isMarqueeActive(marquee) && hasMarqueeSize(marquee, 5)) {
@@ -154,12 +156,13 @@ export default function SceneCanvas({
     <svg
       ref={svgRef}
       className={className}
-      viewBox={`0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}`}
+      viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
       role="img"
       aria-label="Covercast OBS live background"
       preserveAspectRatio="xMidYMid meet"
       onPointerDown={onCanvasPointerDown}
       style={{
+        ...style,
         touchAction: interactive ? "none" : undefined,
         userSelect: "none",
         WebkitUserSelect: "none",
@@ -215,7 +218,7 @@ export default function SceneCanvas({
           })}
         {hasBackgroundCutouts(visibleElements) ? (
           <mask id={backgroundMaskId(idPrefix)} maskUnits="userSpaceOnUse">
-            <rect width={CANVAS_WIDTH} height={CANVAS_HEIGHT} fill="#ffffff" />
+            <rect width={canvasWidth} height={canvasHeight} fill="#ffffff" />
             {visibleElements
               .filter(
                 (element): element is ShapeElement =>
@@ -255,14 +258,14 @@ export default function SceneCanvas({
         }
       >
         <rect
-          width={CANVAS_WIDTH}
-          height={CANVAS_HEIGHT}
+          width={canvasWidth}
+          height={canvasHeight}
           fill={scene.backgroundColor}
           opacity={clampOpacity(scene.backgroundOpacity)}
         />
         <rect
-          width={CANVAS_WIDTH}
-          height={CANVAS_HEIGHT}
+          width={canvasWidth}
+          height={canvasHeight}
           fill={`url(#${idPrefix}-bg-glow)`}
           opacity={0.68 * clampOpacity(scene.backgroundOpacity)}
         />
