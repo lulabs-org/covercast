@@ -877,7 +877,23 @@ export default function SceneEditor() {
 
   useEffect(() => {
     function handleEditorKeyDown(event: KeyboardEvent) {
+      const deleteKeys = ["Backspace", "Delete"];
       const arrowKeys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+      
+      if (deleteKeys.includes(event.key)) {
+        if (isEditableTarget(event.target) || editingTextId) {
+          return;
+        }
+        
+        if (selection.selectedIds.length === 0) {
+          return;
+        }
+        
+        event.preventDefault();
+        deleteSelected();
+        setStatus("已删除选中元素");
+        return;
+      }
       
       if (arrowKeys.includes(event.key)) {
         if (isEditableTarget(event.target) || editingTextId) {
@@ -984,7 +1000,7 @@ export default function SceneEditor() {
     return () => {
       window.removeEventListener("keydown", handleEditorKeyDown);
     };
-  }, [copySelectedElement, pasteCopiedElement, selection.selectedIds, editingTextId, scene.elements, markSceneEdited]);
+  }, [copySelectedElement, pasteCopiedElement, deleteSelected, selection.selectedIds, editingTextId, scene.elements, markSceneEdited]);
 
   function changeScene(updater: (currentScene: Scene) => Scene) {
     setScene(updater);
