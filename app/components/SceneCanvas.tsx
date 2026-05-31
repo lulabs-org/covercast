@@ -16,6 +16,12 @@ import {
   textX,
 } from "../lib/scene-svg";
 import type { GuideLine, MeasurementGuide, ResizeLabel } from "../lib/smart-guide";
+import { getMarqueeRect, hasMarqueeSize, hitTestElements, isMarqueeActive, type HitTestStrategy, type MarqueeState } from "../lib/marquee";
+import {
+  computeBoundingBox,
+  formatDimension,
+  type ResizeHandleType,
+} from "../lib/group-drag";
 
 type ArrowCapLine = {
   x1: number;
@@ -87,11 +93,15 @@ type SceneCanvasProps = {
   className?: string;
   idPrefix?: string;
   interactive?: boolean;
-  selectedId?: string | null;
+  selectedIds?: string[];
   guides?: GuideLine[];
   spacingGuides?: MeasurementGuide[];
   resizeLabel?: ResizeLabel | null;
   svgRef?: Ref<SVGSVGElement>;
+  marquee?: MarqueeState;
+  hitTestStrategy?: HitTestStrategy;
+  editingTextId?: string | null;
+  isGroupDragging?: boolean;
   onCanvasPointerDown?: (event: PointerEvent<SVGSVGElement>) => void;
   onElementPointerDown?: (
     elementId: string,
@@ -101,6 +111,12 @@ type SceneCanvasProps = {
     elementId: string,
     event: PointerEvent<SVGRectElement>,
   ) => void;
+  onGroupDragPointerDown?: (event: PointerEvent<SVGRectElement>) => void;
+  onGroupResizePointerDown?: (
+    handle: ResizeHandleType,
+    event: PointerEvent<SVGRectElement>,
+  ) => void;
+  onTextElementDoubleClick?: (elementId: string) => void;
 };
 
 export default function SceneCanvas({
@@ -108,17 +124,31 @@ export default function SceneCanvas({
   className,
   idPrefix = "scene",
   interactive = false,
-  selectedId,
+  selectedIds = [],
   guides,
   spacingGuides,
   resizeLabel,
   svgRef,
+  marquee,
+  hitTestStrategy = "intersection",
+  editingTextId,
+  isGroupDragging = false,
   onCanvasPointerDown,
   onElementPointerDown,
   onResizePointerDown,
+  onGroupDragPointerDown,
+  onGroupResizePointerDown,
+  onTextElementDoubleClick,
 }: SceneCanvasProps) {
   const visibleElements = scene.elements.filter((element) => element.hidden !== true);
-  const selectedElement = visibleElements.find((element) => element.id === selectedId);
+  const selectedElements = visibleElements.filter((element) => selectedIds.includes(element.id));
+
+  let marqueePreviewElements: SceneElement[] = [];
+  if (marquee && isMarqueeActive(marquee) && hasMarqueeSize(marquee, 5)) {
+    const rect = getMarqueeRect(marquee);
+    const hitIds = hitTestElements(rect, visibleElements, hitTestStrategy);
+    marqueePreviewElements = visibleElements.filter((element) => hitIds.includes(element.id));
+  }
 
   return (
     <svg
@@ -129,7 +159,11 @@ export default function SceneCanvas({
       aria-label="Covercast OBS live background"
       preserveAspectRatio="xMidYMid meet"
       onPointerDown={onCanvasPointerDown}
-      style={{ touchAction: interactive ? "none" : undefined }}
+      style={{
+        touchAction: interactive ? "none" : undefined,
+        userSelect: "none",
+        WebkitUserSelect: "none",
+      }}
     >
       <defs>
         <radialGradient id={`${idPrefix}-bg-glow`} cx="48%" cy="28%" r="72%">
@@ -240,15 +274,277 @@ export default function SceneCanvas({
           element={element}
           idPrefix={idPrefix}
           interactive={interactive}
+          editingTextId={editingTextId}
           onPointerDown={onElementPointerDown}
+          onDoubleClick={onTextElementDoubleClick}
         />
       ))}
 
-      {interactive && selectedElement ? (
-        <SelectionFrame
-          element={selectedElement}
-          onResizePointerDown={onResizePointerDown}
-        />
+      {interactive && selectedElements.length > 0 ? (
+        <>
+          {selectedElements.map((element) => (
+            <SelectionFrame
+              key={element.id}
+              element={element}
+              onResizePointerDown={selectedElements.length === 1 ? onResizePointerDown : undefined}
+            />
+          ))}
+          {selectedElements.length > 1 && !isGroupDragging ? (
+            <GroupSelectionFrame
+              elements={selectedElements}
+              onDragPointerDown={onGroupDragPointerDown}
+              onResizePointerDown={onGroupResizePointerDown}
+            />
+          ) : null}
+        </>
+      ) : null}
+
+      {interactive && marquee && isMarqueeActive(marquee) ? (
+        <MarqueeOverlay marquee={marquee} />
+      ) : null}
+
+      {interactive && marqueePreviewElements.length > 0 ? (
+        <GroupSelectionFrame elements={marqueePreviewElements} />
+      ) : null}
+
+      {guides && guides.length > 0 ? (
+        <g className="smart-guides-overlay" pointerEvents="none">
+          {guides.map((guide, index) => {
+            const crossSize = 6;
+            const cross1 = computeCrossMarker(guide.x1, guide.y1, crossSize);
+            const cross2 = computeCrossMarker(guide.x2, guide.y2, crossSize);
+
+            return (
+              <g key={`guide-${guide.type}-${index}`}>
+                <line
+                  x1={guide.x1}
+                  y1={guide.y1}
+                  x2={guide.x2}
+                  y2={guide.y2}
+                  stroke="#ff5c8a"
+                  strokeWidth="2"
+                />
+                <line
+                  x1={cross1.line1.x1}
+                  y1={cross1.line1.y1}
+                  x2={cross1.line1.x2}
+                  y2={cross1.line1.y2}
+                  stroke="#ff5c8a"
+                  strokeWidth="2"
+                />
+                <line
+                  x1={cross1.line2.x1}
+                  y1={cross1.line2.y1}
+                  x2={cross1.line2.x2}
+                  y2={cross1.line2.y2}
+                  stroke="#ff5c8a"
+                  strokeWidth="2"
+                />
+                <line
+                  x1={cross2.line1.x1}
+                  y1={cross2.line1.y1}
+                  x2={cross2.line1.x2}
+                  y2={cross2.line1.y2}
+                  stroke="#ff5c8a"
+                  strokeWidth="2"
+                />
+                <line
+                  x1={cross2.line2.x1}
+                  y1={cross2.line2.y1}
+                  x2={cross2.line2.x2}
+                  y2={cross2.line2.y2}
+                  stroke="#ff5c8a"
+                  strokeWidth="2"
+                />
+              </g>
+            );
+          })}
+        </g>
+      ) : null}
+
+      {resizeLabel ? (() => {
+        const labelText = `${resizeLabel.w} × ${resizeLabel.h}`;
+        const labelW = labelText.length * 10 + 10;
+        const labelH = 22;
+        const labelGap = 5;
+        const labelRx = resizeLabel.x - labelW / 2;
+        const labelRy = resizeLabel.y + labelGap;
+        return (
+          <g className="resize-label-overlay" pointerEvents="none">
+            <rect
+              x={labelRx} y={labelRy}
+              width={labelW} height={labelH}
+              rx={3} ry={3}
+              fill="#336FFF"
+            />
+            <text
+              x={resizeLabel.x}
+              y={labelRy + labelH / 2}
+              fill="#ffffff"
+              fontSize="16"
+              fontFamily="PingFang SC, Microsoft YaHei, Arial, sans-serif"
+              fontWeight="600"
+              textAnchor="middle"
+              dominantBaseline="central"
+            >
+              {labelText}
+            </text>
+          </g>
+        );
+      })() : null}
+
+      {spacingGuides && spacingGuides.length > 0 ? (
+        <g className="spacing-guides-overlay" pointerEvents="none">
+          {spacingGuides.map((mg, index) => {
+            const { measurementLine, extensionLines, label, direction } = mg;
+            const isHorizontal = direction === "horizontal";
+            const arrowSize = 6;
+
+            const cap1 = computeArrowCap(
+              measurementLine.x1,
+              measurementLine.y1,
+              direction,
+              isHorizontal ? "left" : "top",
+              arrowSize,
+              arrowSize
+            );
+            const cap2 = computeArrowCap(
+              measurementLine.x2,
+              measurementLine.y2,
+              direction,
+              isHorizontal ? "right" : "bottom",
+              arrowSize,
+              arrowSize
+            );
+
+            const labelText = String(label.value);
+            const labelW = labelText.length * 10 + 10;
+            const labelH = 22;
+            const labelGap = 5;
+
+            const labelRx = isHorizontal
+              ? label.x - labelW / 2
+              : label.x + labelGap;
+            const labelRy = isHorizontal
+              ? label.y - labelGap - labelH
+              : label.y - labelH / 2;
+
+            return (
+              <g key={`measurement-${direction}-${index}`}>
+                {extensionLines.map((ext, extIndex) => {
+                  const extTickLen = 6;
+                  const extIsVertical = ext.x1 === ext.x2;
+                  const extTick1x1 = extIsVertical ? ext.x1 - extTickLen : ext.x1;
+                  const extTick1y1 = extIsVertical ? ext.y1 : ext.y1 - extTickLen;
+                  const extTick1x2 = extIsVertical ? ext.x1 + extTickLen : ext.x1;
+                  const extTick1y2 = extIsVertical ? ext.y1 : ext.y1 + extTickLen;
+                  const extTick2x1 = extIsVertical ? ext.x2 - extTickLen : ext.x2;
+                  const extTick2y1 = extIsVertical ? ext.y2 : ext.y2 - extTickLen;
+                  const extTick2x2 = extIsVertical ? ext.x2 + extTickLen : ext.x2;
+                  const extTick2y2 = extIsVertical ? ext.y2 : ext.y2 + extTickLen;
+
+                  return (
+                    <g key={`ext-group-${extIndex}`}>
+                      <line
+                        x1={ext.x1}
+                        y1={ext.y1}
+                        x2={ext.x2}
+                        y2={ext.y2}
+                        stroke="#ff5c8a"
+                        strokeWidth="2"
+                        strokeDasharray="4 4"
+                        opacity="0.6"
+                      />
+                      <line
+                        x1={extTick1x1}
+                        y1={extTick1y1}
+                        x2={extTick1x2}
+                        y2={extTick1y2}
+                        stroke="#ff5c8a"
+                        strokeWidth="2"
+                        opacity="0.6"
+                      />
+                      <line
+                        x1={extTick2x1}
+                        y1={extTick2y1}
+                        x2={extTick2x2}
+                        y2={extTick2y2}
+                        stroke="#ff5c8a"
+                        strokeWidth="2"
+                        opacity="0.6"
+                      />
+                    </g>
+                  );
+                })}
+                <line
+                  x1={measurementLine.x1}
+                  y1={measurementLine.y1}
+                  x2={measurementLine.x2}
+                  y2={measurementLine.y2}
+                  stroke="#ff5c8a"
+                  strokeWidth="2"
+                />
+                <line
+                  x1={cap1.line1.x1}
+                  y1={cap1.line1.y1}
+                  x2={cap1.line1.x2}
+                  y2={cap1.line1.y2}
+                  stroke="#ff5c8a"
+                  strokeWidth="2"
+                />
+                <line
+                  x1={cap1.line2.x1}
+                  y1={cap1.line2.y1}
+                  x2={cap1.line2.x2}
+                  y2={cap1.line2.y2}
+                  stroke="#ff5c8a"
+                  strokeWidth="2"
+                />
+                <line
+                  x1={cap2.line1.x1}
+                  y1={cap2.line1.y1}
+                  x2={cap2.line1.x2}
+                  y2={cap2.line1.y2}
+                  stroke="#ff5c8a"
+                  strokeWidth="2"
+                />
+                <line
+                  x1={cap2.line2.x1}
+                  y1={cap2.line2.y1}
+                  x2={cap2.line2.x2}
+                  y2={cap2.line2.y2}
+                  stroke="#ff5c8a"
+                  strokeWidth="2"
+                />
+                {label.value > 0 ? (
+                  <>
+                    <rect
+                      x={labelRx}
+                      y={labelRy}
+                      width={labelW}
+                      height={labelH}
+                      rx={3}
+                      ry={3}
+                      fill="#ff5c8a"
+                    />
+                    <text
+                      x={labelRx + labelW / 2}
+                      y={labelRy + labelH / 2}
+                      fill="#ffffff"
+                      fontSize="16"
+                      fontFamily="PingFang SC, Microsoft YaHei, Arial, sans-serif"
+                      fontWeight="600"
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                    >
+                      {labelText}
+                    </text>
+                  </>
+                ) : null}
+              </g>
+            );
+          })}
+        </g>
       ) : null}
 
       {guides && guides.length > 0 ? (
@@ -498,15 +794,19 @@ function ElementView({
   element,
   idPrefix,
   interactive,
+  editingTextId,
   onPointerDown,
+  onDoubleClick,
 }: {
   element: SceneElement;
   idPrefix: string;
   interactive: boolean;
+  editingTextId?: string | null;
   onPointerDown?: (
     elementId: string,
     event: PointerEvent<SVGGElement>,
   ) => void;
+  onDoubleClick?: (elementId: string) => void;
 }) {
   return (
     <g
@@ -520,8 +820,15 @@ function ElementView({
         event.stopPropagation();
         onPointerDown?.(element.id, event);
       }}
+      onDoubleClick={() => {
+        if (!interactive || element.type !== "text") {
+          return;
+        }
+        
+        onDoubleClick?.(element.id);
+      }}
     >
-      {renderElement(element, idPrefix, interactive)}
+      {renderElement(element, idPrefix, interactive, editingTextId)}
     </g>
   );
 }
@@ -530,13 +837,14 @@ function renderElement(
   element: SceneElement,
   idPrefix: string,
   interactive: boolean,
+  editingTextId?: string | null,
 ) {
   if (element.type === "text") {
-    return <TextElementView element={element} interactive={interactive} />;
+    return <TextElementView element={element} interactive={interactive} editing={editingTextId === element.id} />;
   }
 
   if (element.type === "image") {
-    return <ImageElementView element={element} idPrefix={idPrefix} />;
+    return <ImageElementView element={element} idPrefix={idPrefix} interactive={interactive} />;
   }
 
   return <ShapeElementView element={element} idPrefix={idPrefix} />;
@@ -583,9 +891,11 @@ function ShapeElementView({
 function TextElementView({
   element,
   interactive,
+  editing,
 }: {
   element: TextElement;
   interactive: boolean;
+  editing?: boolean;
 }) {
   const x = textX(element);
   const lines = element.text.split("\n");
@@ -611,6 +921,10 @@ function TextElementView({
         fontWeight={element.fontWeight}
         textAnchor={textAnchorForAlign(element.align)}
         opacity={element.opacity ?? 1}
+        style={{
+          userSelect: interactive && !editing ? "none" : undefined,
+          pointerEvents: interactive && !editing ? "none" : undefined,
+        }}
       >
         {lines.map((line, index) => (
           <tspan key={`${element.id}-${index}`} x={x} dy={index === 0 ? 0 : lineHeight}>
@@ -625,9 +939,11 @@ function TextElementView({
 function ImageElementView({
   element,
   idPrefix,
+  interactive,
 }: {
   element: ImageElement;
   idPrefix: string;
+  interactive?: boolean;
 }) {
   const opacity = element.opacity ?? 1;
   const preserveAspectRatio =
@@ -658,6 +974,10 @@ function ImageElementView({
           fontFamily="PingFang SC, Microsoft YaHei, Arial, sans-serif"
           fontSize={r * 0.72}
           fontWeight="900"
+          style={{
+            userSelect: interactive ? "none" : undefined,
+            pointerEvents: interactive ? "none" : undefined,
+          }}
         >
           {element.fallbackText || "图"}
         </text>
@@ -805,4 +1125,132 @@ function hasBackgroundCutouts(elements: SceneElement[]) {
 
 function backgroundMaskId(prefix: string) {
   return `${prefix}-background-mask`;
+}
+
+function MarqueeOverlay({ marquee }: { marquee: MarqueeState }) {
+  const rect = getMarqueeRect(marquee);
+
+  if (rect.width === 0 && rect.height === 0) {
+    return null;
+  }
+
+  return (
+    <g className="marquee-overlay" pointerEvents="none">
+      <rect
+        x={rect.x}
+        y={rect.y}
+        width={rect.width}
+        height={rect.height}
+        fill="#336FFF"
+        fillOpacity="0.15"
+        stroke="#336FFF"
+        strokeWidth="3"
+        vectorEffect="non-scaling-stroke"
+      />
+    </g>
+  );
+}
+
+function GroupSelectionFrame({
+  elements,
+  onDragPointerDown,
+  onResizePointerDown,
+}: {
+  elements: SceneElement[];
+  onDragPointerDown?: (event: PointerEvent<SVGRectElement>) => void;
+  onResizePointerDown?: (
+    handle: ResizeHandleType,
+    event: PointerEvent<SVGRectElement>,
+  ) => void;
+}) {
+  const bounds = computeBoundingBox(elements);
+  const labelText = formatDimension(bounds.width, bounds.height);
+  const labelW = labelText.length * 10 + 10;
+  const labelH = 22;
+  const labelGap = 5;
+  const labelRx = bounds.x + bounds.width / 2 - labelW / 2;
+  const labelRy = bounds.y + bounds.height + labelGap;
+  const handleSize = 12;
+
+  const handles: { type: ResizeHandleType; x: number; y: number }[] = [
+    { type: "nw", x: bounds.x - handleSize / 2, y: bounds.y - handleSize / 2 },
+    { type: "n", x: bounds.x + bounds.width / 2 - handleSize / 2, y: bounds.y - handleSize / 2 },
+    { type: "ne", x: bounds.x + bounds.width - handleSize / 2, y: bounds.y - handleSize / 2 },
+    { type: "e", x: bounds.x + bounds.width - handleSize / 2, y: bounds.y + bounds.height / 2 - handleSize / 2 },
+    { type: "se", x: bounds.x + bounds.width - handleSize / 2, y: bounds.y + bounds.height - handleSize / 2 },
+    { type: "s", x: bounds.x + bounds.width / 2 - handleSize / 2, y: bounds.y + bounds.height - handleSize / 2 },
+    { type: "sw", x: bounds.x - handleSize / 2, y: bounds.y + bounds.height - handleSize / 2 },
+    { type: "w", x: bounds.x - handleSize / 2, y: bounds.y + bounds.height / 2 - handleSize / 2 },
+  ];
+
+  return (
+    <g className="group-selection-frame">
+      <rect
+        className="group-drag-handle"
+        x={bounds.x}
+        y={bounds.y}
+        width={bounds.width}
+        height={bounds.height}
+        fill="transparent"
+        stroke="none"
+        onPointerDown={(event) => {
+          event.stopPropagation();
+          onDragPointerDown?.(event);
+        }}
+      />
+      <rect
+        x={bounds.x}
+        y={bounds.y}
+        width={bounds.width}
+        height={bounds.height}
+        fill="none"
+        stroke="#336FFF"
+        strokeWidth="3"
+        vectorEffect="non-scaling-stroke"
+        pointerEvents="none"
+      />
+      {handles.map((handle) => (
+        <rect
+          key={handle.type}
+          className="group-resize-handle"
+          x={handle.x}
+          y={handle.y}
+          width={handleSize}
+          height={handleSize}
+          rx={3}
+          fill="#336FFF"
+          stroke="#132060"
+          strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
+          onPointerDown={(event) => {
+            event.stopPropagation();
+            onResizePointerDown?.(handle.type, event);
+          }}
+        />
+      ))}
+      <rect
+        x={labelRx}
+        y={labelRy}
+        width={labelW}
+        height={labelH}
+        rx={3}
+        ry={3}
+        fill="#336FFF"
+        pointerEvents="none"
+      />
+      <text
+        x={bounds.x + bounds.width / 2}
+        y={labelRy + labelH / 2}
+        textAnchor="middle"
+        fill="#ffffff"
+        fontSize="16"
+        fontFamily="PingFang SC, Microsoft YaHei, Arial, sans-serif"
+        fontWeight="600"
+        dominantBaseline="central"
+        pointerEvents="none"
+      >
+        {labelText}
+      </text>
+    </g>
+  );
 }
