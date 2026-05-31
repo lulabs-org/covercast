@@ -1,4 +1,4 @@
-import type { PointerEvent, Ref } from "react";
+import { useEffect, useState, type PointerEvent, type Ref } from "react";
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
@@ -140,6 +140,32 @@ export default function SceneCanvas({
   onGroupResizePointerDown,
   onTextElementDoubleClick,
 }: SceneCanvasProps) {
+  const [shiftKeyPressed, setShiftKeyPressed] = useState(false);
+
+  useEffect(() => {
+    if (!interactive) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Shift") {
+        setShiftKeyPressed(true);
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "Shift") {
+        setShiftKeyPressed(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [interactive]);
+
   const visibleElements = scene.elements.filter((element) => element.hidden !== true);
   const selectedElements = visibleElements.filter((element) => selectedIds.includes(element.id));
 
@@ -292,6 +318,7 @@ export default function SceneCanvas({
           {selectedElements.length > 1 && !isGroupDragging ? (
             <GroupSelectionFrame
               elements={selectedElements}
+              shiftKeyPressed={shiftKeyPressed}
               onDragPointerDown={onGroupDragPointerDown}
               onResizePointerDown={onGroupResizePointerDown}
             />
@@ -304,7 +331,10 @@ export default function SceneCanvas({
       ) : null}
 
       {interactive && marqueePreviewElements.length > 0 ? (
-        <GroupSelectionFrame elements={marqueePreviewElements} />
+        <GroupSelectionFrame
+          elements={marqueePreviewElements}
+          shiftKeyPressed={shiftKeyPressed}
+        />
       ) : null}
 
       {guides && guides.length > 0 ? (
@@ -913,10 +943,12 @@ function MarqueeOverlay({ marquee }: { marquee: MarqueeState }) {
 
 function GroupSelectionFrame({
   elements,
+  shiftKeyPressed,
   onDragPointerDown,
   onResizePointerDown,
 }: {
   elements: SceneElement[];
+  shiftKeyPressed: boolean;
   onDragPointerDown?: (event: PointerEvent<SVGRectElement>) => void;
   onResizePointerDown?: (
     handle: ResizeHandleType,
@@ -953,6 +985,7 @@ function GroupSelectionFrame({
         height={bounds.height}
         fill="transparent"
         stroke="none"
+        pointerEvents={shiftKeyPressed ? "none" : "fill"}
         onPointerDown={(event) => {
           event.stopPropagation();
           onDragPointerDown?.(event);
