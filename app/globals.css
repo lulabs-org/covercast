@@ -1214,6 +1214,261 @@ h1 {
   display: block;
 }
 
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+  width: 90%;
+  max-width: 540px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.35);
+  animation: slideUp 0.25s ease;
+}
+
+.ai-generate-modal {
+  max-width: 640px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.modal-header h2 {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d4deef;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #4b5563;
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: #fee2e2;
+}
+
+.modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--panel-border);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.form-group.half {
+  flex: 1;
+}
+
+.ai-config-modal-wide {
+  width: 480px;
+  max-width: 90vw;
+}
+
+.form-label {
+  color: #39485f;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid #cfd8e8;
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #142033;
+  background: #ffffff;
+  outline: none;
+  font-size: 14px;
+}
+
+.form-textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(39, 100, 246, 0.14);
+}
+
+.form-hint {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.error-message {
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.warning-message {
+  padding: 12px 14px;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  background: #fff7ed;
+  color: #ea580c;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.warning-message .secondary-button {
+  min-height: 28px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+.ai-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.generated-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #d4deef;
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.generated-preview h3 {
+  font-size: 15px;
+  font-weight: 900;
+  color: #243247;
+}
+
+.preview-json {
+  max-height: 300px;
+  overflow: auto;
+  border: 1px solid #e4ebf6;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.preview-json pre {
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 12px;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: #243247;
+}
+
+.preview-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.ai-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  border: none;
+}
+
+.ai-button:hover {
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+}
+
+.ai-config-button {
+  min-width: 38px;
+  padding: 0;
+  font-size: 16px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 1180px) {
   .editor-grid {
     grid-template-columns: minmax(220px, 280px) minmax(360px, 1fr);

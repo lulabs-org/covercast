@@ -68,7 +68,10 @@ import {
   type GroupResizeState,
   type ResizeHandleType,
 } from "../lib/group-drag";
+import { type AIConfig, readAIConfigFromStorage } from "../lib/ai-config";
 import SceneCanvas from "./SceneCanvas";
+import AIConfigModal from "./AIConfigModal";
+import AIGeneratePanel from "./AIGeneratePanel";
 
 type SingleDragState = {
   id: string;
@@ -209,6 +212,9 @@ export default function SceneEditor() {
     layers: false,
   });
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
+  const [aiConfig, setAIConfig] = useState<AIConfig | null>(null);
+  const [showAIConfigModal, setShowAIConfigModal] = useState(false);
+  const [showAIGeneratePanel, setShowAIGeneratePanel] = useState(false);
 
   const selectedElement = useMemo(() => {
     if (selection.selectedIds.length !== 1) {
@@ -264,6 +270,7 @@ export default function SceneEditor() {
     const timer = window.setTimeout(() => {
       setCustomTemplates(readCustomTemplatesFromStorage());
       setAppOrigin(window.location.origin);
+      setAIConfig(readAIConfigFromStorage());
     }, 0);
 
     return () => {
@@ -403,6 +410,20 @@ export default function SceneEditor() {
       setActiveTemplateId("");
     }
   }, [activeBuiltInTemplate, activeCustomTemplate]);
+
+  function handleAISceneGenerated(generatedScene: Scene) {
+    setScene(generatedScene);
+    setActiveTemplateId("");
+    setSelection(createSelectionState());
+    if (generatedScene.elements[0]?.id) {
+      setSelection((prev) => selectSingle(prev, generatedScene.elements[0].id));
+    }
+    setStatus("已应用 AI 修改的场景");
+  }
+
+  function handleAIConfigSaved(config: AIConfig) {
+    setAIConfig(config);
+  }
 
   function getSlotUrl(templateId: string, slotId: string) {
     const origin = appOrigin || "";
@@ -1609,6 +1630,22 @@ export default function SceneEditor() {
               onChange={(event) => handleAssetInput(event, "add")}
             />
           </label>
+          <button
+            type="button"
+            className="secondary-button ai-button"
+            onClick={() => setShowAIGeneratePanel(true)}
+            title="使用 AI 修改场景"
+          >
+            AI 修改
+          </button>
+          <button
+            type="button"
+            className="secondary-button ai-config-button"
+            onClick={() => setShowAIConfigModal(true)}
+            title="配置 AI API"
+          >
+            ⚙️
+          </button>
           {activeCustomTemplate ? (
             <button
               type="button"
@@ -2085,6 +2122,25 @@ export default function SceneEditor() {
           )}
         </aside>
       </section>
+
+      <AIConfigModal
+        isOpen={showAIConfigModal}
+        onClose={() => setShowAIConfigModal(false)}
+        onSave={handleAIConfigSaved}
+      />
+
+      <AIGeneratePanel
+        isOpen={showAIGeneratePanel}
+        onClose={() => setShowAIGeneratePanel(false)}
+        aiConfig={aiConfig}
+        currentScene={scene}
+        customTemplates={customTemplates}
+        onOpenConfig={() => {
+          setShowAIGeneratePanel(false);
+          setShowAIConfigModal(true);
+        }}
+        onGenerate={handleAISceneGenerated}
+      />
     </main>
   );
 }
