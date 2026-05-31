@@ -58,6 +58,43 @@ label.file-button {
   background: var(--background);
 }
 
+/* Landing Page Hover Effects */
+.nav-link:hover {
+  color: var(--foreground) !important;
+  background: rgba(21, 32, 51, 0.04) !important;
+}
+
+.nav-cta:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(39, 100, 246, 0.25), 0 0 0 1px rgba(39, 100, 246, 0.1) !important;
+}
+
+.hero-primary-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(39, 100, 246, 0.35), 0 2px 6px rgba(39, 100, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+
+.hero-secondary-btn:hover {
+  transform: translateY(-2px) !important;
+  border-color: rgba(217, 224, 238, 1) !important;
+  box-shadow: 0 4px 12px rgba(21, 32, 51, 0.06), 0 1px 3px rgba(21, 32, 51, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 40px rgba(21, 32, 51, 0.06), 0 4px 12px rgba(21, 32, 51, 0.04) !important;
+  border-color: rgba(217, 224, 238, 0.9) !important;
+}
+
+.lab-link:hover {
+  background: linear-gradient(180deg, rgba(39, 100, 246, 0.08) 0%, rgba(39, 100, 246, 0.04) 100%) !important;
+  border-color: rgba(39, 100, 246, 0.25) !important;
+}
+
+.footer-link:hover {
+  color: var(--accent) !important;
+}
+
 .editor-toolbar {
   flex: 0 0 auto;
   display: flex;
