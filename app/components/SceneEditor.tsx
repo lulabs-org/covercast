@@ -2073,6 +2073,7 @@ export default function SceneEditor() {
           {selectedElement ? (
             <ElementInspector
               element={selectedElement}
+              allElements={scene.elements}
               onPatch={patchSelected}
               onCopy={copySelectedElement}
               onPaste={pasteCopiedElement}
@@ -2091,6 +2092,7 @@ export default function SceneEditor() {
 
 function ElementInspector({
   element,
+  allElements,
   onPatch,
   onCopy,
   onPaste,
@@ -2099,6 +2101,7 @@ function ElementInspector({
   onReplaceImage,
 }: {
   element: SceneElement;
+  allElements: SceneElement[];
   onPatch: (patch: Partial<SceneElement>) => void;
   onCopy: () => void;
   onPaste: () => void;
@@ -2106,12 +2109,45 @@ function ElementInspector({
   onDelete: () => void;
   onReplaceImage: (event: ChangeEvent<HTMLInputElement>) => void;
 }) {
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [draftName, setDraftName] = useState<string>(element.name);
+
+  useEffect(() => {
+    setDraftName(element.name);
+    setNameError(null);
+  }, [element.id, element.name]);
+
+  const handleNameChange = (newName: string) => {
+    const trimmedName = newName.trim();
+    
+    if (!trimmedName) {
+      setNameError("图层名称不能为空");
+      setDraftName(newName);
+      return;
+    }
+    
+    const isDuplicate = allElements.some(
+      (el) => el.id !== element.id && el.name === trimmedName
+    );
+    
+    if (isDuplicate) {
+      setNameError("图层名称已存在，请使用其他名称");
+      setDraftName(newName);
+      return;
+    }
+    
+    setNameError(null);
+    setDraftName(trimmedName);
+    onPatch({ name: trimmedName } as Partial<SceneElement>);
+  };
+
   return (
     <div className="inspector">
       <TextField
         label="图层名称"
-        value={element.name}
-        onChange={(value) => onPatch({ name: value } as Partial<SceneElement>)}
+        value={draftName}
+        onChange={handleNameChange}
+        error={nameError || undefined}
       />
       <div className="field-grid">
         <NumberField label="X" value={element.x} onChange={(value) => onPatch({ x: value })} />
@@ -2602,14 +2638,16 @@ function TextField({
   value,
   onChange,
   placeholder,
+  error,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  error?: string;
 }) {
   return (
-    <label className="field">
+    <label className={`field${error ? " field-error-state" : ""}`}>
       <span>{label}</span>
       <input
         type="text"
@@ -2617,6 +2655,7 @@ function TextField({
         placeholder={placeholder}
         onChange={(event) => onChange(event.currentTarget.value)}
       />
+      {error && <span className="field-error">{error}</span>}
     </label>
   );
 }

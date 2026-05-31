@@ -1145,6 +1145,28 @@ h1 {
   line-height: 1.5;
 }
 
+.field .field-error {
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+.field-error-state input,
+.field-error-state textarea,
+.field-error-state select {
+  border-color: #dc2626;
+  background-color: #fef2f2;
+}
+
+.field-error-state input:focus,
+.field-error-state textarea:focus,
+.field-error-state select:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.14);
+}
+
 .font-family-field {
   display: flex;
   flex-direction: column;
