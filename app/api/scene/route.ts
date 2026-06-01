@@ -18,6 +18,12 @@ export async function GET(request: Request) {
 
   if (templateId && slotId) {
     const scene = await readSceneBySlot(templateId, slotId);
+    if (!scene) {
+      return Response.json(
+        { error: "Scene not found", message: "指定的 OBS 源不存在，请检查 URL 参数是否正确" },
+        { status: 404, headers: { "Cache-Control": "no-store" } }
+      );
+    }
     return Response.json(scene, {
       headers: { "Cache-Control": "no-store" },
     });
