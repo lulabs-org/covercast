@@ -970,6 +970,9 @@ export default function SceneEditor() {
       elements: [...currentScene.elements, pastedElement],
     }), `粘贴元素「${pastedElement.name}」`);
     setSelection((prev) => selectSingle(prev, pastedElement.id));
+    }));
+    setSelection((prev) => selectSingle(prev, pastedElement.id));
+    markSceneEdited();
     setStatus(`已粘贴「${pastedElement.name}」`);
   }, [changeScene]);
 
@@ -992,6 +995,89 @@ export default function SceneEditor() {
         } else {
           undo();
         }
+      if (arrowKeys.includes(event.key)) {
+        if (isEditableTarget(event.target) || editingTextId) {
+          return;
+        }
+        
+        if (selection.selectedIds.length === 0) {
+          return;
+        }
+        
+        event.preventDefault();
+        
+        const selectedElements = scene.elements.filter(
+          (el) => selection.selectedIds.includes(el.id) && !el.locked
+        );
+        
+        if (selectedElements.length === 0) {
+          return;
+        }
+        
+        const movementStep = event.shiftKey ? 10 : 1;
+        
+        let dx = 0;
+        let dy = 0;
+        
+        switch (event.key) {
+          case "ArrowUp":
+            dy = -movementStep;
+            break;
+          case "ArrowDown":
+            dy = movementStep;
+            break;
+          case "ArrowLeft":
+            dx = -movementStep;
+            break;
+          case "ArrowRight":
+            dx = movementStep;
+            break;
+        }
+        
+        const otherElements = scene.elements.filter(
+          (el) => !selection.selectedIds.includes(el.id) && !el.locked && el.hidden !== true
+        );
+        spatialIndexRef.current = buildSpatialIndex(otherElements);
+        
+        const keyboardContext: GuideContext = { mode: "keyboard" };
+        
+        setScene((currentScene) => {
+          const updatedElements = currentScene.elements.map((element) => {
+            if (!selection.selectedIds.includes(element.id) || element.locked) {
+              return element;
+            }
+            
+            return {
+              ...element,
+              x: element.x + dx,
+              y: element.y + dy,
+            } as SceneElement;
+          });
+          
+          const updatedSelectedElements = updatedElements.filter(
+            (el) => selection.selectedIds.includes(el.id) && !el.locked
+          );
+          
+          if (updatedSelectedElements.length > 0) {
+            const movedBounds = computeBoundingBox(updatedSelectedElements);
+            const guides = computeGuidesOptimized(movedBounds, spatialIndexRef.current, undefined, keyboardContext);
+            const spacingGuides = computeSpacingGuidesOptimized(movedBounds, spatialIndexRef.current, keyboardContext);
+            
+            guidesSelectedIdsRef.current = selection.selectedIds;
+            setGuides(guides);
+            setSpacingGuides(spacingGuides);
+          }
+          
+          return {
+            ...currentScene,
+            elements: updatedElements,
+          };
+        });
+        markSceneEdited();
+        return;
+      }
+
+      if (!isCopyPasteModifier(event) || isEditableTarget(event.target)) {
         return;
       }
 
@@ -1101,6 +1187,12 @@ export default function SceneEditor() {
       window.removeEventListener("keydown", handleEditorKeyDown);
     };
   }, [copySelectedElement, pasteCopiedElement, undo, redo, selection.selectedIds, editingTextId, scene.elements, markSceneEdited]);
+  }, [copySelectedElement, pasteCopiedElement, selection.selectedIds, editingTextId, scene.elements, markSceneEdited]);
+
+  function changeScene(updater: (currentScene: Scene) => Scene) {
+    setScene(updater);
+    markSceneEdited();
+  }
 
   function patchElement(elementId: string, patch: Partial<SceneElement>) {
     changeScene((currentScene) => ({
@@ -1158,6 +1250,7 @@ export default function SceneEditor() {
       [elements[currentIndex], elements[nextIndex]] = [elements[nextIndex], elements[currentIndex]];
       return { ...currentScene, elements };
     }, `调整图层顺序`);
+    });
     setSelection(selectSingle(selection, elementId));
   }
 
@@ -1562,6 +1655,7 @@ export default function SceneEditor() {
       ...currentScene,
       elements: [...currentScene.elements, element],
     }), `添加文字元素`);
+    }));
     setSelection(selectSingle(selection, element.id));
   }
 
@@ -1571,6 +1665,7 @@ export default function SceneEditor() {
       ...currentScene,
       elements: [...currentScene.elements, element],
     }), `添加矩形元素`);
+    }));
     setSelection(selectSingle(selection, element.id));
   }
 
@@ -1580,6 +1675,7 @@ export default function SceneEditor() {
       ...currentScene,
       elements: [...currentScene.elements, element],
     }), `添加椭圆元素`);
+    }));
     setSelection(selectSingle(selection, element.id));
   }
 
@@ -1654,6 +1750,7 @@ export default function SceneEditor() {
       );
       return { ...currentScene, elements };
     }, `删除元素`);
+    });
     const remainingElement = scene.elements.find(
       (element) => !selection.selectedIds.includes(element.id),
     );

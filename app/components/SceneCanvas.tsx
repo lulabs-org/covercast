@@ -1,4 +1,4 @@
-import type { PointerEvent, Ref } from "react";
+import { useEffect, useState, type PointerEvent, type Ref } from "react";
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
@@ -140,6 +140,32 @@ export default function SceneCanvas({
   onGroupResizePointerDown,
   onTextElementDoubleClick,
 }: SceneCanvasProps) {
+  const [shiftKeyPressed, setShiftKeyPressed] = useState(false);
+
+  useEffect(() => {
+    if (!interactive) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Shift") {
+        setShiftKeyPressed(true);
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "Shift") {
+        setShiftKeyPressed(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [interactive]);
+
   const visibleElements = scene.elements.filter((element) => element.hidden !== true);
   const selectedElements = visibleElements.filter((element) => selectedIds.includes(element.id));
 
@@ -292,6 +318,7 @@ export default function SceneCanvas({
           {selectedElements.length > 1 && !isGroupDragging ? (
             <GroupSelectionFrame
               elements={selectedElements}
+              shiftKeyPressed={shiftKeyPressed}
               onDragPointerDown={onGroupDragPointerDown}
               onResizePointerDown={onGroupResizePointerDown}
             />
@@ -545,6 +572,10 @@ export default function SceneCanvas({
             );
           })}
         </g>
+        <GroupSelectionFrame
+          elements={marqueePreviewElements}
+          shiftKeyPressed={shiftKeyPressed}
+        />
       ) : null}
 
       {guides && guides.length > 0 ? (
@@ -601,6 +632,37 @@ export default function SceneCanvas({
           })}
         </g>
       ) : null}
+
+      {resizeLabel ? (() => {
+        const labelText = `${resizeLabel.w} × ${resizeLabel.h}`;
+        const labelW = labelText.length * 10 + 10;
+        const labelH = 22;
+        const labelGap = 5;
+        const labelRx = resizeLabel.x - labelW / 2;
+        const labelRy = resizeLabel.y + labelGap;
+        return (
+          <g className="resize-label-overlay" pointerEvents="none">
+            <rect
+              x={labelRx} y={labelRy}
+              width={labelW} height={labelH}
+              rx={3} ry={3}
+              fill="#336FFF"
+            />
+            <text
+              x={resizeLabel.x}
+              y={labelRy + labelH / 2}
+              fill="#ffffff"
+              fontSize="16"
+              fontFamily="PingFang SC, Microsoft YaHei, Arial, sans-serif"
+              fontWeight="600"
+              textAnchor="middle"
+              dominantBaseline="central"
+            >
+              {labelText}
+            </text>
+          </g>
+        );
+      })() : null}
 
       {spacingGuides && spacingGuides.length > 0 ? (
         <g className="spacing-guides-overlay" pointerEvents="none">
@@ -755,37 +817,6 @@ export default function SceneCanvas({
           })}
         </g>
       ) : null}
-
-      {resizeLabel ? (() => {
-        const labelText = `${resizeLabel.w} × ${resizeLabel.h}`;
-        const labelW = labelText.length * 10 + 10;
-        const labelH = 22;
-        const labelGap = 5;
-        const labelRx = resizeLabel.x - labelW / 2;
-        const labelRy = resizeLabel.y + labelGap;
-        return (
-          <g className="resize-label-overlay" pointerEvents="none">
-            <rect
-              x={labelRx} y={labelRy}
-              width={labelW} height={labelH}
-              rx={3} ry={3}
-              fill="#ff5c8a"
-            />
-            <text
-              x={resizeLabel.x}
-              y={labelRy + labelH / 2}
-              fill="#ffffff"
-              fontSize="16"
-              fontFamily="PingFang SC, Microsoft YaHei, Arial, sans-serif"
-              fontWeight="600"
-              textAnchor="middle"
-              dominantBaseline="central"
-            >
-              {labelText}
-            </text>
-          </g>
-        );
-      })() : null}
     </svg>
   );
 }
@@ -1153,10 +1184,12 @@ function MarqueeOverlay({ marquee }: { marquee: MarqueeState }) {
 
 function GroupSelectionFrame({
   elements,
+  shiftKeyPressed,
   onDragPointerDown,
   onResizePointerDown,
 }: {
   elements: SceneElement[];
+  shiftKeyPressed: boolean;
   onDragPointerDown?: (event: PointerEvent<SVGRectElement>) => void;
   onResizePointerDown?: (
     handle: ResizeHandleType,
@@ -1193,6 +1226,7 @@ function GroupSelectionFrame({
         height={bounds.height}
         fill="transparent"
         stroke="none"
+        pointerEvents={shiftKeyPressed ? "none" : "fill"}
         onPointerDown={(event) => {
           event.stopPropagation();
           onDragPointerDown?.(event);
