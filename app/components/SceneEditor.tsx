@@ -970,8 +970,6 @@ export default function SceneEditor() {
       elements: [...currentScene.elements, pastedElement],
     }), `粘贴元素「${pastedElement.name}」`);
     setSelection((prev) => selectSingle(prev, pastedElement.id));
-    }));
-    setSelection((prev) => selectSingle(prev, pastedElement.id));
     markSceneEdited();
     setStatus(`已粘贴「${pastedElement.name}」`);
   }, [changeScene]);
@@ -995,6 +993,8 @@ export default function SceneEditor() {
         } else {
           undo();
         }
+      }
+
       if (arrowKeys.includes(event.key)) {
         if (isEditableTarget(event.target) || editingTextId) {
           return;
@@ -1187,12 +1187,6 @@ export default function SceneEditor() {
       window.removeEventListener("keydown", handleEditorKeyDown);
     };
   }, [copySelectedElement, pasteCopiedElement, undo, redo, selection.selectedIds, editingTextId, scene.elements, markSceneEdited]);
-  }, [copySelectedElement, pasteCopiedElement, selection.selectedIds, editingTextId, scene.elements, markSceneEdited]);
-
-  function changeScene(updater: (currentScene: Scene) => Scene) {
-    setScene(updater);
-    markSceneEdited();
-  }
 
   function patchElement(elementId: string, patch: Partial<SceneElement>) {
     changeScene((currentScene) => ({
@@ -1250,7 +1244,6 @@ export default function SceneEditor() {
       [elements[currentIndex], elements[nextIndex]] = [elements[nextIndex], elements[currentIndex]];
       return { ...currentScene, elements };
     }, `调整图层顺序`);
-    });
     setSelection(selectSingle(selection, elementId));
   }
 
@@ -1655,7 +1648,6 @@ export default function SceneEditor() {
       ...currentScene,
       elements: [...currentScene.elements, element],
     }), `添加文字元素`);
-    }));
     setSelection(selectSingle(selection, element.id));
   }
 
@@ -1665,7 +1657,6 @@ export default function SceneEditor() {
       ...currentScene,
       elements: [...currentScene.elements, element],
     }), `添加矩形元素`);
-    }));
     setSelection(selectSingle(selection, element.id));
   }
 
@@ -1675,7 +1666,6 @@ export default function SceneEditor() {
       ...currentScene,
       elements: [...currentScene.elements, element],
     }), `添加椭圆元素`);
-    }));
     setSelection(selectSingle(selection, element.id));
   }
 
@@ -1750,7 +1740,6 @@ export default function SceneEditor() {
       );
       return { ...currentScene, elements };
     }, `删除元素`);
-    });
     const remainingElement = scene.elements.find(
       (element) => !selection.selectedIds.includes(element.id),
     );

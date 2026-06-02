@@ -331,7 +331,7 @@ export default function SceneCanvas({
       ) : null}
 
       {interactive && marqueePreviewElements.length > 0 ? (
-        <GroupSelectionFrame elements={marqueePreviewElements} />
+        <GroupSelectionFrame elements={marqueePreviewElements} shiftKeyPressed={shiftKeyPressed} />
       ) : null}
 
       {guides && guides.length > 0 ? (
@@ -572,10 +572,6 @@ export default function SceneCanvas({
             );
           })}
         </g>
-        <GroupSelectionFrame
-          elements={marqueePreviewElements}
-          shiftKeyPressed={shiftKeyPressed}
-        />
       ) : null}
 
       {guides && guides.length > 0 ? (
