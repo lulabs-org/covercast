@@ -78,6 +78,8 @@ import { useTemplateManager, type CustomSceneTemplate, type SceneSlotInfo } from
 import { useSlotManager } from "../hooks/useSlotManager";
 import { ElementInspector } from "./panels/ElementInspector";
 import { LayerPanel } from "./panels/LayerPanel";
+import { SourcesPanel } from "./panels/SourcesPanel";
+import { TemplatePanel, TemplateSaveForm, TemplateToolbarButtons } from "./panels/TemplatePanel";
 import SceneCanvas from "./SceneCanvas";
 
 type SingleDragState = {
@@ -1049,15 +1051,6 @@ export default function SceneEditor() {
     }
   }
 
-  function handleTemplateImportInput(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.currentTarget.files?.[0];
-    event.currentTarget.value = "";
-
-    if (file) {
-      void importTemplateFile(file);
-    }
-  }
-
   function deleteSelected() {
     if (selection.selectedIds.length === 0) {
       return;
@@ -1166,23 +1159,12 @@ export default function SceneEditor() {
               保存模板
             </button>
           ) : null}
-          <button
-            type="button"
-            className={`secondary-button toolbar-template-button${showTemplateForm ? " active" : ""}`}
-            onClick={() => setShowTemplateForm((visible) => !visible)}
-            aria-expanded={showTemplateForm}
-            aria-controls="template-save-panel"
-          >
-            {activeCustomTemplate ? "另存为模板" : "保存为模板"}
-          </button>
-          <label className="secondary-button file-button">
-            导入
-            <input
-              type="file"
-              accept="application/json,.json"
-              onChange={handleTemplateImportInput}
-            />
-          </label>
+          <TemplateToolbarButtons
+            showTemplateForm={showTemplateForm}
+            activeCustomTemplate={activeCustomTemplate}
+            onToggleSaveForm={() => setShowTemplateForm((visible) => !visible)}
+            onImport={(file) => void importTemplateFile(file)}
+          />
           <div className="export-control" aria-label="导出场景">
             <select
               className="export-format-select"
@@ -1207,34 +1189,14 @@ export default function SceneEditor() {
         </div>
       </section>
 
-      {showTemplateForm && (
-        <section
-          className="template-save-panel"
-          id="template-save-panel"
-          aria-label="保存当前场景为模板"
-        >
-          <TextField
-            label="模板名称"
-            placeholder="未命名模板"
-            value={customTemplateName}
-            onChange={setCustomTemplateName}
-          />
-          <button
-            type="button"
-            className="primary-button"
-            onClick={saveCustomTemplate}
-          >
-            确认保存
-          </button>
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={() => setShowTemplateForm(false)}
-          >
-            取消
-          </button>
-        </section>
-      )}
+      <TemplateSaveForm
+        show={showTemplateForm}
+        activeCustomTemplate={activeCustomTemplate}
+        customTemplateName={customTemplateName}
+        onSetName={setCustomTemplateName}
+        onSave={saveCustomTemplate}
+        onCancel={() => setShowTemplateForm(false)}
+      />
 
       <section className="editor-grid">
         <aside
@@ -1284,178 +1246,39 @@ export default function SceneEditor() {
             </div>
           </SidebarSection>
 
-          <SidebarSection
-            title="OBS 源"
-            caption={`${templateSlots.length} 个源`}
+          <SourcesPanel
+            templateSlots={templateSlots}
+            customTemplates={customTemplates}
+            activeSlotId={activeSlotId}
             collapsed={collapsedSections.sources}
             onToggle={() => toggleSidebarSection("sources")}
-          >
-            <div className="source-create-row">
-              <span>新建浏览器源</span>
-              <select
-                className="template-select-dropdown"
-                value=""
-                onChange={(e) => {
-                  if (e.currentTarget.value) {
-                    void addSlot(e.currentTarget.value);
-                    e.currentTarget.value = "";
-                  }
-                }}
-                title="选择模板创建浏览器源"
-              >
-                <option value="" disabled>选择模板...</option>
-                <optgroup label="内置模板">
-                  {BUILT_IN_TEMPLATES.map((template) => (
-                    <option key={template.id} value={template.id}>
-                      {template.name}
-                    </option>
-                  ))}
-                </optgroup>
-                {customTemplates.length > 0 && (
-                  <optgroup label="自定义模板">
-                    {customTemplates.map((template) => (
-                      <option key={template.id} value={template.id}>
-                        {template.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-              </select>
-            </div>
+            onAddSlot={(templateId) => void addSlot(templateId)}
+            onRemoveSlot={(templateId, slotId) => void removeSlot(templateId, slotId)}
+            onSelectSlot={selectSlotForEditing}
+            onRenameSlot={(templateId, slotId, newName) => {
+              writeSlotNameToStorage(templateId, slotId, newName);
+              setTemplateSlots((prev) =>
+                prev.map((s) =>
+                  s.templateId === templateId && s.slotId === slotId
+                    ? { ...s, name: newName }
+                    : s,
+                ),
+              );
+            }}
+            getSlotUrl={getSlotUrl}
+            setStatus={setStatus}
+          />
 
-            {templateSlots.length === 0 ? (
-              <div className="live-url-empty">
-                <p>暂无浏览器源，请从上方选择模板创建</p>
-              </div>
-            ) : (
-              <div className="slot-list">
-                {templateSlots.map((slot) => {
-                  const url = getSlotUrl(slot.templateId, slot.slotId);
-                  const isActive = slot.slotId === activeSlotId;
-                  const template = BUILT_IN_TEMPLATES.find((t) => t.id === slot.templateId)
-                    ?? customTemplates.find((t) => t.id === slot.templateId);
-                  const templateName = template?.name ?? "未命名模板";
-
-                  return (
-                    <div
-                      key={`${slot.templateId}/${slot.slotId}`}
-                      className={`slot-item${isActive ? " active" : ""}`}
-                      onClick={() => selectSlotForEditing(slot.slotId)}
-                    >
-                      <div className="slot-item-header">
-                        <div className="slot-title-group">
-                          <span className="slot-template-badge">{templateName}</span>
-                          <EditableSlotName
-                            name={slot.name}
-                            onSave={(newName) => {
-                              writeSlotNameToStorage(slot.templateId, slot.slotId, newName);
-                              setTemplateSlots((prev) =>
-                                prev.map((s) =>
-                                  s.templateId === slot.templateId && s.slotId === slot.slotId
-                                    ? { ...s, name: newName }
-                                    : s,
-                                ),
-                              );
-                            }}
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          className="slot-delete-button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            void removeSlot(slot.templateId, slot.slotId);
-                          }}
-                          title="删除此浏览器源"
-                        >
-                          ×
-                        </button>
-                      </div>
-                      <div className="slot-item-url">
-                        <code>{url}</code>
-                        <button
-                          type="button"
-                          className="slot-copy-button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigator.clipboard.writeText(url).then(() => {
-                              setStatus("URL 已复制到剪贴板");
-                            });
-                          }}
-                          title="复制到剪贴板"
-                        >
-                          复制 URL
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </SidebarSection>
-
-          <SidebarSection
-            title="模板"
-            caption={`${BUILT_IN_TEMPLATES.length + customTemplates.length} 个`}
+          <TemplatePanel
+            customTemplates={customTemplates}
+            activeTemplateId={activeTemplateId}
+            hasUnsavedCustomTemplateChanges={hasUnsavedCustomTemplateChanges}
             collapsed={collapsedSections.templates}
             onToggle={() => toggleSidebarSection("templates")}
-          >
-            <div className="template-library">
-              <div className="template-section">
-                <div className="template-section-header">
-                  <span className="template-section-title">内置模板</span>
-                  <span className="template-section-count">{BUILT_IN_TEMPLATES.length} 个</span>
-                </div>
-                <div className="template-list">
-                  {BUILT_IN_TEMPLATES.map((template) => (
-                    <TemplateCard
-                      key={template.id}
-                      name={template.name}
-                      description={template.description}
-                      badge="内置"
-                      active={activeTemplateId === template.id}
-                      onApply={() => applyBuiltInTemplate(template.id)}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {customTemplates.length > 0 && (
-                <div className="template-section">
-                  <div className="template-section-header">
-                    <span className="template-section-title">自定义模板</span>
-                    <span className="template-section-count">{customTemplates.length} 个</span>
-                  </div>
-                  <div className="template-list">
-                    {customTemplates.map((template) => (
-                      <TemplateCard
-                        key={template.id}
-                        name={template.name}
-                        description={
-                          activeTemplateId === template.id && hasUnsavedCustomTemplateChanges
-                            ? "有未保存修改"
-                            : formatTemplateDate(
-                              template.updatedAt ?? template.createdAt,
-                              template.updatedAt ? "更新于" : "保存于",
-                            )
-                        }
-                        badge={
-                          activeTemplateId === template.id && hasUnsavedCustomTemplateChanges
-                            ? "未保存"
-                            : "自定义"
-                        }
-                        active={activeTemplateId === template.id}
-                        dirty={activeTemplateId === template.id && hasUnsavedCustomTemplateChanges}
-                        onApply={() => applyTemplate(template)}
-                        onDelete={() => deleteCustomTemplate(template.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-            </div>
-          </SidebarSection>
+            onApplyBuiltInTemplate={applyBuiltInTemplate}
+            onApplyCustomTemplate={applyTemplate}
+            onDeleteCustomTemplate={deleteCustomTemplate}
+          />
 
           <LayerPanel
             elements={scene.elements}
@@ -1595,51 +1418,6 @@ export default function SceneEditor() {
   );
 }
 
-function TemplateCard({
-  name,
-  description,
-  badge,
-  active,
-  dirty = false,
-  onApply,
-  onDelete,
-}: {
-  name: string;
-  description: string;
-  badge: string;
-  active: boolean;
-  dirty?: boolean;
-  onApply: () => void;
-  onDelete?: () => void;
-}) {
-  return (
-    <div className={[
-      "template-card",
-      active ? "active" : "",
-      dirty ? "dirty" : "",
-    ].filter(Boolean).join(" ")}>
-      <button type="button" className="template-card-button" onClick={onApply}>
-        <div className="template-card-content">
-          <span className="template-card-name">{name}</span>
-          <small className="template-card-desc">{description}</small>
-        </div>
-        <span className="template-card-badge">{badge}</span>
-      </button>
-      {onDelete ? (
-        <button
-          type="button"
-          className="template-card-delete"
-          aria-label={`删除模板 ${name}`}
-          onClick={onDelete}
-          title="删除模板"
-        >
-          ×
-        </button>
-      ) : null}
-    </div>
-  );
-}
-
 function PanelTitle({ title, caption }: { title: string; caption: string }) {
   return (
     <div className="panel-title">
@@ -1677,19 +1455,6 @@ function SidebarSection({
       {collapsed ? null : <div className="sidebar-section-body">{children}</div>}
     </section>
   );
-}
-
-function formatTemplateDate(value: string, prefix = "保存于") {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "保存在浏览器缓存";
-  }
-
-  return `${prefix} ${date.toLocaleDateString("zh-CN", {
-    month: "2-digit",
-    day: "2-digit",
-  })}`;
 }
 
 async function inlineSceneAssets(scene: Scene): Promise<Scene> {
@@ -1930,64 +1695,4 @@ function OpacityField({
 
 function isHexColor(value: string) {
   return /^#[0-9a-fA-F]{6}$/.test(value);
-}
-
-function EditableSlotName({
-  name,
-  onSave,
-}: {
-  name: string;
-  onSave: (value: string) => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(name);
-
-  if (editing) {
-    return (
-      <input
-        className="slot-name-input"
-        type="text"
-        value={draft}
-        onChange={(e) => setDraft(e.currentTarget.value)}
-        onBlur={() => {
-          const trimmed = draft.trim();
-          if (trimmed && trimmed !== name) {
-            onSave(trimmed);
-          }
-          setEditing(false);
-          setDraft(name);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            const trimmed = draft.trim();
-            if (trimmed && trimmed !== name) {
-              onSave(trimmed);
-            }
-            setEditing(false);
-            setDraft(name);
-          }
-          if (e.key === "Escape") {
-            setEditing(false);
-            setDraft(name);
-          }
-        }}
-        autoFocus
-        onClick={(e) => e.stopPropagation()}
-      />
-    );
-  }
-
-  return (
-    <span
-      className="slot-name"
-      onClick={(e) => {
-        e.stopPropagation();
-        setDraft(name);
-        setEditing(true);
-      }}
-      title="点击重命名"
-    >
-      {name}
-    </span>
-  );
 }
