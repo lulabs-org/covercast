@@ -70,6 +70,8 @@ import {
 } from "../lib/group-drag";
 import { useScrollVisibility } from "../lib/use-scroll-visibility";
 import { usePanelResize } from "../lib/use-panel-resize";
+import { useHistory } from "../hooks/useHistory";
+import { useClipboard } from "../hooks/useClipboard";
 import SceneCanvas from "./SceneCanvas";
 
 type SingleDragState = {
@@ -104,22 +106,9 @@ const CANVAS_ZOOM_MAX = 3;
 const CANVAS_ZOOM_STEP = 0.1;
 const CANVAS_PREVIEW_MAX_WIDTH = 560;
 const STAGE_VIEWPORT_PADDING = 36;
-const MAX_HISTORY_SIZE = 50;
-
 type SidebarSectionId = "scene" | "sources" | "templates" | "layers";
 type ExportFormat = "png" | "jpeg" | "svg" | "json";
 
-type HistoryEntry = {
-  scene: Scene;
-  selectedIds: string[];
-  description: string;
-  timestamp: number;
-};
-
-type HistoryState = {
-  past: HistoryEntry[];
-  future: HistoryEntry[];
-};
 type TemplateExportPayload = {
   format: typeof TEMPLATE_EXPORT_FORMAT;
   version: 1;
@@ -200,11 +189,8 @@ export default function SceneEditor() {
   const [guides, setGuides] = useState<GuideLine[]>([]);
   const [spacingGuides, setSpacingGuides] = useState<MeasurementGuide[]>([]);
   const [resizeLabel, setResizeLabel] = useState<ResizeLabel | null>(null);
-  const [history, setHistory] = useState<HistoryState>({ past: [], future: [] });
   const guidesSelectedIdsRef = useRef<string[]>([]);
   const svgRef = useRef<SVGSVGElement>(null);
-  const elementClipboardRef = useRef<SceneElement | null>(null);
-  const pasteOffsetRef = useRef(1);
   const sceneElementsRef = useRef<SceneElement[]>(scene.elements);
   const selectedElementRef = useRef<SceneElement | null>(null);
   const snapStateRef = useRef<SnapState>(createSnapState());
@@ -216,7 +202,6 @@ export default function SceneEditor() {
   const latestMarqueeRef = useRef<{ x: number; y: number } | null>(null);
   const [activeSlotId, setActiveSlotId] = useState<string>("default");
   const [templateSlots, setTemplateSlots] = useState<SceneSlotInfo[]>([]);
-  const [canPasteElement, setCanPasteElement] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<Record<SidebarSectionId, boolean>>({
     scene: false,
     sources: false,
@@ -227,6 +212,13 @@ export default function SceneEditor() {
 
   const { leftPanelRef, rightPanelRef, stageViewportRef } = useScrollVisibility();
   const { panelWidths, resizerLeftRef, resizerRightRef, handleMouseDown } = usePanelResize();
+  const { history, saveHistory, undo, redo } = useHistory({
+    scene,
+    selectedIds: selection.selectedIds,
+    setScene,
+    setSelection,
+    setStatus,
+  });
 
   const selectedElement = useMemo(() => {
     if (selection.selectedIds.length !== 1) {
@@ -552,72 +544,6 @@ export default function SceneEditor() {
     setCanvasZoom((value) => clampZoom(value + direction * CANVAS_ZOOM_STEP));
   }
 
-  const saveHistory = useCallback((description: string, sceneToSave?: Scene) => {
-    const entry: HistoryEntry = {
-      scene: cloneScene(sceneToSave ?? scene),
-      selectedIds: selection.selectedIds,
-      description,
-      timestamp: Date.now(),
-    };
-
-    setHistory((prev) => ({
-      past: [...prev.past, entry].slice(-MAX_HISTORY_SIZE),
-      future: [],
-    }));
-  }, [scene, selection.selectedIds]);
-
-  const undo = useCallback(() => {
-    if (history.past.length === 0) {
-      setStatus("没有可撤销的操作");
-      return;
-    }
-
-    const previous = history.past[history.past.length - 1];
-
-    setHistory((prev) => ({
-      past: prev.past.slice(0, -1),
-      future: [
-        {
-          scene: cloneScene(scene),
-          selectedIds: selection.selectedIds,
-          description: "当前状态",
-          timestamp: Date.now(),
-        },
-        ...prev.future,
-      ],
-    }));
-
-    setScene(previous.scene);
-    setSelection((prev) => ({ ...prev, selectedIds: previous.selectedIds }));
-    setStatus(`已撤销：${previous.description}`);
-  }, [history.past, scene, selection.selectedIds]);
-
-  const redo = useCallback(() => {
-    if (history.future.length === 0) {
-      setStatus("没有可重做的操作");
-      return;
-    }
-
-    const next = history.future[0];
-
-    setHistory((prev) => ({
-      past: [
-        ...prev.past,
-        {
-          scene: cloneScene(scene),
-          selectedIds: selection.selectedIds,
-          description: "当前状态",
-          timestamp: Date.now(),
-        },
-      ],
-      future: prev.future.slice(1),
-    }));
-
-    setScene(next.scene);
-    setSelection((prev) => ({ ...prev, selectedIds: next.selectedIds }));
-    setStatus(`已重做：${next.description}`);
-  }, [history.future, scene, selection.selectedIds]);
-
   useEffect(() => {
     if (!drag) {
       return;
@@ -934,45 +860,14 @@ export default function SceneEditor() {
     markSceneEdited();
   }, [scene, saveHistory, markSceneEdited]);
 
-  const copySelectedElement = useCallback(() => {
-    const element = selectedElementRef.current;
-
-    if (!element) {
-      setStatus("请先选择一个画布组件");
-      return;
-    }
-
-    elementClipboardRef.current = cloneSceneElement(element);
-    pasteOffsetRef.current = 1;
-    setCanPasteElement(true);
-    setStatus(`已复制「${element.name}」`);
-  }, []);
-
-  const pasteCopiedElement = useCallback(() => {
-    const sourceElement = elementClipboardRef.current;
-
-    if (!sourceElement) {
-      setStatus("没有可粘贴的组件");
-      return;
-    }
-
-    const pastedElement = createPastedSceneElement(
-      sourceElement,
-      sceneElementsRef.current,
-      pasteOffsetRef.current,
-    );
-    pasteOffsetRef.current += 1;
-    sceneElementsRef.current = [...sceneElementsRef.current, pastedElement];
-    selectedElementRef.current = pastedElement;
-
-    changeScene((currentScene) => ({
-      ...currentScene,
-      elements: [...currentScene.elements, pastedElement],
-    }), `粘贴元素「${pastedElement.name}」`);
-    setSelection((prev) => selectSingle(prev, pastedElement.id));
-    markSceneEdited();
-    setStatus(`已粘贴「${pastedElement.name}」`);
-  }, [changeScene]);
+  const { elementClipboardRef, canPasteElement, copySelectedElement, pasteCopiedElement } = useClipboard({
+    selectedElementRef,
+    sceneElementsRef,
+    changeScene,
+    setSelection,
+    markSceneEdited,
+    setStatus,
+  });
 
   useEffect(() => {
     function handleEditorKeyDown(event: KeyboardEvent) {
@@ -3169,48 +3064,6 @@ function findMatchingBuiltInTemplateId(scene: Scene) {
 
 function scenesMatch(left: Scene, right: Scene) {
   return JSON.stringify(left) === JSON.stringify(right);
-}
-
-function cloneSceneElement(element: SceneElement): SceneElement {
-  return JSON.parse(JSON.stringify(element)) as SceneElement;
-}
-
-function createPastedSceneElement(
-  element: SceneElement,
-  elements: SceneElement[],
-  offsetMultiplier: number,
-): SceneElement {
-  const offset = 24 * offsetMultiplier;
-
-  return {
-    ...cloneSceneElement(element),
-    id: createSceneElementId(element.type),
-    name: uniqueSceneElementName(`${element.name} 副本`, elements),
-    x: clamp(element.x + offset, -element.width + 24, CANVAS_WIDTH - 24),
-    y: clamp(element.y + offset, -element.height + 24, CANVAS_HEIGHT - 24),
-  } as SceneElement;
-}
-
-function createSceneElementId(type: SceneElement["type"]) {
-  return `${type}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
-function uniqueSceneElementName(name: string, elements: SceneElement[]) {
-  const existingNames = new Set(elements.map((element) => element.name));
-
-  if (!existingNames.has(name)) {
-    return name;
-  }
-
-  let suffix = 2;
-  let candidate = `${name} ${suffix}`;
-
-  while (existingNames.has(candidate)) {
-    suffix += 1;
-    candidate = `${name} ${suffix}`;
-  }
-
-  return candidate;
 }
 
 function isCopyPasteModifier(event: KeyboardEvent) {
