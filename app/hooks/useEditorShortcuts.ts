@@ -33,7 +33,7 @@ type UseEditorShortcutsOptions = {
   selectedElementRef: React.MutableRefObject<SceneElement | null>;
   elementClipboardRef: React.MutableRefObject<SceneElement | null>;
   spatialIndexRef: React.MutableRefObject<SpatialIndex>;
-  guidesSelectedIdsRef: React.MutableRefObject<string[]>;
+  setGuidesSelectedIds: (ids: string[]) => void;
   setGuides: (guides: GuideLine[]) => void;
   setSpacingGuides: (guides: MeasurementGuide[]) => void;
   setScene: (updater: (currentScene: Scene) => Scene) => void;
@@ -52,7 +52,7 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
     selectedElementRef,
     elementClipboardRef,
     spatialIndexRef,
-    guidesSelectedIdsRef,
+    setGuidesSelectedIds,
     setGuides,
     setSpacingGuides,
     setScene,
@@ -148,7 +148,7 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
             const guides = computeGuidesOptimized(movedBounds, spatialIndexRef.current, undefined, keyboardContext);
             const spacingGuides = computeSpacingGuidesOptimized(movedBounds, spatialIndexRef.current, keyboardContext);
             
-            guidesSelectedIdsRef.current = selection.selectedIds;
+            setGuidesSelectedIds(selection.selectedIds);
             setGuides(guides);
             setSpacingGuides(spacingGuides);
           }
@@ -236,7 +236,7 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
             const guides = computeGuidesOptimized(movedBounds, spatialIndexRef.current, undefined, keyboardContext);
             const spacingGuides = computeSpacingGuidesOptimized(movedBounds, spatialIndexRef.current, keyboardContext);
             
-            guidesSelectedIdsRef.current = selection.selectedIds;
+            setGuidesSelectedIds(selection.selectedIds);
             setGuides(guides);
             setSpacingGuides(spacingGuides);
           }
