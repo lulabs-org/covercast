@@ -72,6 +72,8 @@ import { useScrollVisibility } from "../lib/use-scroll-visibility";
 import { usePanelResize } from "../lib/use-panel-resize";
 import { useHistory } from "../hooks/useHistory";
 import { useClipboard } from "../hooks/useClipboard";
+import { useEditorShortcuts } from "../hooks/useEditorShortcuts";
+import { useCanvasZoom } from "../hooks/useCanvasZoom";
 import SceneCanvas from "./SceneCanvas";
 
 type SingleDragState = {
@@ -100,12 +102,6 @@ type SceneSlotInfo = {
 
 const TEMPLATE_EXPORT_FORMAT = "covercast.template";
 const CUSTOM_FONT_FAMILY_VALUE = "__custom-font-family__";
-const CANVAS_ASPECT_RATIO = CANVAS_WIDTH / CANVAS_HEIGHT;
-const CANVAS_ZOOM_MIN = 0.25;
-const CANVAS_ZOOM_MAX = 3;
-const CANVAS_ZOOM_STEP = 0.1;
-const CANVAS_PREVIEW_MAX_WIDTH = 560;
-const STAGE_VIEWPORT_PADDING = 36;
 type SidebarSectionId = "scene" | "sources" | "templates" | "layers";
 type ExportFormat = "png" | "jpeg" | "svg" | "json";
 
@@ -183,8 +179,6 @@ export default function SceneEditor() {
   const [appOrigin, setAppOrigin] = useState("");
   const [showTemplateForm, setShowTemplateForm] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat>("png");
-  const [canvasZoom, setCanvasZoom] = useState(1);
-  const [canvasFitWidth, setCanvasFitWidth] = useState(CANVAS_PREVIEW_MAX_WIDTH);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [guides, setGuides] = useState<GuideLine[]>([]);
   const [spacingGuides, setSpacingGuides] = useState<MeasurementGuide[]>([]);
@@ -212,6 +206,20 @@ export default function SceneEditor() {
 
   const { leftPanelRef, rightPanelRef, stageViewportRef } = useScrollVisibility();
   const { panelWidths, resizerLeftRef, resizerRightRef, handleMouseDown } = usePanelResize();
+  const {
+    canvasZoom,
+    canvasPreviewWidth,
+    canvasZoomPercent,
+    setCanvasZoomLevel,
+    zoomCanvasIn,
+    zoomCanvasOut,
+    resetCanvasZoom,
+    handleStageWheel,
+    handleZoomSliderWheel,
+    CANVAS_ZOOM_MIN,
+    CANVAS_ZOOM_MAX,
+    CANVAS_ZOOM_STEP,
+  } = useCanvasZoom({ stageViewportRef });
   const { history, saveHistory, undo, redo } = useHistory({
     scene,
     selectedIds: selection.selectedIds,
@@ -351,39 +359,6 @@ export default function SceneEditor() {
     };
   }, []);
 
-  useEffect(() => {
-    const viewport = stageViewportRef.current;
-
-    if (!viewport) {
-      return;
-    }
-
-    const currentViewport = viewport;
-
-    function updateFitWidth() {
-      const availableWidth = Math.max(160, currentViewport.clientWidth - STAGE_VIEWPORT_PADDING);
-      const availableHeight = Math.max(280, currentViewport.clientHeight - STAGE_VIEWPORT_PADDING);
-      const nextFitWidth = Math.min(
-        availableWidth,
-        availableHeight * CANVAS_ASPECT_RATIO,
-        CANVAS_PREVIEW_MAX_WIDTH,
-      );
-
-      setCanvasFitWidth(Math.max(160, nextFitWidth));
-    }
-
-    updateFitWidth();
-
-    const observer = new ResizeObserver(updateFitWidth);
-    observer.observe(currentViewport);
-    window.addEventListener("resize", updateFitWidth);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", updateFitWidth);
-    };
-  }, []);
-
   const activeBuiltInTemplate =
     BUILT_IN_TEMPLATES.find((template) => template.id === activeTemplateId) ?? null;
   const activeCustomTemplate =
@@ -401,8 +376,6 @@ export default function SceneEditor() {
   const visualLayers = scene.elements
     .map((element, index) => ({ element, index }))
     .reverse();
-  const canvasPreviewWidth = Math.round(canvasFitWidth * canvasZoom);
-  const canvasZoomPercent = Math.round(canvasZoom * 100);
 
   const markSceneEdited = useCallback(() => {
     if (activeCustomTemplate) {
@@ -510,38 +483,6 @@ export default function SceneEditor() {
       ...current,
       [sectionId]: !current[sectionId],
     }));
-  }
-
-  function setCanvasZoomLevel(value: number) {
-    setCanvasZoom(clampZoom(value));
-  }
-
-  function zoomCanvasIn() {
-    setCanvasZoom((value) => clampZoom(value + CANVAS_ZOOM_STEP));
-  }
-
-  function zoomCanvasOut() {
-    setCanvasZoom((value) => clampZoom(value - CANVAS_ZOOM_STEP));
-  }
-
-  function resetCanvasZoom() {
-    setCanvasZoom(1);
-  }
-
-  function handleStageWheel(event: ReactWheelEvent<HTMLDivElement>) {
-    if (!event.ctrlKey && !event.metaKey) {
-      return;
-    }
-
-    event.preventDefault();
-    const direction = event.deltaY < 0 ? 1 : -1;
-    setCanvasZoom((value) => clampZoom(value + direction * CANVAS_ZOOM_STEP));
-  }
-
-  function handleZoomSliderWheel(event: ReactWheelEvent<HTMLDivElement>) {
-    event.preventDefault();
-    const direction = event.deltaY < 0 ? 1 : -1;
-    setCanvasZoom((value) => clampZoom(value + direction * CANVAS_ZOOM_STEP));
   }
 
   useEffect(() => {
@@ -869,219 +810,23 @@ export default function SceneEditor() {
     setStatus,
   });
 
-  useEffect(() => {
-    function handleEditorKeyDown(event: KeyboardEvent) {
-      const arrowKeys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
-      
-      if (isEditableTarget(event.target) || editingTextId) {
-        if (!arrowKeys.includes(event.key)) {
-          return;
-        }
-      }
-      
-      const key = event.key.toLowerCase();
-      
-      if ((event.metaKey || event.ctrlKey) && key === "z") {
-        event.preventDefault();
-        if (event.shiftKey) {
-          redo();
-        } else {
-          undo();
-        }
-      }
-
-      if (arrowKeys.includes(event.key)) {
-        if (isEditableTarget(event.target) || editingTextId) {
-          return;
-        }
-        
-        if (selection.selectedIds.length === 0) {
-          return;
-        }
-        
-        event.preventDefault();
-        
-        const selectedElements = scene.elements.filter(
-          (el) => selection.selectedIds.includes(el.id) && !el.locked
-        );
-        
-        if (selectedElements.length === 0) {
-          return;
-        }
-        
-        const movementStep = event.shiftKey ? 10 : 1;
-        
-        let dx = 0;
-        let dy = 0;
-        
-        switch (event.key) {
-          case "ArrowUp":
-            dy = -movementStep;
-            break;
-          case "ArrowDown":
-            dy = movementStep;
-            break;
-          case "ArrowLeft":
-            dx = -movementStep;
-            break;
-          case "ArrowRight":
-            dx = movementStep;
-            break;
-        }
-        
-        const otherElements = scene.elements.filter(
-          (el) => !selection.selectedIds.includes(el.id) && !el.locked && el.hidden !== true
-        );
-        spatialIndexRef.current = buildSpatialIndex(otherElements);
-        
-        const keyboardContext: GuideContext = { mode: "keyboard" };
-        
-        setScene((currentScene) => {
-          const updatedElements = currentScene.elements.map((element) => {
-            if (!selection.selectedIds.includes(element.id) || element.locked) {
-              return element;
-            }
-            
-            return {
-              ...element,
-              x: element.x + dx,
-              y: element.y + dy,
-            } as SceneElement;
-          });
-          
-          const updatedSelectedElements = updatedElements.filter(
-            (el) => selection.selectedIds.includes(el.id) && !el.locked
-          );
-          
-          if (updatedSelectedElements.length > 0) {
-            const movedBounds = computeBoundingBox(updatedSelectedElements);
-            const guides = computeGuidesOptimized(movedBounds, spatialIndexRef.current, undefined, keyboardContext);
-            const spacingGuides = computeSpacingGuidesOptimized(movedBounds, spatialIndexRef.current, keyboardContext);
-            
-            guidesSelectedIdsRef.current = selection.selectedIds;
-            setGuides(guides);
-            setSpacingGuides(spacingGuides);
-          }
-          
-          return {
-            ...currentScene,
-            elements: updatedElements,
-          };
-        });
-        markSceneEdited();
-        return;
-      }
-
-      if (!isCopyPasteModifier(event) || isEditableTarget(event.target)) {
-        return;
-      }
-
-      if ((event.metaKey || event.ctrlKey) && key === "y") {
-        event.preventDefault();
-        redo();
-        return;
-      }
-      
-      if (arrowKeys.includes(event.key)) {
-        if (selection.selectedIds.length === 0) {
-          return;
-        }
-        
-        event.preventDefault();
-        
-        const selectedElements = scene.elements.filter(
-          (el) => selection.selectedIds.includes(el.id) && !el.locked
-        );
-        
-        if (selectedElements.length === 0) {
-          return;
-        }
-        
-        const movementStep = event.shiftKey ? 10 : 1;
-        
-        let dx = 0;
-        let dy = 0;
-        
-        switch (event.key) {
-          case "ArrowUp":
-            dy = -movementStep;
-            break;
-          case "ArrowDown":
-            dy = movementStep;
-            break;
-          case "ArrowLeft":
-            dx = -movementStep;
-            break;
-          case "ArrowRight":
-            dx = movementStep;
-            break;
-        }
-        
-        const otherElements = scene.elements.filter(
-          (el) => !selection.selectedIds.includes(el.id) && !el.locked && el.hidden !== true
-        );
-        spatialIndexRef.current = buildSpatialIndex(otherElements);
-        
-        const keyboardContext: GuideContext = { mode: "keyboard" };
-        
-        setScene((currentScene) => {
-          const updatedElements = currentScene.elements.map((element) => {
-            if (!selection.selectedIds.includes(element.id) || element.locked) {
-              return element;
-            }
-            
-            return {
-              ...element,
-              x: element.x + dx,
-              y: element.y + dy,
-            } as SceneElement;
-          });
-          
-          const updatedSelectedElements = updatedElements.filter(
-            (el) => selection.selectedIds.includes(el.id) && !el.locked
-          );
-          
-          if (updatedSelectedElements.length > 0) {
-            const movedBounds = computeBoundingBox(updatedSelectedElements);
-            const guides = computeGuidesOptimized(movedBounds, spatialIndexRef.current, undefined, keyboardContext);
-            const spacingGuides = computeSpacingGuidesOptimized(movedBounds, spatialIndexRef.current, keyboardContext);
-            
-            guidesSelectedIdsRef.current = selection.selectedIds;
-            setGuides(guides);
-            setSpacingGuides(spacingGuides);
-          }
-          
-          return {
-            ...currentScene,
-            elements: updatedElements,
-          };
-        });
-        markSceneEdited();
-        return;
-      }
-
-      if (!isCopyPasteModifier(event) || isEditableTarget(event.target)) {
-        return;
-      }
-
-      if (key === "c" && selectedElementRef.current) {
-        event.preventDefault();
-        copySelectedElement();
-        return;
-      }
-
-      if (key === "v" && elementClipboardRef.current) {
-        event.preventDefault();
-        pasteCopiedElement();
-      }
-    }
-
-    window.addEventListener("keydown", handleEditorKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleEditorKeyDown);
-    };
-  }, [copySelectedElement, pasteCopiedElement, undo, redo, selection.selectedIds, editingTextId, scene.elements, markSceneEdited]);
+  useEditorShortcuts({
+    scene,
+    selection,
+    editingTextId,
+    undo,
+    redo,
+    copySelectedElement,
+    pasteCopiedElement,
+    selectedElementRef,
+    elementClipboardRef,
+    spatialIndexRef,
+    guidesSelectedIdsRef,
+    setGuides,
+    setSpacingGuides,
+    setScene,
+    markSceneEdited,
+  });
 
   function patchElement(elementId: string, patch: Partial<SceneElement>) {
     changeScene((currentScene) => ({
@@ -3066,23 +2811,6 @@ function scenesMatch(left: Scene, right: Scene) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
-function isCopyPasteModifier(event: KeyboardEvent) {
-  return (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey;
-}
-
-function isEditableTarget(target: EventTarget | null) {
-  if (!(target instanceof HTMLElement)) {
-    return false;
-  }
-
-  return (
-    target.isContentEditable ||
-    target.tagName === "INPUT" ||
-    target.tagName === "TEXTAREA" ||
-    target.tagName === "SELECT"
-  );
-}
-
 async function inlineSceneAssets(scene: Scene): Promise<Scene> {
   const elements = await Promise.all(
     scene.elements.map(async (element) => {
@@ -3221,10 +2949,6 @@ function minimumHeight(element: SceneElement) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
-}
-
-function clampZoom(value: number) {
-  return clamp(Number.isFinite(value) ? value : 1, CANVAS_ZOOM_MIN, CANVAS_ZOOM_MAX);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
