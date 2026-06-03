@@ -77,6 +77,7 @@ import { useCanvasZoom } from "../hooks/useCanvasZoom";
 import { useTemplateManager, type CustomSceneTemplate, type SceneSlotInfo } from "../hooks/useTemplateManager";
 import { useSlotManager } from "../hooks/useSlotManager";
 import { ElementInspector } from "./panels/ElementInspector";
+import { LayerPanel } from "./panels/LayerPanel";
 import SceneCanvas from "./SceneCanvas";
 
 type SingleDragState = {
@@ -308,10 +309,6 @@ export default function SceneEditor() {
       ? "自定义模板有未保存修改"
       : "自定义模板已保存"
     : activeSlot?.name ?? "未选择 OBS 源";
-  const visualLayers = scene.elements
-    .map((element, index) => ({ element, index }))
-    .reverse();
-
   const markSceneEdited = useCallback(() => {
     if (activeCustomTemplate) {
       return;
@@ -1460,78 +1457,16 @@ export default function SceneEditor() {
             </div>
           </SidebarSection>
 
-          <SidebarSection
-            title="图层"
-            caption={`${scene.elements.length} 个`}
+          <LayerPanel
+            elements={scene.elements}
+            selection={selection}
             collapsed={collapsedSections.layers}
             onToggle={() => toggleSidebarSection("layers")}
-          >
-            <div className="layer-list">
-              {visualLayers.map(({ element, index }) => {
-                const isActive = isSelected(selection, element.id);
-                const isTop = index === scene.elements.length - 1;
-                const isBottom = index === 0;
-
-                return (
-                  <div
-                    key={element.id}
-                    className={[
-                      "layer-row",
-                      isActive ? "active" : "",
-                      element.hidden ? "muted" : "",
-                      element.locked ? "locked" : "",
-                    ].filter(Boolean).join(" ")}
-                  >
-                    <button
-                      type="button"
-                      className="layer-main"
-                      onClick={() => setSelection(selectSingle(selection, element.id))}
-                    >
-                      <span className="layer-type">{elementTypeGlyph(element)}</span>
-                      <span className="layer-name">{element.name}</span>
-                      <small>{elementTypeLabel(element)}</small>
-                    </button>
-                    <div className="layer-actions">
-                      <button
-                        type="button"
-                        className={element.hidden ? "layer-action active" : "layer-action"}
-                        onClick={() => toggleElementHidden(element.id)}
-                        title={element.hidden ? "显示图层" : "隐藏图层"}
-                      >
-                        {element.hidden ? "隐" : "显"}
-                      </button>
-                      <button
-                        type="button"
-                        className={element.locked ? "layer-action active" : "layer-action"}
-                        onClick={() => toggleElementLocked(element.id)}
-                        title={element.locked ? "解锁图层" : "锁定图层"}
-                      >
-                        {element.locked ? "锁" : "解"}
-                      </button>
-                      <button
-                        type="button"
-                        className="layer-action"
-                        disabled={isTop}
-                        onClick={() => moveElementLayer(element.id, "forward")}
-                        title="上移一层"
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        className="layer-action"
-                        disabled={isBottom}
-                        onClick={() => moveElementLayer(element.id, "backward")}
-                        title="下移一层"
-                      >
-                        ↓
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </SidebarSection>
+            onSelect={setSelection}
+            onToggleHidden={toggleElementHidden}
+            onToggleLocked={toggleElementLocked}
+            onMoveLayer={moveElementLayer}
+          />
         </aside>
 
         <div
@@ -1742,38 +1677,6 @@ function SidebarSection({
       {collapsed ? null : <div className="sidebar-section-body">{children}</div>}
     </section>
   );
-}
-
-function elementTypeLabel(element: SceneElement) {
-  if (element.type === "text") {
-    return "文字";
-  }
-
-  if (element.type === "image") {
-    return "图片";
-  }
-
-  if (element.type === "ellipse") {
-    return "椭圆";
-  }
-
-  return "矩形";
-}
-
-function elementTypeGlyph(element: SceneElement) {
-  if (element.type === "text") {
-    return "T";
-  }
-
-  if (element.type === "image") {
-    return "I";
-  }
-
-  if (element.type === "ellipse") {
-    return "O";
-  }
-
-  return "R";
 }
 
 function formatTemplateDate(value: string, prefix = "保存于") {
