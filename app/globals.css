@@ -1231,6 +1231,22 @@ h1 {
   box-shadow: 0 0 0 3px rgba(39, 100, 246, 0.14);
 }
 
+.field-error input {
+  border-color: var(--danger);
+}
+
+.field-error input:focus {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(217, 45, 32, 0.14);
+}
+
+.field.field-error .field-error-message {
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
 .checkbox-field {
   display: grid;
   grid-template-columns: 1fr auto;
