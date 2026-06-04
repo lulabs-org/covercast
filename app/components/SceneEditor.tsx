@@ -61,12 +61,11 @@ import { useSlotManager } from "../hooks/useSlotManager";
 import { useDragManager } from "../hooks/useDragManager";
 import { useMarqueeSelection } from "../hooks/useMarqueeSelection";
 import { useExportScene, type ExportFormat, EXPORT_FORMAT_OPTIONS } from "../hooks/useExportScene";
-import { ElementInspector } from "./panels/ElementInspector";
-import { LayerPanel } from "./panels/LayerPanel";
-import { SourcesPanel } from "./panels/SourcesPanel";
-import { TemplatePanel, TemplateSaveForm } from "./panels/TemplatePanel";
+import { TemplateSaveForm } from "./panels/TemplatePanel";
 import { SceneToolbar } from "./editor/SceneToolbar";
 import { StagePanel } from "./editor/StagePanel";
+import { LeftSidebar } from "./editor/sidebar/LeftSidebar";
+import { RightSidebar } from "./editor/sidebar/RightSidebar";
 
 type SidebarSectionId = "scene" | "sources" | "templates" | "layers";
 
@@ -553,98 +552,36 @@ export default function SceneEditor() {
       />
 
       <section className="editor-grid">
-        <aside
-          ref={leftPanelRef}
-          className="left-panel"
-          aria-label="Scene settings"
-          style={{ width: `${panelWidths.leftPanel}px` }}
-        >
-          <div className="sidebar-context">
-            <span className="context-label">当前编辑</span>
-            <strong>
-              {activeTemplate?.name ?? "自定义场景"}
-              {hasUnsavedCustomTemplateChanges ? (
-                <span className="unsaved-pill">未保存</span>
-              ) : null}
-            </strong>
-            <small>{editingContextCaption}</small>
-          </div>
-
-          <SidebarSection
-            title="场景"
-            caption="941×1672 竖屏"
-            collapsed={collapsedSections.scene}
-            onToggle={() => toggleSidebarSection("scene")}
-          >
-            <div className="section-fields">
-              <ColorField
-                label="背景颜色"
-                value={scene.backgroundColor}
-                onChange={(value) =>
-                  changeScene((currentScene) => ({
-                    ...currentScene,
-                    backgroundColor: value,
-                  }))
-                }
-              />
-              <OpacityField
-                label="背景透明度"
-                value={scene.backgroundOpacity}
-                onChange={(value) =>
-                  changeScene((currentScene) => ({
-                    ...currentScene,
-                    backgroundOpacity: value,
-                  }))
-                }
-              />
-            </div>
-          </SidebarSection>
-
-          <SourcesPanel
-            templateSlots={templateSlots}
-            customTemplates={customTemplates}
-            activeSlotId={activeSlotId}
-            collapsed={collapsedSections.sources}
-            onToggle={() => toggleSidebarSection("sources")}
-            onAddSlot={(templateId) => void addSlot(templateId)}
-            onRemoveSlot={(templateId, slotId) => void removeSlot(templateId, slotId)}
-            onSelectSlot={selectSlotForEditing}
-            onRenameSlot={(templateId, slotId, newName) => {
-              writeSlotNameToStorage(templateId, slotId, newName);
-              setTemplateSlots((prev) =>
-                prev.map((s) =>
-                  s.templateId === templateId && s.slotId === slotId
-                    ? { ...s, name: newName }
-                    : s,
-                ),
-              );
-            }}
-            getSlotUrl={getSlotUrl}
-            setStatus={setStatus}
-          />
-
-          <TemplatePanel
-            customTemplates={customTemplates}
-            activeTemplateId={activeTemplateId}
-            hasUnsavedCustomTemplateChanges={hasUnsavedCustomTemplateChanges}
-            collapsed={collapsedSections.templates}
-            onToggle={() => toggleSidebarSection("templates")}
-            onApplyBuiltInTemplate={applyBuiltInTemplate}
-            onApplyCustomTemplate={applyTemplate}
-            onDeleteCustomTemplate={deleteCustomTemplate}
-          />
-
-          <LayerPanel
-            elements={scene.elements}
-            selection={selection}
-            collapsed={collapsedSections.layers}
-            onToggle={() => toggleSidebarSection("layers")}
-            onSelect={setSelection}
-            onToggleHidden={toggleElementHidden}
-            onToggleLocked={toggleElementLocked}
-            onMoveLayer={moveElementLayer}
-          />
-        </aside>
+        <LeftSidebar
+          leftPanelRef={leftPanelRef}
+          leftPanelWidth={panelWidths.leftPanel}
+          activeTemplate={activeCustomTemplate}
+          hasUnsavedCustomTemplateChanges={hasUnsavedCustomTemplateChanges}
+          editingContextCaption={editingContextCaption}
+          collapsedSections={collapsedSections}
+          toggleSidebarSection={toggleSidebarSection}
+          scene={scene}
+          changeScene={changeScene}
+          templateSlots={templateSlots}
+          customTemplates={customTemplates}
+          activeSlotId={activeSlotId}
+          addSlot={addSlot}
+          removeSlot={removeSlot}
+          selectSlotForEditing={selectSlotForEditing}
+          writeSlotNameToStorage={writeSlotNameToStorage}
+          setTemplateSlots={setTemplateSlots}
+          getSlotUrl={getSlotUrl}
+          setStatus={setStatus}
+          activeTemplateId={activeTemplateId}
+          applyBuiltInTemplate={applyBuiltInTemplate}
+          applyTemplate={applyTemplate}
+          deleteCustomTemplate={deleteCustomTemplate}
+          selection={selection}
+          setSelection={setSelection}
+          toggleElementHidden={toggleElementHidden}
+          toggleElementLocked={toggleElementLocked}
+          moveElementLayer={moveElementLayer}
+        />
 
         <div
           ref={resizerLeftRef}
@@ -691,77 +628,20 @@ export default function SceneEditor() {
           onMouseDown={(e) => handleMouseDown("right", e)}
         />
 
-        <aside
-          ref={rightPanelRef}
-          className="right-panel"
-          aria-label="Selected element settings"
-          style={{ width: `${panelWidths.rightPanel}px` }}
-        >
-          <PanelTitle
-            title={selectedElement ? selectedElement.name : "未选择元素"}
-            caption={selectedElement ? selectedElement.id : "点击画布元素进行编辑"}
-          />
-
-          {selectedElement ? (
-            <ElementInspector
-              element={selectedElement}
-              onPatch={patchSelected}
-              onCopy={copySelectedElement}
-              onPaste={pasteCopiedElement}
-              canPaste={canPasteElement}
-              onDelete={deleteSelected}
-              onReplaceImage={(event) => handleAssetInput(event, "replace")}
-            />
-          ) : (
-            <p className="empty-state">选择文字、视频框或图片素材后，可在这里调整位置、大小和样式。</p>
-          )}
-        </aside>
+        <RightSidebar
+          rightPanelRef={rightPanelRef}
+          rightPanelWidth={panelWidths.rightPanel}
+          selectedElement={selectedElement}
+          patchSelected={patchSelected}
+          copySelectedElement={copySelectedElement}
+          pasteCopiedElement={pasteCopiedElement}
+          canPasteElement={canPasteElement}
+          deleteSelected={deleteSelected}
+          handleAssetInput={handleAssetInput}
+        />
       </section>
     </main>
   );
-}
-
-function PanelTitle({ title, caption }: { title: string; caption: string }) {
-  return (
-    <div className="panel-title">
-      <h2>{title}</h2>
-      <span>{caption}</span>
-    </div>
-  );
-}
-
-function SidebarSection({
-  title,
-  caption,
-  collapsed,
-  onToggle,
-  children,
-}: {
-  title: string;
-  caption: string;
-  collapsed: boolean;
-  onToggle: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <section className="sidebar-section">
-      <button
-        type="button"
-        className="sidebar-section-header"
-        onClick={onToggle}
-        aria-expanded={!collapsed}
-      >
-        <span>{title}</span>
-        <small>{caption}</small>
-        <b>{collapsed ? "＋" : "－"}</b>
-      </button>
-      {collapsed ? null : <div className="sidebar-section-body">{children}</div>}
-    </section>
-  );
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
 }
 
 function TextField({
@@ -786,80 +666,4 @@ function TextField({
       />
     </label>
   );
-}
-
-function ColorField({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  const colorValue = isHexColor(value) ? value : "#ffffff";
-
-  return (
-    <label className="field color-field">
-      <span>{label}</span>
-      <div>
-        <input
-          type="color"
-          value={colorValue}
-          onChange={(event) => onChange(event.currentTarget.value)}
-        />
-        <input
-          type="text"
-          value={value}
-          onChange={(event) => onChange(event.currentTarget.value)}
-          placeholder="#ffffff"
-        />
-      </div>
-    </label>
-  );
-}
-
-function OpacityField({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  onChange: (value: number) => void;
-}) {
-  const opacity = clamp(value, 0, 1);
-
-  return (
-    <label className="field opacity-field">
-      <span>{label}</span>
-      <div>
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={opacity}
-          onChange={(event) => onChange(Number(event.currentTarget.value))}
-        />
-        <input
-          type="number"
-          min={0}
-          max={1}
-          step={0.01}
-          value={opacity.toFixed(2)}
-          onChange={(event) => {
-            const nextValue = Number(event.currentTarget.value);
-            if (Number.isFinite(nextValue)) {
-              onChange(clamp(nextValue, 0, 1));
-            }
-          }}
-        />
-      </div>
-    </label>
-  );
-}
-
-function isHexColor(value: string) {
-  return /^#[0-9a-fA-F]{6}$/.test(value);
 }
