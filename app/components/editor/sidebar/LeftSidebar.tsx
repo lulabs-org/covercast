@@ -44,6 +44,8 @@ type LeftSidebarProps = {
   activeTemplateId: string;
   applyBuiltInTemplate: (templateId: string) => void;
   applyTemplate: (template: { id: string; name: string; scene: Scene }) => void;
+  duplicateCustomTemplate: (templateId: string) => void;
+  renameCustomTemplate: (templateId: string, newName: string) => void;
   deleteCustomTemplate: (templateId: string) => void;
   
   // Layers
@@ -77,6 +79,8 @@ export function LeftSidebar({
   activeTemplateId,
   applyBuiltInTemplate,
   applyTemplate,
+  duplicateCustomTemplate,
+  renameCustomTemplate,
   deleteCustomTemplate,
   selection,
   setSelection,
@@ -163,6 +167,8 @@ export function LeftSidebar({
         onToggle={() => toggleSidebarSection("templates")}
         onApplyBuiltInTemplate={applyBuiltInTemplate}
         onApplyCustomTemplate={applyTemplate}
+        onDuplicateCustomTemplate={duplicateCustomTemplate}
+        onRenameCustomTemplate={renameCustomTemplate}
         onDeleteCustomTemplate={deleteCustomTemplate}
       />
 

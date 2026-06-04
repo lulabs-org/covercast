@@ -345,6 +345,61 @@ export function useTemplateManager(options: UseTemplateManagerOptions) {
     }
   }
 
+  function duplicateCustomTemplate(templateId: string) {
+    const template = customTemplates.find((t) => t.id === templateId);
+    if (!template) {
+      return;
+    }
+
+    const timestamp = new Date().toISOString();
+    const duplicatedTemplate: CustomSceneTemplate = {
+      id: createCustomTemplateId(),
+      name: uniqueTemplateName(`${template.name} 副本`, customTemplates),
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      scene: cloneScene(template.scene),
+    };
+    const nextTemplates = [duplicatedTemplate, ...customTemplates];
+
+    try {
+      writeCustomTemplatesToStorage(nextTemplates);
+      setCustomTemplates(nextTemplates);
+      setStatus(`已创建副本「${duplicatedTemplate.name}」`);
+    } catch {
+      setStatus("创建副本失败，浏览器缓存空间可能不足");
+    }
+  }
+
+  function renameCustomTemplate(templateId: string, newName: string) {
+    const template = customTemplates.find((t) => t.id === templateId);
+    if (!template) {
+      return;
+    }
+
+    const trimmedName = newName.trim();
+    if (!trimmedName) {
+      setStatus("模板名称不能为空");
+      return;
+    }
+
+    const updatedTemplate: CustomSceneTemplate = {
+      ...template,
+      name: trimmedName,
+      updatedAt: new Date().toISOString(),
+    };
+    const nextTemplates = customTemplates.map((t) =>
+      t.id === templateId ? updatedTemplate : t,
+    );
+
+    try {
+      writeCustomTemplatesToStorage(nextTemplates);
+      setCustomTemplates(nextTemplates);
+      setStatus(`已重命名为「${trimmedName}」`);
+    } catch {
+      setStatus("重命名失败，请检查浏览器缓存权限");
+    }
+  }
+
   function exportTemplateJson() {
     const payload = createTemplateExportPayload(
       activeTemplate?.name ?? "自定义场景",
@@ -421,6 +476,8 @@ export function useTemplateManager(options: UseTemplateManagerOptions) {
     saveCustomTemplate,
     saveActiveCustomTemplate,
     deleteCustomTemplate,
+    duplicateCustomTemplate,
+    renameCustomTemplate,
     exportTemplateJson,
     importTemplateFile,
   };

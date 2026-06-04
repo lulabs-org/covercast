@@ -140,6 +140,8 @@ export default function SceneEditor() {
     saveCustomTemplate,
     saveActiveCustomTemplate,
     deleteCustomTemplate,
+    duplicateCustomTemplate,
+    renameCustomTemplate,
     exportTemplateJson,
     importTemplateFile,
   } = useTemplateManager({
@@ -382,6 +384,8 @@ export default function SceneEditor() {
           activeTemplateId={activeTemplateId}
           applyBuiltInTemplate={applyBuiltInTemplate}
           applyTemplate={applyTemplate}
+          duplicateCustomTemplate={duplicateCustomTemplate}
+          renameCustomTemplate={renameCustomTemplate}
           deleteCustomTemplate={deleteCustomTemplate}
           selection={selection}
           setSelection={setSelection}
