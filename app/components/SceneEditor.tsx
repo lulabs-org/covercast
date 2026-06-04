@@ -12,21 +12,14 @@ import {
   useState,
 } from "react";
 import {
-  BUILT_IN_TEMPLATES,
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
   DEFAULT_FONT_FAMILY,
   DEFAULT_TEMPLATE_ID,
   cloneScene,
   createDefaultScene,
-  createEllipseElement,
-  createImageElement,
-  createRectElement,
-  createTextElement,
-  isImageElement,
   isShapeElement,
   isTextElement,
-  type ImageElement,
   type GradientDirection,
   type Scene,
   type SceneElement,
@@ -61,6 +54,10 @@ import { useSlotManager } from "../hooks/useSlotManager";
 import { useDragManager } from "../hooks/useDragManager";
 import { useMarqueeSelection } from "../hooks/useMarqueeSelection";
 import { useExportScene, type ExportFormat, EXPORT_FORMAT_OPTIONS } from "../hooks/useExportScene";
+import { useSceneActions } from "../hooks/useSceneActions";
+import { useAssetManager } from "../hooks/useAssetManager";
+import { useSceneLoader } from "../hooks/useSceneLoader";
+import { useVisibleGuides } from "../hooks/useVisibleGuides";
 import { TemplateSaveForm } from "./panels/TemplatePanel";
 import { SceneToolbar } from "./editor/SceneToolbar";
 import { StagePanel } from "./editor/StagePanel";
@@ -221,41 +218,12 @@ export default function SceneEditor() {
     return scene.elements.find((element) => element.id === selection.selectedIds[0]) ?? null;
   }, [scene.elements, selection.selectedIds]);
 
-  const visibleGuides = useMemo(() => {
-    const currentIds = selection.selectedIds;
-    
-    return guides.filter(guide => {
-      if (!guide.mode) {
-        return true;
-      }
-      
-      if (guide.mode === "keyboard") {
-        const idsMatch = guidesSelectedIds.length === currentIds.length && 
-          guidesSelectedIds.every(id => currentIds.includes(id));
-        return idsMatch;
-      }
-      
-      return true;
-    });
-  }, [guides, selection.selectedIds, guidesSelectedIds]);
-
-  const visibleSpacingGuides = useMemo(() => {
-    const currentIds = selection.selectedIds;
-    
-    return spacingGuides.filter(guide => {
-      if (!guide.mode) {
-        return true;
-      }
-      
-      if (guide.mode === "keyboard") {
-        const idsMatch = guidesSelectedIds.length === currentIds.length && 
-          guidesSelectedIds.every(id => currentIds.includes(id));
-        return idsMatch;
-      }
-      
-      return true;
-    });
-  }, [spacingGuides, selection.selectedIds, guidesSelectedIds]);
+  const { visibleGuides, visibleSpacingGuides } = useVisibleGuides(
+    guides,
+    spacingGuides,
+    selection.selectedIds,
+    guidesSelectedIds
+  );
 
   useEffect(() => {
     sceneElementsRef.current = scene.elements;
@@ -269,42 +237,6 @@ export default function SceneEditor() {
 
     return () => {
       window.clearTimeout(timer);
-    };
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-
-    async function loadScene() {
-      try {
-        const response = await fetch("/api/scene", { cache: "no-store" });
-        if (!response.ok) {
-          throw new Error("Scene request failed");
-        }
-
-        const nextScene = (await response.json()) as Scene;
-        if (active) {
-          setScene(nextScene);
-          setStatus("已读取本地场景");
-          const matchingTemplateId = BUILT_IN_TEMPLATES.find(
-            (template) => JSON.stringify(template.scene) === JSON.stringify(nextScene)
-          )?.id ?? "";
-          setActiveTemplateId(matchingTemplateId);
-          if (nextScene.elements[0]?.id) {
-            setSelection((prev) => selectSingle(prev, nextScene.elements[0].id));
-          }
-        }
-      } catch {
-        if (active) {
-          setStatus("使用默认模板，保存后会写入本地场景");
-        }
-      }
-    }
-
-    void loadScene();
-
-    return () => {
-      active = false;
     };
   }, []);
 
@@ -351,64 +283,38 @@ export default function SceneEditor() {
     markSceneEdited,
   });
 
-  function patchElement(elementId: string, patch: Partial<SceneElement>) {
-    changeScene((currentScene) => ({
-      ...currentScene,
-      elements: currentScene.elements.map((element) =>
-        element.id === elementId ? ({ ...element, ...patch } as SceneElement) : element,
-      ),
-    }), `修改元素属性`);
-  }
+  const {
+    patchElement,
+    patchSelected,
+    toggleElementHidden,
+    toggleElementLocked,
+    moveElementLayer,
+    addTextElement,
+    addRectElement,
+    addEllipseElement,
+    deleteSelected,
+  } = useSceneActions({
+    scene,
+    selection,
+    changeScene,
+    setSelection,
+  });
 
-  function patchSelected(patch: Partial<SceneElement>) {
-    if (!selectedElement) {
-      return;
-    }
+  const { handleAssetInput } = useAssetManager({
+    setStatus,
+    selectedElement,
+    patchElement,
+    changeScene,
+    selection,
+    setSelection,
+  });
 
-    patchElement(selectedElement.id, patch);
-  }
-
-  function toggleElementHidden(elementId: string) {
-    changeScene((currentScene) => ({
-      ...currentScene,
-      elements: currentScene.elements.map((element) =>
-        element.id === elementId
-          ? ({ ...element, hidden: !element.hidden } as SceneElement)
-          : element,
-      ),
-    }), `切换元素显示状态`);
-  }
-
-  function toggleElementLocked(elementId: string) {
-    changeScene((currentScene) => ({
-      ...currentScene,
-      elements: currentScene.elements.map((element) =>
-        element.id === elementId
-          ? ({ ...element, locked: !element.locked } as SceneElement)
-          : element,
-      ),
-    }), `切换元素锁定状态`);
-  }
-
-  function moveElementLayer(elementId: string, direction: "forward" | "backward") {
-    changeScene((currentScene) => {
-      const currentIndex = currentScene.elements.findIndex((element) => element.id === elementId);
-      const nextIndex = direction === "forward" ? currentIndex + 1 : currentIndex - 1;
-
-      if (
-        currentIndex < 0 ||
-        nextIndex < 0 ||
-        nextIndex >= currentScene.elements.length
-      ) {
-        return currentScene;
-      }
-
-      const elements = [...currentScene.elements];
-      [elements[currentIndex], elements[nextIndex]] = [elements[nextIndex], elements[currentIndex]];
-      return { ...currentScene, elements };
-    }, `调整图层顺序`);
-    setSelection(selectSingle(selection, elementId));
-  }
+  useSceneLoader({
+    setScene,
+    setStatus,
+    setActiveTemplateId,
+    setSelection,
+  });
 
   function handleTextElementDoubleClick(elementId: string) {
     const element = scene.elements.find((item) => item.id === elementId);
@@ -418,105 +324,6 @@ export default function SceneEditor() {
     
     setSelection(selectSingle(selection, elementId));
     setEditingTextId(elementId);
-  }
-
-  function addTextElement() {
-    const element = createTextElement();
-    changeScene((currentScene) => ({
-      ...currentScene,
-      elements: [...currentScene.elements, element],
-    }), `添加文字元素`);
-    setSelection(selectSingle(selection, element.id));
-  }
-
-  function addRectElement() {
-    const element = createRectElement();
-    changeScene((currentScene) => ({
-      ...currentScene,
-      elements: [...currentScene.elements, element],
-    }), `添加矩形元素`);
-    setSelection(selectSingle(selection, element.id));
-  }
-
-  function addEllipseElement() {
-    const element = createEllipseElement();
-    changeScene((currentScene) => ({
-      ...currentScene,
-      elements: [...currentScene.elements, element],
-    }), `添加椭圆元素`);
-    setSelection(selectSingle(selection, element.id));
-  }
-
-  async function uploadAsset(file: File, mode: "add" | "replace") {
-    setStatus("正在上传素材...");
-
-    const formData = new FormData();
-    formData.append("asset", file);
-
-    try {
-      const response = await fetch("/api/assets", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Upload failed");
-      }
-
-      const payload = (await response.json()) as { src: string; name: string };
-
-      if (mode === "replace" && selectedElement && isImageElement(selectedElement)) {
-        patchElement(selectedElement.id, {
-          src: payload.src,
-          alt: payload.name,
-        } as Partial<ImageElement>);
-        setStatus("素材已替换到当前画布");
-        return;
-      }
-
-      const element = createImageElement(payload.src, payload.name || "自定义素材");
-      changeScene((currentScene) => ({
-        ...currentScene,
-        elements: [...currentScene.elements, element],
-      }));
-      setSelection(selectSingle(selection, element.id));
-      setStatus("素材已添加到当前画布");
-    } catch {
-      setStatus("素材上传失败，仅支持 PNG、JPG、WebP");
-    }
-  }
-
-  function handleAssetInput(
-    event: ChangeEvent<HTMLInputElement>,
-    mode: "add" | "replace",
-  ) {
-    const file = event.currentTarget.files?.[0];
-    event.currentTarget.value = "";
-
-    if (file) {
-      void uploadAsset(file, mode);
-    }
-  }
-
-  function deleteSelected() {
-    if (selection.selectedIds.length === 0) {
-      return;
-    }
-
-    changeScene((currentScene) => {
-      const elements = currentScene.elements.filter(
-        (element) => !selection.selectedIds.includes(element.id),
-      );
-      return { ...currentScene, elements };
-    }, `删除元素`);
-    const remainingElement = scene.elements.find(
-      (element) => !selection.selectedIds.includes(element.id),
-    );
-    if (remainingElement?.id) {
-      setSelection(selectSingle(selection, remainingElement.id));
-    } else {
-      setSelection(clearSelection(selection));
-    }
   }
 
   return (
@@ -632,7 +439,7 @@ export default function SceneEditor() {
           rightPanelRef={rightPanelRef}
           rightPanelWidth={panelWidths.rightPanel}
           selectedElement={selectedElement}
-          patchSelected={patchSelected}
+          patchSelected={(patch) => patchSelected(selectedElement, patch)}
           copySelectedElement={copySelectedElement}
           pasteCopiedElement={pasteCopiedElement}
           canPasteElement={canPasteElement}
@@ -641,29 +448,5 @@ export default function SceneEditor() {
         />
       </section>
     </main>
-  );
-}
-
-function TextField({
-  label,
-  value,
-  onChange,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-}) {
-  return (
-    <label className="field">
-      <span>{label}</span>
-      <input
-        type="text"
-        value={value}
-        placeholder={placeholder}
-        onChange={(event) => onChange(event.currentTarget.value)}
-      />
-    </label>
   );
 }
