@@ -57,8 +57,11 @@ export function usePanelResize() {
   const resizerRightRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // This is intentional: SSR requires same initial state on server/client to avoid hydration mismatch.
+    // localStorage is only available on client, so we load stored widths after hydration.
     const storedWidths = loadPanelWidths();
     if (storedWidths) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPanelWidths(storedWidths);
     }
   }, []);
