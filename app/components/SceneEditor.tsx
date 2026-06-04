@@ -64,8 +64,9 @@ import { useExportScene, type ExportFormat, EXPORT_FORMAT_OPTIONS } from "../hoo
 import { ElementInspector } from "./panels/ElementInspector";
 import { LayerPanel } from "./panels/LayerPanel";
 import { SourcesPanel } from "./panels/SourcesPanel";
-import { TemplatePanel, TemplateSaveForm, TemplateToolbarButtons } from "./panels/TemplatePanel";
-import SceneCanvas from "./SceneCanvas";
+import { TemplatePanel, TemplateSaveForm } from "./panels/TemplatePanel";
+import { SceneToolbar } from "./editor/SceneToolbar";
+import { StagePanel } from "./editor/StagePanel";
 
 type SidebarSectionId = "scene" | "sources" | "templates" | "layers";
 
@@ -521,87 +522,26 @@ export default function SceneEditor() {
 
   return (
     <main className="editor-shell">
-      <section className="editor-toolbar" aria-label="Covercast editor controls">
-        <div>
-          <p className="eyebrow">Covercast</p>
-          <h1>直播背景编辑器</h1>
-        </div>
-        <div className="toolbar-actions">
-          <button 
-            type="button" 
-            className="secondary-button"
-            onClick={undo}
-            disabled={history.past.length === 0}
-            title="撤销 (Ctrl+Z)"
-          >
-            ↶
-          </button>
-          <button 
-            type="button" 
-            className="secondary-button"
-            onClick={redo}
-            disabled={history.future.length === 0}
-            title="重做 (Ctrl+Shift+Z 或 Ctrl+Y)"
-          >
-            ↷
-          </button>
-          <button type="button" className="secondary-button" onClick={addTextElement}>
-            添加文字
-          </button>
-          <button type="button" className="secondary-button" onClick={addRectElement}>
-            添加矩形
-          </button>
-          <button type="button" className="secondary-button" onClick={addEllipseElement}>
-            添加椭圆
-          </button>
-          <label className="secondary-button file-button">
-            添加图片
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              onChange={(event) => handleAssetInput(event, "add")}
-            />
-          </label>
-          {activeCustomTemplate ? (
-            <button
-              type="button"
-              className="primary-button"
-              onClick={saveActiveCustomTemplate}
-              disabled={!hasUnsavedCustomTemplateChanges}
-              title={hasUnsavedCustomTemplateChanges ? "覆盖保存当前自定义模板" : "当前模板没有未保存修改"}
-            >
-              保存模板
-            </button>
-          ) : null}
-          <TemplateToolbarButtons
-            showTemplateForm={showTemplateForm}
-            activeCustomTemplate={activeCustomTemplate}
-            onToggleSaveForm={() => setShowTemplateForm((visible) => !visible)}
-            onImport={(file) => void importTemplateFile(file)}
-          />
-          <div className="export-control" aria-label="导出场景">
-            <select
-              className="export-format-select"
-              value={exportFormat}
-              onChange={(event) => setExportFormat(event.currentTarget.value as ExportFormat)}
-              title="选择导出格式"
-            >
-              {EXPORT_FORMAT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              className="primary-button muted"
-              onClick={() => void exportScene(exportFormat)}
-            >
-              导出
-            </button>
-          </div>
-        </div>
-      </section>
+      <SceneToolbar
+        undo={undo}
+        redo={redo}
+        canUndo={history.past.length > 0}
+        canRedo={history.future.length > 0}
+        addTextElement={addTextElement}
+        addRectElement={addRectElement}
+        addEllipseElement={addEllipseElement}
+        handleAssetInput={handleAssetInput}
+        activeCustomTemplate={activeCustomTemplate}
+        hasUnsavedCustomTemplateChanges={hasUnsavedCustomTemplateChanges}
+        saveActiveCustomTemplate={saveActiveCustomTemplate}
+        showTemplateForm={showTemplateForm}
+        setShowTemplateForm={setShowTemplateForm}
+        importTemplateFile={importTemplateFile}
+        exportFormat={exportFormat}
+        setExportFormat={setExportFormat}
+        exportScene={exportScene}
+        EXPORT_FORMAT_OPTIONS={EXPORT_FORMAT_OPTIONS}
+      />
 
       <TemplateSaveForm
         show={showTemplateForm}
@@ -712,89 +652,38 @@ export default function SceneEditor() {
           onMouseDown={(e) => handleMouseDown("left", e)}
         />
 
-        <section className="stage-panel" aria-label="Canvas preview">
-          <div className="stage-header">
-            <span className="stage-status">{status}</span>
-            <div className="stage-header-tools">
-              <span>拖拽移动，右下角黄点缩放</span>
-              <div className="canvas-zoom-controls" aria-label="画布缩放" onWheel={handleZoomSliderWheel}>
-                <button
-                  type="button"
-                  className="zoom-button"
-                  onClick={zoomCanvasOut}
-                  disabled={canvasZoom <= CANVAS_ZOOM_MIN}
-                  title="缩小画布"
-                >
-                  -
-                </button>
-                <label className="zoom-slider-label">
-                  <span>{canvasZoomPercent}%</span>
-                  <input
-                    type="range"
-                    min={CANVAS_ZOOM_MIN}
-                    max={CANVAS_ZOOM_MAX}
-                    step={CANVAS_ZOOM_STEP}
-                    value={canvasZoom}
-                    onChange={(event) => setCanvasZoomLevel(Number(event.currentTarget.value))}
-                    title="调整画布缩放"
-                  />
-                </label>
-                <button
-                  type="button"
-                  className="zoom-button"
-                  onClick={zoomCanvasIn}
-                  disabled={canvasZoom >= CANVAS_ZOOM_MAX}
-                  title="放大画布"
-                >
-                  +
-                </button>
-                <button
-                  type="button"
-                  className="zoom-fit-button"
-                  onClick={resetCanvasZoom}
-                  disabled={canvasZoom === 1}
-                  title="恢复适配视图"
-                >
-                  适配
-                </button>
-              </div>
-            </div>
-          </div>
-          <div
-            className="stage-viewport"
-            ref={stageViewportRef}
-            onWheel={handleStageWheel}
-          >
-            <div className="stage-viewport-inner">
-              <div
-                className="scene-preview-frame"
-                style={{ width: canvasPreviewWidth }}
-              >
-                <SceneCanvas
-                  scene={scene}
-                  className="scene-preview"
-                  idPrefix="editor"
-                  interactive
-                  selectedIds={selection.selectedIds}
-                  guides={visibleGuides}
-                  spacingGuides={visibleSpacingGuides}
-                  resizeLabel={resizeLabel}
-                  svgRef={svgRef}
-                  marquee={marquee}
-                  hitTestStrategy={hitTestStrategy}
-                  editingTextId={editingTextId}
-                  isGroupDragging={drag?.mode === "group-move"}
-                  onCanvasPointerDown={handleCanvasPointerDown}
-                  onElementPointerDown={handleElementPointerDown}
-                  onResizePointerDown={handleResizePointerDown}
-                  onGroupDragPointerDown={handleGroupDragPointerDown}
-                  onGroupResizePointerDown={handleGroupResizePointerDown}
-                  onTextElementDoubleClick={handleTextElementDoubleClick}
-                />
-              </div>
-            </div>
-          </div>
-        </section>
+        <StagePanel
+          status={status}
+          canvasZoom={canvasZoom}
+          canvasZoomPercent={canvasZoomPercent}
+          canvasPreviewWidth={canvasPreviewWidth}
+          CANVAS_ZOOM_MIN={CANVAS_ZOOM_MIN}
+          CANVAS_ZOOM_MAX={CANVAS_ZOOM_MAX}
+          CANVAS_ZOOM_STEP={CANVAS_ZOOM_STEP}
+          setCanvasZoomLevel={setCanvasZoomLevel}
+          zoomCanvasIn={zoomCanvasIn}
+          zoomCanvasOut={zoomCanvasOut}
+          resetCanvasZoom={resetCanvasZoom}
+          handleZoomSliderWheel={handleZoomSliderWheel}
+          handleStageWheel={handleStageWheel}
+          stageViewportRef={stageViewportRef}
+          scene={scene}
+          selectedIds={selection.selectedIds}
+          guides={visibleGuides}
+          spacingGuides={visibleSpacingGuides}
+          resizeLabel={resizeLabel}
+          svgRef={svgRef}
+          marquee={marquee}
+          hitTestStrategy={hitTestStrategy}
+          editingTextId={editingTextId}
+          isGroupDragging={drag?.mode === "group-move"}
+          onCanvasPointerDown={handleCanvasPointerDown}
+          onElementPointerDown={handleElementPointerDown}
+          onResizePointerDown={handleResizePointerDown}
+          onGroupDragPointerDown={handleGroupDragPointerDown}
+          onGroupResizePointerDown={handleGroupResizePointerDown}
+          onTextElementDoubleClick={handleTextElementDoubleClick}
+        />
 
         <div
           ref={resizerRightRef}
