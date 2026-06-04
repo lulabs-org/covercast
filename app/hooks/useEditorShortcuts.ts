@@ -30,6 +30,7 @@ type UseEditorShortcutsOptions = {
   redo: () => void;
   copySelectedElement: () => void;
   pasteCopiedElement: () => void;
+  deleteSelected: () => void;
   selectedElementRef: React.MutableRefObject<SceneElement | null>;
   elementClipboardRef: React.MutableRefObject<SceneElement | null>;
   spatialIndexRef: React.MutableRefObject<SpatialIndex>;
@@ -49,6 +50,7 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
     redo,
     copySelectedElement,
     pasteCopiedElement,
+    deleteSelected,
     selectedElementRef,
     elementClipboardRef,
     spatialIndexRef,
@@ -78,6 +80,23 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
         } else {
           undo();
         }
+      }
+
+      // 处理删除快捷键 (Backspace/Delete)
+      // Windows: Backspace 和 Delete 键
+      // Mac: Backspace 键（标记为 "delete"）和 Fn+Delete 键
+      if (event.key === "Backspace" || event.key === "Delete") {
+        if (isEditableTarget(event.target) || editingTextId) {
+          return;
+        }
+        
+        if (selection.selectedIds.length === 0) {
+          return;
+        }
+        
+        event.preventDefault();
+        deleteSelected();
+        return;
       }
 
       if (arrowKeys.includes(event.key)) {
@@ -271,5 +290,5 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
     return () => {
       window.removeEventListener("keydown", handleEditorKeyDown);
     };
-  }, [copySelectedElement, pasteCopiedElement, undo, redo, selection.selectedIds, editingTextId, scene.elements, markSceneEdited]);
+  }, [copySelectedElement, pasteCopiedElement, deleteSelected, undo, redo, selection.selectedIds, editingTextId, scene.elements, markSceneEdited]);
 }

@@ -265,24 +265,6 @@ export default function SceneEditor() {
     setStatus,
   });
 
-  useEditorShortcuts({
-    scene,
-    selection,
-    editingTextId,
-    undo,
-    redo,
-    copySelectedElement,
-    pasteCopiedElement,
-    selectedElementRef,
-    elementClipboardRef,
-    spatialIndexRef,
-    setGuidesSelectedIds,
-    setGuides,
-    setSpacingGuides,
-    setScene,
-    markSceneEdited,
-  });
-
   const {
     patchElement,
     patchSelected,
@@ -298,6 +280,25 @@ export default function SceneEditor() {
     selection,
     changeScene,
     setSelection,
+  });
+
+  useEditorShortcuts({
+    scene,
+    selection,
+    editingTextId,
+    undo,
+    redo,
+    copySelectedElement,
+    pasteCopiedElement,
+    deleteSelected,
+    selectedElementRef,
+    elementClipboardRef,
+    spatialIndexRef,
+    setGuidesSelectedIds,
+    setGuides,
+    setSpacingGuides,
+    setScene,
+    markSceneEdited,
   });
 
   const { handleAssetInput } = useAssetManager({
