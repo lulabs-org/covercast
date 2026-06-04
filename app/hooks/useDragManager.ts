@@ -30,10 +30,6 @@ import {
   type SelectionState,
 } from "../lib/selection";
 import {
-  startMarquee,
-  type MarqueeState,
-} from "../lib/marquee";
-import {
   computeBoundingBox,
   computeNewBoundsFromHandle,
   createGroupResizeState,
@@ -105,7 +101,6 @@ export function useDragManager({
   setScene,
   setSelection,
   setEditingTextId,
-  setMarquee,
 }: {
   scene: Scene;
   selection: SelectionState;
@@ -116,7 +111,6 @@ export function useDragManager({
   setScene: React.Dispatch<React.SetStateAction<Scene>>;
   setSelection: React.Dispatch<React.SetStateAction<SelectionState>>;
   setEditingTextId: React.Dispatch<React.SetStateAction<string | null>>;
-  setMarquee: React.Dispatch<React.SetStateAction<MarqueeState>>;
 }) {
   const [drag, setDrag] = useState<DragState | null>(null);
   const [guides, setGuides] = useState<GuideLine[]>([]);
@@ -582,29 +576,6 @@ export function useDragManager({
     [scene, selection, svgRef]
   );
 
-  const handleCanvasPointerDown = useCallback(
-    (event: ReactPointerEvent<SVGSVGElement>) => {
-      const svg = svgRef.current;
-      if (!svg) {
-        return;
-      }
-
-      const point = getSvgPoint(svg, event.clientX, event.clientY);
-      const isShiftPressed = event.shiftKey;
-
-      if (!isShiftPressed) {
-        setSelection((prev) => clearSelection(prev));
-      }
-
-      if (editingTextId) {
-        setEditingTextId(null);
-      }
-
-      setMarquee((prev) => startMarquee(prev, point.x, point.y));
-    },
-    [svgRef, setSelection, setEditingTextId, setMarquee, editingTextId]
-  );
-
   return {
     drag,
     guides,
@@ -617,6 +588,5 @@ export function useDragManager({
     handleResizePointerDown,
     handleGroupResizePointerDown,
     handleGroupDragPointerDown,
-    handleCanvasPointerDown,
   };
 }

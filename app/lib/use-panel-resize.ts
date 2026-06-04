@@ -50,14 +50,18 @@ type ResizeState = {
 };
 
 export function usePanelResize() {
-  const [panelWidths, setPanelWidths] = useState<PanelWidths>(() => {
-    const storedWidths = loadPanelWidths();
-    return storedWidths ?? DEFAULT_PANEL_WIDTHS;
-  });
+  const [panelWidths, setPanelWidths] = useState<PanelWidths>(DEFAULT_PANEL_WIDTHS);
   const [isDragging, setIsDragging] = useState(false);
   const resizeStateRef = useRef<ResizeState | null>(null);
   const resizerLeftRef = useRef<HTMLDivElement>(null);
   const resizerRightRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const storedWidths = loadPanelWidths();
+    if (storedWidths) {
+      setPanelWidths(storedWidths);
+    }
+  }, []);
 
   const handleMouseDown = useCallback((panel: "left" | "right", event: React.MouseEvent) => {
     event.preventDefault();

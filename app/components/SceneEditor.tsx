@@ -45,21 +45,11 @@ import {
 import {
   clearSelection,
   createSelectionState,
-  selectMultiple,
   selectSingle,
   type SelectionState,
 } from "../lib/selection";
 import {
-  clearMarquee,
-  createMarqueeState,
-  getMarqueeRect,
-  hasMarqueeSize,
-  hitTestElements,
-  isMarqueeActive,
-  startMarquee,
-  updateMarquee,
   type HitTestStrategy,
-  type MarqueeState,
 } from "../lib/marquee";
 import { useScrollVisibility } from "../lib/use-scroll-visibility";
 import { usePanelResize } from "../lib/use-panel-resize";
@@ -70,6 +60,7 @@ import { useCanvasZoom } from "../hooks/useCanvasZoom";
 import { useTemplateManager, type CustomSceneTemplate, type SceneSlotInfo } from "../hooks/useTemplateManager";
 import { useSlotManager } from "../hooks/useSlotManager";
 import { useDragManager } from "../hooks/useDragManager";
+import { useMarqueeSelection } from "../hooks/useMarqueeSelection";
 import { ElementInspector } from "./panels/ElementInspector";
 import { LayerPanel } from "./panels/LayerPanel";
 import { SourcesPanel } from "./panels/SourcesPanel";
@@ -94,7 +85,6 @@ const EXPORT_FORMAT_OPTIONS: {
 export default function SceneEditor() {
   const [scene, setScene] = useState<Scene>(() => createDefaultScene());
   const [selection, setSelection] = useState<SelectionState>(() => createSelectionState());
-  const [marquee, setMarquee] = useState<MarqueeState>(() => createMarqueeState());
   const [hitTestStrategy, setHitTestStrategy] = useState<HitTestStrategy>("intersection");
   const [status, setStatus] = useState("正在读取本地场景...");
   const [appOrigin, setAppOrigin] = useState("");
@@ -103,8 +93,6 @@ export default function SceneEditor() {
   const svgRef = useRef<SVGSVGElement>(null);
   const sceneElementsRef = useRef<SceneElement[]>(scene.elements);
   const selectedElementRef = useRef<SceneElement | null>(null);
-  const marqueeRafRef = useRef<number>(0);
-  const latestMarqueeRef = useRef<{ x: number; y: number } | null>(null);
   const [collapsedSections, setCollapsedSections] = useState<Record<SidebarSectionId, boolean>>({
     scene: false,
     sources: false,
@@ -201,6 +189,19 @@ export default function SceneEditor() {
   }, [customTemplates, customTemplatesRef]);
 
   const {
+    marquee,
+    setMarquee,
+    handleCanvasPointerDown,
+  } = useMarqueeSelection({
+    svgRef,
+    sceneElementsRef,
+    hitTestStrategy,
+    editingTextId,
+    setSelection,
+    setEditingTextId,
+  });
+
+  const {
     drag,
     guides,
     spacingGuides,
@@ -212,7 +213,6 @@ export default function SceneEditor() {
     handleResizePointerDown,
     handleGroupResizePointerDown,
     handleGroupDragPointerDown,
-    handleCanvasPointerDown,
   } = useDragManager({
     scene,
     selection,
@@ -223,7 +223,6 @@ export default function SceneEditor() {
     setScene,
     setSelection,
     setEditingTextId,
-    setMarquee,
   });
 
   const selectedElement = useMemo(() => {
@@ -431,74 +430,6 @@ export default function SceneEditor() {
     setSelection(selectSingle(selection, elementId));
     setEditingTextId(elementId);
   }
-
-  useEffect(() => {
-    if (!isMarqueeActive(marquee)) {
-      return;
-    }
-
-    function handlePointerMove(event: PointerEvent) {
-      const svg = svgRef.current;
-      if (!svg) {
-        return;
-      }
-
-      const point = getSvgPoint(svg, event.clientX, event.clientY);
-      latestMarqueeRef.current = { x: point.x, y: point.y };
-
-      if (marqueeRafRef.current === 0) {
-        marqueeRafRef.current = requestAnimationFrame(processMarqueeFrame);
-      }
-    }
-
-    function processMarqueeFrame() {
-      marqueeRafRef.current = 0;
-
-      const latest = latestMarqueeRef.current;
-      if (!latest) {
-        return;
-      }
-
-      setMarquee((prev) => updateMarquee(prev, latest.x, latest.y));
-    }
-
-    function handlePointerUp(event: PointerEvent) {
-      const svg = svgRef.current;
-      if (!svg) {
-        setMarquee((prev) => clearMarquee(prev));
-        return;
-      }
-
-      const isShiftPressed = event.shiftKey;
-
-      setMarquee((prevMarquee) => {
-        if (hasMarqueeSize(prevMarquee, 5)) {
-          const rect = getMarqueeRect(prevMarquee);
-          const hitIds = hitTestElements(rect, sceneElementsRef.current, hitTestStrategy);
-
-          if (hitIds.length > 0) {
-            setSelection((prevSelection) => selectMultiple(prevSelection, hitIds, isShiftPressed));
-          } else if (!isShiftPressed) {
-            setSelection((prevSelection) => clearSelection(prevSelection));
-          }
-        }
-
-        return clearMarquee(prevMarquee);
-      });
-    }
-
-    window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("pointerup", handlePointerUp, { once: true });
-
-    return () => {
-      if (marqueeRafRef.current !== 0) {
-        cancelAnimationFrame(marqueeRafRef.current);
-        marqueeRafRef.current = 0;
-      }
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
-    };
-  }, [marquee, hitTestStrategy]);
 
   function addTextElement() {
     const element = createTextElement();
@@ -1080,20 +1011,6 @@ function downloadBlob(blob: Blob, filename: string) {
   download.click();
   download.remove();
   window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
-}
-
-function getSvgPoint(svg: SVGSVGElement, clientX: number, clientY: number) {
-  const point = svg.createSVGPoint();
-  point.x = clientX;
-  point.y = clientY;
-  const matrix = svg.getScreenCTM();
-
-  if (!matrix) {
-    return { x: 0, y: 0 };
-  }
-
-  const nextPoint = point.matrixTransform(matrix.inverse());
-  return { x: nextPoint.x, y: nextPoint.y };
 }
 
 function clamp(value: number, min: number, max: number) {
