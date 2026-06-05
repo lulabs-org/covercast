@@ -2,8 +2,8 @@
 
 import { type PointerEvent as ReactPointerEvent, useRef, useState, useEffect, useCallback } from "react";
 import {
-  CANVAS_HEIGHT,
-  CANVAS_WIDTH,
+  DEFAULT_CANVAS_HEIGHT,
+  DEFAULT_CANVAS_WIDTH,
   isTextElement,
   type Scene,
   type SceneElement,
@@ -101,6 +101,8 @@ export function useDragManager({
   setScene,
   setSelection,
   setEditingTextId,
+  canvasWidth = DEFAULT_CANVAS_WIDTH,
+  canvasHeight = DEFAULT_CANVAS_HEIGHT,
 }: {
   scene: Scene;
   selection: SelectionState;
@@ -111,6 +113,8 @@ export function useDragManager({
   setScene: React.Dispatch<React.SetStateAction<Scene>>;
   setSelection: React.Dispatch<React.SetStateAction<SelectionState>>;
   setEditingTextId: React.Dispatch<React.SetStateAction<string | null>>;
+  canvasWidth?: number;
+  canvasHeight?: number;
 }) {
   const [drag, setDrag] = useState<DragState | null>(null);
   const [guides, setGuides] = useState<GuideLine[]>([]);
@@ -167,12 +171,12 @@ export function useDragManager({
         const rawX = clamp(
           groupBox.x + latest.dx,
           -groupBox.width + 24,
-          CANVAS_WIDTH - 24,
+          canvasWidth - 24,
         );
         const rawY = clamp(
           groupBox.y + latest.dy,
           -groupBox.height + 24,
-          CANVAS_HEIGHT - 24,
+          canvasHeight - 24,
         );
 
         const groupRect = {
@@ -230,10 +234,10 @@ export function useDragManager({
         );
 
         const clampedBounds: BoundingBox = {
-          x: clamp(newBounds.x, 0, CANVAS_WIDTH - 10),
-          y: clamp(newBounds.y, 0, CANVAS_HEIGHT - 10),
-          width: clamp(newBounds.width, 10, CANVAS_WIDTH - newBounds.x),
-          height: clamp(newBounds.height, 10, CANVAS_HEIGHT - newBounds.y),
+          x: clamp(newBounds.x, 0, canvasWidth - 10),
+          y: clamp(newBounds.y, 0, canvasHeight - 10),
+          width: clamp(newBounds.width, 10, canvasWidth - newBounds.x),
+          height: clamp(newBounds.height, 10, canvasHeight - newBounds.y),
         };
 
         const resizeSnap = computeResizeSnapOptimized(
@@ -247,8 +251,8 @@ export function useDragManager({
         const snappedBounds: BoundingBox = {
           x: clampedBounds.x,
           y: clampedBounds.y,
-          width: clamp(resizeSnap.snappedWidth, 10, CANVAS_WIDTH - clampedBounds.x),
-          height: clamp(resizeSnap.snappedHeight, 10, CANVAS_HEIGHT - clampedBounds.y),
+          width: clamp(resizeSnap.snappedWidth, 10, canvasWidth - clampedBounds.x),
+          height: clamp(resizeSnap.snappedHeight, 10, canvasHeight - clampedBounds.y),
         };
 
         const resizeGuides = computeGuidesOptimized(snappedBounds, spatialIndexRef.current);
@@ -297,12 +301,12 @@ export function useDragManager({
         const rawX = clamp(
           activeDrag.element.x + latest.dx,
           -activeDrag.element.width + 24,
-          CANVAS_WIDTH - 24,
+          canvasWidth - 24,
         );
         const rawY = clamp(
           activeDrag.element.y + latest.dy,
           -activeDrag.element.height + 24,
-          CANVAS_HEIGHT - 24,
+          canvasHeight - 24,
         );
 
         const result = computeSnapOptimized(
@@ -341,12 +345,12 @@ export function useDragManager({
       const rawWidth = clamp(
         activeDrag.element.width + latest.dx,
         minimumWidth(activeDrag.element),
-        CANVAS_WIDTH - activeDrag.element.x,
+        canvasWidth - activeDrag.element.x,
       );
       const rawHeight = clamp(
         activeDrag.element.height + latest.dy,
         minimumHeight(activeDrag.element),
-        CANVAS_HEIGHT - activeDrag.element.y,
+        canvasHeight - activeDrag.element.y,
       );
 
       const resizeSnap = computeResizeSnapOptimized(
@@ -360,12 +364,12 @@ export function useDragManager({
       const snappedWidth = clamp(
         resizeSnap.snappedWidth,
         minimumWidth(activeDrag.element),
-        CANVAS_WIDTH - activeDrag.element.x,
+        canvasWidth - activeDrag.element.x,
       );
       const snappedHeight = clamp(
         resizeSnap.snappedHeight,
         minimumHeight(activeDrag.element),
-        CANVAS_HEIGHT - activeDrag.element.y,
+        canvasHeight - activeDrag.element.y,
       );
 
       const snappedRect = {

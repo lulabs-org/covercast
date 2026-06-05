@@ -1,4 +1,4 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, type SceneElement, type ShapeElement } from "../../lib/scene";
+import { DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT, type SceneElement, type ShapeElement } from "../../lib/scene";
 import { gradientVector } from "../../lib/scene-svg";
 
 type VisibleElement = SceneElement;
@@ -37,9 +37,13 @@ function backgroundMaskId(prefix: string) {
 export function SceneDefs({
   visibleElements,
   idPrefix,
+  canvasWidth = DEFAULT_CANVAS_WIDTH,
+  canvasHeight = DEFAULT_CANVAS_HEIGHT,
 }: {
   visibleElements: VisibleElement[];
   idPrefix: string;
+  canvasWidth?: number;
+  canvasHeight?: number;
 }) {
   return (
     <defs>
@@ -92,7 +96,7 @@ export function SceneDefs({
         })}
       {hasBackgroundCutouts(visibleElements) ? (
         <mask id={backgroundMaskId(idPrefix)} maskUnits="userSpaceOnUse">
-          <rect width={CANVAS_WIDTH} height={CANVAS_HEIGHT} fill="#ffffff" />
+          <rect width={canvasWidth} height={canvasHeight} fill="#ffffff" />
           {visibleElements
             .filter(
               (element): element is ShapeElement =>
