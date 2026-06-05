@@ -146,8 +146,8 @@ export function AITemplateDialog({
                 </svg>
               </div>
               <div>
-                <h2 className="ai-dialog-title">AI 修改设计图</h2>
-                <p className="ai-dialog-subtitle">使用 AI 智能修改您的直播背景设计</p>
+                <h2 className="ai-dialog-title">AI 优化设计图</h2>
+                <p className="ai-dialog-subtitle">使用 AI 智能优化您的直播背景设计</p>
               </div>
             </div>
             <button

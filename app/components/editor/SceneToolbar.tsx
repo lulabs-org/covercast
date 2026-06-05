@@ -120,11 +120,11 @@ export function SceneToolbar({
         />
         <button
           type="button"
-          className={`secondary-button ${showAITemplateDialog ? "active" : ""}`}
+          className={`ai-optimize-button ${showAITemplateDialog ? "active" : ""}`}
           onClick={() => setShowAITemplateDialog((visible) => !visible)}
-          title="AI 自动修改设计图"
+          title="AI 智能优化设计图"
         >
-          AI 修改
+          AI优化
         </button>
         <div className="export-control" aria-label="导出场景">
           <select

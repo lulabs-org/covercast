@@ -330,7 +330,7 @@ export default function SceneEditor() {
 
   function handleApplyAIScene(newScene: Scene) {
     const currentSceneSnapshot = cloneScene(scene);
-    saveHistory("AI 修改设计图", currentSceneSnapshot);
+    saveHistory("AI 优化设计图", currentSceneSnapshot);
     setScene(newScene);
     if (newScene.elements[0]?.id) {
       setSelection(selectSingle(selection, newScene.elements[0].id));

@@ -208,6 +208,37 @@ h1 {
   cursor: not-allowed;
 }
 
+/* AI Optimize Button - Purple Theme */
+.ai-optimize-button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 14px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+  transition: all 0.2s ease;
+}
+
+.ai-optimize-button:hover {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+  transform: translateY(-1px);
+}
+
+.ai-optimize-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+}
+
+.ai-optimize-button.active {
+  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
+}
+
 .toolbar-template-button.active {
   border-color: var(--accent);
   color: var(--accent);
