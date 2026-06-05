@@ -35,13 +35,13 @@ export async function writeStoredScene(scene: Scene) {
   await writeFile(SCENE_FILE, JSON.stringify(normalizeScene(scene), null, 2), "utf8");
 }
 
-export async function readSceneBySlot(templateId: string, slotId: string): Promise<Scene> {
+export async function readSceneBySlot(templateId: string, slotId: string): Promise<Scene | null> {
   try {
     const filePath = path.join(SCENES_DIR, templateId, `${slotId}.json`);
     const content = await readFile(filePath, "utf8");
     return normalizeScene(JSON.parse(content));
   } catch {
-    return createDefaultScene();
+    return null;
   }
 }
 

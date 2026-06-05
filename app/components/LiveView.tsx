@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createDefaultScene, type Scene } from "../lib/scene";
 import SceneCanvas from "./SceneCanvas";
+import LiveViewError from "./LiveViewError";
+import { useLiveScene } from "../hooks/useLiveScene";
 
 type LiveViewProps = {
   templateId?: string;
@@ -10,41 +10,15 @@ type LiveViewProps = {
 };
 
 export default function LiveView({ templateId, slotId }: LiveViewProps) {
-  const [scene, setScene] = useState<Scene>(() => createDefaultScene());
+  const { scene, error, isLoading } = useLiveScene(templateId, slotId);
 
-  useEffect(() => {
-    let active = true;
+  if (error) {
+    return <LiveViewError title={error.title} message={error.message} />;
+  }
 
-    async function refreshScene() {
-      try {
-        const url = templateId && slotId
-          ? `/api/scene?t=${encodeURIComponent(templateId)}&s=${encodeURIComponent(slotId)}&ts=${Date.now()}`
-          : `/api/scene?ts=${Date.now()}`;
-
-        const response = await fetch(url, {
-          cache: "no-store",
-        });
-        if (!response.ok) {
-          return;
-        }
-
-        const nextScene = (await response.json()) as Scene;
-        if (active) {
-          setScene(nextScene);
-        }
-      } catch {
-        // OBS should keep rendering the last known scene if a refresh fails.
-      }
-    }
-
-    void refreshScene();
-    const interval = window.setInterval(refreshScene, 1000);
-
-    return () => {
-      active = false;
-      window.clearInterval(interval);
-    };
-  }, [templateId, slotId]);
+  if (isLoading || !scene) {
+    return null;
+  }
 
   return (
     <>
