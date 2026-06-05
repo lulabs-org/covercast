@@ -184,6 +184,17 @@ export function createImageElement(src: string, name = "自定义素材"): Image
   };
 }
 
+const emptyScene: Scene = {
+  version: 1,
+  backgroundColor: "#1e293b",
+  backgroundOpacity: 1,
+  elements: [],
+};
+
+export function createEmptyScene(): Scene {
+  return cloneScene(emptyScene);
+}
+
 const defaultScene: Scene = {
   version: 1,
   backgroundColor: "#2845c7",
@@ -1035,6 +1046,12 @@ const courseSprintScene: Scene = {
 };
 
 export const BUILT_IN_TEMPLATES = [
+  {
+    id: "empty",
+    name: "空白封面",
+    description: "从空白画布开始创作",
+    scene: emptyScene,
+  },
   {
     id: DEFAULT_TEMPLATE_ID,
     name: "双讲师课程",
