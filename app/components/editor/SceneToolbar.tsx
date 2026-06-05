@@ -26,6 +26,10 @@ type SceneToolbarProps = {
   setShowTemplateForm: Dispatch<SetStateAction<boolean>>;
   importTemplateFile: (file: File) => Promise<void>;
   
+  // AI Template
+  showAITemplateDialog: boolean;
+  setShowAITemplateDialog: Dispatch<SetStateAction<boolean>>;
+  
   // Export
   exportFormat: ExportFormat;
   setExportFormat: (format: ExportFormat) => void;
@@ -48,6 +52,8 @@ export function SceneToolbar({
   showTemplateForm,
   setShowTemplateForm,
   importTemplateFile,
+  showAITemplateDialog,
+  setShowAITemplateDialog,
   exportFormat,
   setExportFormat,
   exportScene,
@@ -112,6 +118,14 @@ export function SceneToolbar({
           onToggleSaveForm={() => setShowTemplateForm((visible) => !visible)}
           onImport={(file) => void importTemplateFile(file)}
         />
+        <button
+          type="button"
+          className={`secondary-button ${showAITemplateDialog ? "active" : ""}`}
+          onClick={() => setShowAITemplateDialog((visible) => !visible)}
+          title="AI 自动修改设计图"
+        >
+          AI 修改
+        </button>
         <div className="export-control" aria-label="导出场景">
           <select
             className="export-format-select"

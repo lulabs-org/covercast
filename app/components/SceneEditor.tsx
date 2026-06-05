@@ -63,6 +63,7 @@ import { SceneToolbar } from "./editor/SceneToolbar";
 import { StagePanel } from "./editor/StagePanel";
 import { LeftSidebar } from "./editor/sidebar/LeftSidebar";
 import { RightSidebar } from "./editor/sidebar/RightSidebar";
+import { AITemplateDialog } from "../features/ai-template/components/AITemplateDialog";
 
 type SidebarSectionId = "scene" | "sources" | "templates" | "layers";
 
@@ -84,6 +85,7 @@ export default function SceneEditor() {
     layers: false,
   });
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
+  const [showAITemplateDialog, setShowAITemplateDialog] = useState(false);
 
   const { leftPanelRef, rightPanelRef, stageViewportRef } = useScrollVisibility();
   const { panelWidths, resizerLeftRef, resizerRightRef, handleMouseDown } = usePanelResize();
@@ -326,6 +328,17 @@ export default function SceneEditor() {
     setEditingTextId(elementId);
   }
 
+  function handleApplyAIScene(newScene: Scene) {
+    const currentSceneSnapshot = cloneScene(scene);
+    saveHistory("AI 修改设计图", currentSceneSnapshot);
+    setScene(newScene);
+    if (newScene.elements[0]?.id) {
+      setSelection(selectSingle(selection, newScene.elements[0].id));
+    }
+    markSceneEdited();
+    setStatus("已应用 AI 生成的设计图");
+  }
+
   return (
     <main className="editor-shell">
       <SceneToolbar
@@ -343,6 +356,8 @@ export default function SceneEditor() {
         showTemplateForm={showTemplateForm}
         setShowTemplateForm={setShowTemplateForm}
         importTemplateFile={importTemplateFile}
+        showAITemplateDialog={showAITemplateDialog}
+        setShowAITemplateDialog={setShowAITemplateDialog}
         exportFormat={exportFormat}
         setExportFormat={setExportFormat}
         exportScene={exportScene}
@@ -356,6 +371,15 @@ export default function SceneEditor() {
         onSetName={setCustomTemplateName}
         onSave={saveCustomTemplate}
         onCancel={() => setShowTemplateForm(false)}
+      />
+
+      <AITemplateDialog
+        isOpen={showAITemplateDialog}
+        onClose={() => setShowAITemplateDialog(false)}
+        currentScene={scene}
+        activeTemplateId={activeTemplateId}
+        customTemplates={customTemplates}
+        onApplyScene={handleApplyAIScene}
       />
 
       <section className="editor-grid">
