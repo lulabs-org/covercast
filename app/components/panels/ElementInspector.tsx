@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { type ChangeEvent } from "react";
 import {
   DEFAULT_FONT_FAMILY,
   isImageElement,
@@ -214,12 +214,9 @@ function FontFamilyField({
   value: string;
   onChange: (value: string) => void;
 }) {
-  const [customOpen, setCustomOpen] = useState(false);
   const matchedOption = findFontFamilyOption(value);
-  const usesCustomFont = customOpen || !matchedOption;
-  const selectedValue = usesCustomFont
-    ? CUSTOM_FONT_FAMILY_VALUE
-    : matchedOption.value;
+  const isCustomFont = !matchedOption;
+  const selectedValue = isCustomFont ? CUSTOM_FONT_FAMILY_VALUE : matchedOption.value;
 
   return (
     <div className="font-family-field">
@@ -231,11 +228,10 @@ function FontFamilyField({
             const nextValue = event.currentTarget.value;
 
             if (nextValue === CUSTOM_FONT_FAMILY_VALUE) {
-              setCustomOpen(true);
+              onChange("");
               return;
             }
 
-            setCustomOpen(false);
             onChange(nextValue);
           }}
         >
@@ -247,7 +243,7 @@ function FontFamilyField({
           <option value={CUSTOM_FONT_FAMILY_VALUE}>自定义字体栈</option>
         </select>
       </label>
-      {usesCustomFont ? (
+      {isCustomFont ? (
         <TextField
           label="自定义字体栈"
           value={value}
@@ -255,7 +251,7 @@ function FontFamilyField({
           onChange={onChange}
         />
       ) : null}
-      <div className="font-preview" style={{ fontFamily: value }}>
+      <div className="font-preview" style={{ fontFamily: value || DEFAULT_FONT_FAMILY }}>
         直播背景 Aa 123
       </div>
     </div>
