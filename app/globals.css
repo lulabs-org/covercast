@@ -1063,6 +1063,19 @@ h1 {
   }
 }
 
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
 .stage-panel {
   display: flex;
   flex-direction: column;
