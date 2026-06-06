@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useState, useEffect, type ChangeEvent } from "react";
 import {
   DEFAULT_FONT_FAMILY,
   isImageElement,
@@ -103,14 +103,16 @@ function TextField({
   value,
   onChange,
   placeholder,
+  error,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  error?: string;
 }) {
   return (
-    <label className="field">
+    <label className={`field${error ? " field-error" : ""}`}>
       <span>{label}</span>
       <input
         type="text"
@@ -118,6 +120,7 @@ function TextField({
         placeholder={placeholder}
         onChange={(event) => onChange(event.currentTarget.value)}
       />
+      {error ? <span className="field-error-message">{error}</span> : null}
     </label>
   );
 }
@@ -514,6 +517,7 @@ function ImageInspector({
 
 export function ElementInspector({
   element,
+  allElements,
   onPatch,
   onCopy,
   onPaste,
@@ -522,6 +526,7 @@ export function ElementInspector({
   onReplaceImage,
 }: {
   element: SceneElement;
+  allElements: SceneElement[];
   onPatch: (patch: Partial<SceneElement>) => void;
   onCopy: () => void;
   onPaste: () => void;
@@ -529,12 +534,36 @@ export function ElementInspector({
   onDelete: () => void;
   onReplaceImage: (event: ChangeEvent<HTMLInputElement>) => void;
 }) {
+  const [pendingName, setPendingName] = useState<string>(element.name);
+
+  useEffect(() => {
+    setPendingName(element.name);
+  }, [element.id, element.name]);
+
+  const nameError = allElements.some(
+    (el) => el.id !== element.id && el.name === pendingName
+  )
+    ? "图层名称已存在，请使用其他名称"
+    : undefined;
+
+  const handleNameChange = (value: string) => {
+    setPendingName(value);
+    // 只有当名称不重复时才更新元素
+    const isDuplicate = allElements.some(
+      (el) => el.id !== element.id && el.name === value
+    );
+    if (!isDuplicate) {
+      onPatch({ name: value } as Partial<SceneElement>);
+    }
+  };
+
   return (
     <div className="inspector">
       <TextField
         label="图层名称"
-        value={element.name}
-        onChange={(value) => onPatch({ name: value } as Partial<SceneElement>)}
+        value={pendingName}
+        onChange={handleNameChange}
+        error={nameError}
       />
       <div className="field-grid">
         <NumberField label="X" value={element.x} onChange={(value) => onPatch({ x: value })} />

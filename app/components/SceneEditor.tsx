@@ -462,6 +462,7 @@ export default function SceneEditor() {
           rightPanelRef={rightPanelRef}
           rightPanelWidth={panelWidths.rightPanel}
           selectedElement={selectedElement}
+          allElements={scene.elements}
           patchSelected={(patch) => patchSelected(selectedElement, patch)}
           copySelectedElement={copySelectedElement}
           pasteCopiedElement={pasteCopiedElement}
