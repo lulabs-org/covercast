@@ -1,5 +1,9 @@
-export const CANVAS_WIDTH = 941;
-export const CANVAS_HEIGHT = 1672;
+export const DEFAULT_CANVAS_WIDTH = 941;
+export const DEFAULT_CANVAS_HEIGHT = 1672;
+
+// Legacy constants for backward compatibility
+export const CANVAS_WIDTH = DEFAULT_CANVAS_WIDTH;
+export const CANVAS_HEIGHT = DEFAULT_CANVAS_HEIGHT;
 
 export const DEFAULT_FONT_FAMILY =
   '"PingFang SC", "Microsoft YaHei", "Noto Sans SC", Arial, sans-serif';

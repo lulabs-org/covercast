@@ -1,4 +1,4 @@
-import { CANVAS_HEIGHT, CANVAS_WIDTH } from "./scene";
+import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH } from "./scene";
 
 export type GuideMode = "drag" | "keyboard";
 
@@ -66,10 +66,17 @@ export type ResizeLabel = {
 
 const DEFAULT_THRESHOLD = 5;
 
+export type CanvasSizeOptions = {
+  canvasWidth?: number;
+  canvasHeight?: number;
+};
+
 export function computeGuides(
   dragged: Rect,
   others: Rect[],
   threshold = DEFAULT_THRESHOLD,
+  canvasWidth = DEFAULT_CANVAS_WIDTH,
+  canvasHeight = DEFAULT_CANVAS_HEIGHT,
 ): GuideLine[] {
   const guides: GuideLine[] = [];
 
@@ -80,8 +87,8 @@ export function computeGuides(
   const dCenterV = dragged.y + dragged.height / 2;
   const dBottom = dragged.y + dragged.height;
 
-  const canvasCx = CANVAS_WIDTH / 2;
-  const canvasCy = CANVAS_HEIGHT / 2;
+  const canvasCx = canvasWidth / 2;
+  const canvasCy = canvasHeight / 2;
 
   if (Math.abs(dLeft - 0) < threshold) {
     guides.push({
@@ -90,18 +97,18 @@ export function computeGuides(
       x1: 0,
       y1: 0,
       x2: 0,
-      y2: CANVAS_HEIGHT,
+      y2: canvasHeight,
     });
   }
 
-  if (Math.abs(dRight - CANVAS_WIDTH) < threshold) {
+  if (Math.abs(dRight - canvasWidth) < threshold) {
     guides.push({
       direction: "vertical",
       type: "right",
-      x1: CANVAS_WIDTH,
+      x1: canvasWidth,
       y1: 0,
-      x2: CANVAS_WIDTH,
-      y2: CANVAS_HEIGHT,
+      x2: canvasWidth,
+      y2: canvasHeight,
     });
   }
 
@@ -112,7 +119,7 @@ export function computeGuides(
       x1: canvasCx,
       y1: 0,
       x2: canvasCx,
-      y2: CANVAS_HEIGHT,
+      y2: canvasHeight,
     });
   }
 
@@ -122,19 +129,19 @@ export function computeGuides(
       type: "top",
       x1: 0,
       y1: 0,
-      x2: CANVAS_WIDTH,
+      x2: canvasWidth,
       y2: 0,
     });
   }
 
-  if (Math.abs(dBottom - CANVAS_HEIGHT) < threshold) {
+  if (Math.abs(dBottom - canvasHeight) < threshold) {
     guides.push({
       direction: "horizontal",
       type: "bottom",
       x1: 0,
-      y1: CANVAS_HEIGHT,
-      x2: CANVAS_WIDTH,
-      y2: CANVAS_HEIGHT,
+      y1: canvasHeight,
+      x2: canvasWidth,
+      y2: canvasHeight,
     });
   }
 
@@ -144,7 +151,7 @@ export function computeGuides(
       type: "center-v",
       x1: 0,
       y1: canvasCy,
-      x2: CANVAS_WIDTH,
+      x2: canvasWidth,
       y2: canvasCy,
     });
   }
@@ -362,6 +369,8 @@ export function computeSnap(
   prevSnap: SnapState | null = null,
   threshold = SNAP_THRESHOLD,
   hysteresis = SNAP_HYSTERESIS,
+  canvasWidth = DEFAULT_CANVAS_WIDTH,
+  canvasHeight = DEFAULT_CANVAS_HEIGHT,
 ): SnapResult {
   const nextSnap: SnapState = { x: null, y: null };
   let snapDx = 0;
@@ -377,15 +386,15 @@ export function computeSnap(
   const xCandidates: SnapCandidate[] = [];
   const yCandidates: SnapCandidate[] = [];
 
-  const canvasCx = CANVAS_WIDTH / 2;
-  const canvasCy = CANVAS_HEIGHT / 2;
+  const canvasCx = canvasWidth / 2;
+  const canvasCy = canvasHeight / 2;
 
   if (Math.abs(dLeft - 0) < threshold) {
     xCandidates.push({ delta: 0 - dLeft, type: "left" });
   }
 
-  if (Math.abs(dRight - CANVAS_WIDTH) < threshold) {
-    xCandidates.push({ delta: CANVAS_WIDTH - dRight, type: "right" });
+  if (Math.abs(dRight - canvasWidth) < threshold) {
+    xCandidates.push({ delta: canvasWidth - dRight, type: "right" });
   }
 
   if (Math.abs(dCenterH - canvasCx) < threshold) {
@@ -396,8 +405,8 @@ export function computeSnap(
     yCandidates.push({ delta: 0 - dTop, type: "top" });
   }
 
-  if (Math.abs(dBottom - CANVAS_HEIGHT) < threshold) {
-    yCandidates.push({ delta: CANVAS_HEIGHT - dBottom, type: "bottom" });
+  if (Math.abs(dBottom - canvasHeight) < threshold) {
+    yCandidates.push({ delta: canvasHeight - dBottom, type: "bottom" });
   }
 
   if (Math.abs(dCenterV - canvasCy) < threshold) {
@@ -500,7 +509,7 @@ export function computeSnap(
 
   const guides =
     snappedRect.x !== rawRect.x || snappedRect.y !== rawRect.y
-      ? computeGuides(snappedRect, others, threshold)
+      ? computeGuides(snappedRect, others, threshold, canvasWidth, canvasHeight)
       : [];
 
   return {
@@ -854,6 +863,8 @@ export function computeResizeSnap(
   prevSnap: ResizeSnapState | null = null,
   threshold = SNAP_THRESHOLD,
   hysteresis = SNAP_HYSTERESIS,
+  canvasWidth = DEFAULT_CANVAS_WIDTH,
+  canvasHeight = DEFAULT_CANVAS_HEIGHT,
 ): ResizeSnapResult {
   const nextSnap: ResizeSnapState = { w: null, h: null };
   let snapDw = 0;
@@ -869,19 +880,19 @@ export function computeResizeSnap(
   const wCandidates: SnapCandidate[] = [];
   const hCandidates: SnapCandidate[] = [];
 
-  const canvasCx = CANVAS_WIDTH / 2;
-  const canvasCy = CANVAS_HEIGHT / 2;
+  const canvasCx = canvasWidth / 2;
+  const canvasCy = canvasHeight / 2;
 
-  if (Math.abs(dRight - CANVAS_WIDTH) < threshold) {
-    wCandidates.push({ delta: CANVAS_WIDTH - dRight, type: "right" });
+  if (Math.abs(dRight - canvasWidth) < threshold) {
+    wCandidates.push({ delta: canvasWidth - dRight, type: "right" });
   }
 
   if (Math.abs(dCenterH - canvasCx) < threshold) {
     wCandidates.push({ delta: 2 * (canvasCx - dCenterH), type: "center-h" });
   }
 
-  if (Math.abs(dBottom - CANVAS_HEIGHT) < threshold) {
-    hCandidates.push({ delta: CANVAS_HEIGHT - dBottom, type: "bottom" });
+  if (Math.abs(dBottom - canvasHeight) < threshold) {
+    hCandidates.push({ delta: canvasHeight - dBottom, type: "bottom" });
   }
 
   if (Math.abs(dCenterV - canvasCy) < threshold) {
@@ -975,10 +986,12 @@ export function computeGuidesOptimized(
   spatialIndex: SpatialIndex,
   threshold = DEFAULT_THRESHOLD,
   context?: GuideContext,
+  canvasWidth = DEFAULT_CANVAS_WIDTH,
+  canvasHeight = DEFAULT_CANVAS_HEIGHT,
 ): GuideLine[] {
   const nearbyElements = spatialIndex.queryNearby(dragged, GUIDE_QUERY_RANGE);
   const effectiveThreshold = context?.mode === "keyboard" ? 1 : threshold;
-  const guides = computeGuides(dragged, nearbyElements, effectiveThreshold);
+  const guides = computeGuides(dragged, nearbyElements, effectiveThreshold, canvasWidth, canvasHeight);
   
   if (context?.mode) {
     return guides.map(guide => ({ ...guide, mode: context.mode }));
@@ -994,9 +1007,11 @@ export function computeSnapOptimized(
   threshold = SNAP_THRESHOLD,
   hysteresis = SNAP_HYSTERESIS,
   context?: GuideContext,
+  canvasWidth = DEFAULT_CANVAS_WIDTH,
+  canvasHeight = DEFAULT_CANVAS_HEIGHT,
 ): SnapResult {
   const nearbyElements = spatialIndex.queryNearby(rawRect, GUIDE_QUERY_RANGE);
-  const result = computeSnap(rawRect, nearbyElements, prevSnap, threshold, hysteresis);
+  const result = computeSnap(rawRect, nearbyElements, prevSnap, threshold, hysteresis, canvasWidth, canvasHeight);
   
   if (context?.mode) {
     return {
@@ -1030,7 +1045,9 @@ export function computeResizeSnapOptimized(
   prevSnap: ResizeSnapState | null = null,
   threshold = SNAP_THRESHOLD,
   hysteresis = SNAP_HYSTERESIS,
+  canvasWidth = DEFAULT_CANVAS_WIDTH,
+  canvasHeight = DEFAULT_CANVAS_HEIGHT,
 ): ResizeSnapResult {
   const nearbyElements = spatialIndex.queryNearby(rawRect, GUIDE_QUERY_RANGE);
-  return computeResizeSnap(rawRect, nearbyElements, prevSnap, threshold, hysteresis);
+  return computeResizeSnap(rawRect, nearbyElements, prevSnap, threshold, hysteresis, canvasWidth, canvasHeight);
 }

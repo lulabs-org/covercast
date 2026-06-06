@@ -1174,8 +1174,7 @@ h1 {
 
 .scene-preview {
   width: 100%;
-  height: auto;
-  aspect-ratio: 941 / 1672;
+  height: 100%;
   display: block;
   border-radius: 4px;
   box-shadow: 0 18px 50px rgba(15, 23, 42, 0.26);
