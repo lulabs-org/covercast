@@ -22,6 +22,7 @@ export function CustomTemplateCard({
   template,
   active,
   dirty,
+  customTemplates,
   onApply,
   onDuplicate,
   onRename,
@@ -30,6 +31,7 @@ export function CustomTemplateCard({
   template: CustomSceneTemplate;
   active: boolean;
   dirty: boolean;
+  customTemplates: CustomSceneTemplate[];
   onApply: () => void;
   onDuplicate: () => void;
   onRename: (newName: string) => void;
@@ -49,6 +51,12 @@ export function CustomTemplateCard({
 
   const badge = dirty ? "未保存" : "自定义";
 
+  const renameError = renameValue.trim() && renameValue.trim() !== template.name && customTemplates.some(
+    (t) => t.id !== template.id && t.name === renameValue.trim()
+  )
+    ? "模板名称已存在"
+    : undefined;
+
   useEffect(() => {
     if (isRenaming && renameInputRef.current) {
       renameInputRef.current.focus();
@@ -63,6 +71,9 @@ export function CustomTemplateCard({
   }
 
   function handleRenameSubmit() {
+    if (renameError) {
+      return;
+    }
     const trimmedValue = renameValue.trim();
     if (trimmedValue && trimmedValue !== template.name) {
       onRename(trimmedValue);
@@ -85,19 +96,25 @@ export function CustomTemplateCard({
       "template-card",
       active ? "active" : "",
       dirty ? "dirty" : "",
+      renameError ? "rename-error" : "",
     ].filter(Boolean).join(" ")}>
       <button type="button" className="template-card-button" onClick={onApply}>
         <div className="template-card-content">
           {isRenaming ? (
-            <input
-              ref={renameInputRef}
-              type="text"
-              value={renameValue}
-              onChange={(e) => setRenameValue(e.currentTarget.value)}
-              onKeyDown={handleRenameKeyDown}
-              onBlur={handleRenameSubmit}
-              className="template-card-rename-input"
-            />
+            <div className="template-card-rename-wrapper">
+              <input
+                ref={renameInputRef}
+                type="text"
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.currentTarget.value)}
+                onKeyDown={handleRenameKeyDown}
+                onBlur={handleRenameSubmit}
+                className={`template-card-rename-input${renameError ? " error" : ""}`}
+              />
+              {renameError ? (
+                <span className="template-card-rename-error">{renameError}</span>
+              ) : null}
+            </div>
           ) : (
             <span className="template-card-name">{template.name}</span>
           )}

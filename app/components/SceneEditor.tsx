@@ -355,6 +355,7 @@ export default function SceneEditor() {
         show={showTemplateForm}
         activeCustomTemplate={activeCustomTemplate}
         customTemplateName={customTemplateName}
+        customTemplates={customTemplates}
         onSetName={setCustomTemplateName}
         onSave={saveCustomTemplate}
         onCancel={() => setShowTemplateForm(false)}

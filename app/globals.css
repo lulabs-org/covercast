@@ -1044,6 +1044,23 @@ h1 {
   box-shadow: 0 0 0 2px rgba(78, 114, 255, 0.2);
 }
 
+.template-card-rename-input.error {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 2px rgba(217, 45, 32, 0.2);
+}
+
+.template-card-rename-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.template-card-rename-error {
+  color: var(--danger);
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .template-card-more {
   display: inline-flex;
   align-items: center;
@@ -1290,6 +1307,22 @@ h1 {
 .field select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(39, 100, 246, 0.14);
+}
+
+.field.field-error input {
+  border-color: var(--danger);
+}
+
+.field.field-error input:focus {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(217, 45, 32, 0.14);
+}
+
+.field.field-error .field-error-message {
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 4px;
 }
 
 .checkbox-field {

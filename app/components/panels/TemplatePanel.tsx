@@ -130,6 +130,7 @@ export function TemplatePanel({
                   template={template}
                   active={activeTemplateId === template.id}
                   dirty={activeTemplateId === template.id && hasUnsavedCustomTemplateChanges}
+                  customTemplates={customTemplates}
                   onApply={() => onApplyCustomTemplate(template)}
                   onDuplicate={() => onDuplicateCustomTemplate(template.id)}
                   onRename={(newName) => onRenameCustomTemplate(template.id, newName)}
@@ -148,6 +149,7 @@ export function TemplateSaveForm({
   show,
   activeCustomTemplate,
   customTemplateName,
+  customTemplates,
   onSetName,
   onSave,
   onCancel,
@@ -155,6 +157,7 @@ export function TemplateSaveForm({
   show: boolean;
   activeCustomTemplate: CustomSceneTemplate | null;
   customTemplateName: string;
+  customTemplates: CustomSceneTemplate[];
   onSetName: (name: string) => void;
   onSave: () => void;
   onCancel: () => void;
@@ -163,13 +166,27 @@ export function TemplateSaveForm({
     return null;
   }
 
+  const trimmedName = customTemplateName.trim();
+  const nameError = trimmedName && customTemplates.some(
+    (template) => template.name === trimmedName
+  )
+    ? "模板名称已存在，请使用其他名称"
+    : undefined;
+
+  const handleSave = () => {
+    if (nameError) {
+      return;
+    }
+    onSave();
+  };
+
   return (
     <section
       className="template-save-panel"
       id="template-save-panel"
       aria-label="保存当前场景为模板"
     >
-      <label className="field">
+      <label className={`field${nameError ? " field-error" : ""}`}>
         <span>模板名称</span>
         <input
           type="text"
@@ -177,11 +194,13 @@ export function TemplateSaveForm({
           value={customTemplateName}
           onChange={(event) => onSetName(event.currentTarget.value)}
         />
+        {nameError ? <span className="field-error-message">{nameError}</span> : null}
       </label>
       <button
         type="button"
         className="primary-button"
-        onClick={onSave}
+        onClick={handleSave}
+        disabled={!!nameError}
       >
         确认保存
       </button>
