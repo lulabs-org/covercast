@@ -5,7 +5,7 @@ import {
   writeSceneBySlot,
   deleteSceneSlot,
   listAllSlots,
-} from "../../lib/storage";
+} from "../../lib/scene-storage";
 import type { Scene } from "../../lib/scene";
 
 export const runtime = "nodejs";
