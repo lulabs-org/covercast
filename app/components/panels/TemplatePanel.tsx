@@ -3,6 +3,7 @@
 import { type ReactNode } from "react";
 import { BUILT_IN_TEMPLATES } from "../../lib/scene";
 import { type CustomSceneTemplate } from "../../hooks/useTemplateManager";
+import { CustomTemplateCard } from "./CustomTemplateCard";
 
 function SidebarSection({
   title,
@@ -41,7 +42,6 @@ function TemplateCard({
   active,
   dirty = false,
   onApply,
-  onDelete,
 }: {
   name: string;
   description: string;
@@ -49,7 +49,6 @@ function TemplateCard({
   active: boolean;
   dirty?: boolean;
   onApply: () => void;
-  onDelete?: () => void;
 }) {
   return (
     <div className={[
@@ -64,32 +63,8 @@ function TemplateCard({
         </div>
         <span className="template-card-badge">{badge}</span>
       </button>
-      {onDelete ? (
-        <button
-          type="button"
-          className="template-card-delete"
-          aria-label={`删除模板 ${name}`}
-          onClick={onDelete}
-          title="删除模板"
-        >
-          ×
-        </button>
-      ) : null}
     </div>
   );
-}
-
-function formatTemplateDate(value: string, prefix = "保存于") {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "保存在浏览器缓存";
-  }
-
-  return `${prefix} ${date.toLocaleDateString("zh-CN", {
-    month: "2-digit",
-    day: "2-digit",
-  })}`;
 }
 
 export function TemplatePanel({
@@ -100,6 +75,8 @@ export function TemplatePanel({
   onToggle,
   onApplyBuiltInTemplate,
   onApplyCustomTemplate,
+  onDuplicateCustomTemplate,
+  onRenameCustomTemplate,
   onDeleteCustomTemplate,
 }: {
   customTemplates: CustomSceneTemplate[];
@@ -109,6 +86,8 @@ export function TemplatePanel({
   onToggle: () => void;
   onApplyBuiltInTemplate: (templateId: string) => void;
   onApplyCustomTemplate: (template: CustomSceneTemplate) => void;
+  onDuplicateCustomTemplate: (templateId: string) => void;
+  onRenameCustomTemplate: (templateId: string, newName: string) => void;
   onDeleteCustomTemplate: (templateId: string) => void;
 }) {
   return (
@@ -146,25 +125,15 @@ export function TemplatePanel({
             </div>
             <div className="template-list">
               {customTemplates.map((template) => (
-                <TemplateCard
+                <CustomTemplateCard
                   key={template.id}
-                  name={template.name}
-                  description={
-                    activeTemplateId === template.id && hasUnsavedCustomTemplateChanges
-                      ? "有未保存修改"
-                      : formatTemplateDate(
-                        template.updatedAt ?? template.createdAt,
-                        template.updatedAt ? "更新于" : "保存于",
-                      )
-                  }
-                  badge={
-                    activeTemplateId === template.id && hasUnsavedCustomTemplateChanges
-                      ? "未保存"
-                      : "自定义"
-                  }
+                  template={template}
                   active={activeTemplateId === template.id}
                   dirty={activeTemplateId === template.id && hasUnsavedCustomTemplateChanges}
+                  customTemplates={customTemplates}
                   onApply={() => onApplyCustomTemplate(template)}
+                  onDuplicate={() => onDuplicateCustomTemplate(template.id)}
+                  onRename={(newName) => onRenameCustomTemplate(template.id, newName)}
                   onDelete={() => onDeleteCustomTemplate(template.id)}
                 />
               ))}
@@ -180,6 +149,7 @@ export function TemplateSaveForm({
   show,
   activeCustomTemplate,
   customTemplateName,
+  customTemplates,
   onSetName,
   onSave,
   onCancel,
@@ -187,6 +157,7 @@ export function TemplateSaveForm({
   show: boolean;
   activeCustomTemplate: CustomSceneTemplate | null;
   customTemplateName: string;
+  customTemplates: CustomSceneTemplate[];
   onSetName: (name: string) => void;
   onSave: () => void;
   onCancel: () => void;
@@ -195,13 +166,27 @@ export function TemplateSaveForm({
     return null;
   }
 
+  const trimmedName = customTemplateName.trim();
+  const nameError = trimmedName && customTemplates.some(
+    (template) => template.name === trimmedName
+  )
+    ? "模板名称已存在，请使用其他名称"
+    : undefined;
+
+  const handleSave = () => {
+    if (nameError) {
+      return;
+    }
+    onSave();
+  };
+
   return (
     <section
       className="template-save-panel"
       id="template-save-panel"
       aria-label="保存当前场景为模板"
     >
-      <label className="field">
+      <label className={`field${nameError ? " field-error" : ""}`}>
         <span>模板名称</span>
         <input
           type="text"
@@ -209,11 +194,13 @@ export function TemplateSaveForm({
           value={customTemplateName}
           onChange={(event) => onSetName(event.currentTarget.value)}
         />
+        {nameError ? <span className="field-error-message">{nameError}</span> : null}
       </label>
       <button
         type="button"
         className="primary-button"
-        onClick={onSave}
+        onClick={handleSave}
+        disabled={!!nameError}
       >
         确认保存
       </button>
