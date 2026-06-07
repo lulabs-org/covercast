@@ -1,5 +1,5 @@
 import { useRef, useState, useCallback } from "react";
-import { CANVAS_WIDTH, CANVAS_HEIGHT, type Scene, type SceneElement } from "../lib/scene";
+import { DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT, type Scene, type SceneElement } from "../lib/scene";
 import { selectSingle, type SelectionState } from "../lib/selection";
 
 function clamp(value: number, min: number, max: number) {
@@ -36,6 +36,8 @@ function createPastedSceneElement(
   element: SceneElement,
   elements: SceneElement[],
   offsetMultiplier: number,
+  canvasWidth: number,
+  canvasHeight: number,
 ): SceneElement {
   const offset = 24 * offsetMultiplier;
 
@@ -43,8 +45,8 @@ function createPastedSceneElement(
     ...cloneSceneElement(element),
     id: createSceneElementId(element.type),
     name: uniqueSceneElementName(`${element.name} 副本`, elements),
-    x: clamp(element.x + offset, -element.width + 24, CANVAS_WIDTH - 24),
-    y: clamp(element.y + offset, -element.height + 24, CANVAS_HEIGHT - 24),
+    x: clamp(element.x + offset, -element.width + 24, canvasWidth - 24),
+    y: clamp(element.y + offset, -element.height + 24, canvasHeight - 24),
   } as SceneElement;
 }
 
@@ -55,6 +57,8 @@ type UseClipboardOptions = {
   setSelection: (updater: (prev: SelectionState) => SelectionState) => void;
   markSceneEdited: () => void;
   setStatus: (status: string) => void;
+  canvasWidth?: number;
+  canvasHeight?: number;
 };
 
 export function useClipboard(options: UseClipboardOptions) {
@@ -65,6 +69,8 @@ export function useClipboard(options: UseClipboardOptions) {
     setSelection,
     markSceneEdited,
     setStatus,
+    canvasWidth = DEFAULT_CANVAS_WIDTH,
+    canvasHeight = DEFAULT_CANVAS_HEIGHT,
   } = options;
 
   const elementClipboardRef = useRef<SceneElement | null>(null);
@@ -97,6 +103,8 @@ export function useClipboard(options: UseClipboardOptions) {
       sourceElement,
       sceneElementsRef.current,
       pasteOffsetRef.current,
+      canvasWidth,
+      canvasHeight,
     );
     pasteOffsetRef.current += 1;
     sceneElementsRef.current = [...sceneElementsRef.current, pastedElement];

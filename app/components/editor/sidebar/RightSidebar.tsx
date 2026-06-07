@@ -11,6 +11,7 @@ type RightSidebarProps = {
   
   // Selected element
   selectedElement: SceneElement | null;
+  allElements: SceneElement[];
   
   // ElementInspector actions
   patchSelected: (patch: Partial<SceneElement>) => void;
@@ -25,6 +26,7 @@ export function RightSidebar({
   rightPanelRef,
   rightPanelWidth,
   selectedElement,
+  allElements,
   patchSelected,
   copySelectedElement,
   pasteCopiedElement,
@@ -47,6 +49,7 @@ export function RightSidebar({
       {selectedElement ? (
         <ElementInspector
           element={selectedElement}
+          allElements={allElements}
           onPatch={patchSelected}
           onCopy={copySelectedElement}
           onPaste={pasteCopiedElement}

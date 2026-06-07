@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { type WheelEvent as ReactWheelEvent } from "react";
-import { CANVAS_WIDTH, CANVAS_HEIGHT } from "../lib/scene";
+import { DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT } from "../lib/scene";
 
-const CANVAS_ASPECT_RATIO = CANVAS_WIDTH / CANVAS_HEIGHT;
 const CANVAS_ZOOM_MIN = 0.25;
 const CANVAS_ZOOM_MAX = 3;
 const CANVAS_ZOOM_STEP = 0.1;
@@ -19,10 +18,14 @@ function clampZoom(value: number) {
 
 type UseCanvasZoomOptions = {
   stageViewportRef: React.RefObject<HTMLDivElement | null>;
+  canvasWidth?: number;
+  canvasHeight?: number;
 };
 
 export function useCanvasZoom(options: UseCanvasZoomOptions) {
-  const { stageViewportRef } = options;
+  const { stageViewportRef, canvasWidth = DEFAULT_CANVAS_WIDTH, canvasHeight = DEFAULT_CANVAS_HEIGHT } = options;
+
+  const canvasAspectRatio = canvasWidth / canvasHeight;
 
   const [canvasZoom, setCanvasZoom] = useState(1);
   const [canvasFitWidth, setCanvasFitWidth] = useState(CANVAS_PREVIEW_MAX_WIDTH);
@@ -41,7 +44,7 @@ export function useCanvasZoom(options: UseCanvasZoomOptions) {
       const availableHeight = Math.max(280, currentViewport.clientHeight - STAGE_VIEWPORT_PADDING);
       const nextFitWidth = Math.min(
         availableWidth,
-        availableHeight * CANVAS_ASPECT_RATIO,
+        availableHeight * canvasAspectRatio,
         CANVAS_PREVIEW_MAX_WIDTH,
       );
 
@@ -58,7 +61,7 @@ export function useCanvasZoom(options: UseCanvasZoomOptions) {
       observer.disconnect();
       window.removeEventListener("resize", updateFitWidth);
     };
-  }, [stageViewportRef]);
+  }, [stageViewportRef, canvasAspectRatio]);
 
   const canvasPreviewWidth = Math.round(canvasFitWidth * canvasZoom);
   const canvasZoomPercent = Math.round(canvasZoom * 100);

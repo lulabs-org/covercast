@@ -4,9 +4,11 @@ import type { Ref, ReactNode } from "react";
 import { LayerPanel } from "../../panels/LayerPanel";
 import { SourcesPanel } from "../../panels/SourcesPanel";
 import { TemplatePanel } from "../../panels/TemplatePanel";
+import { CanvasSizeSelector } from "../../controls/CanvasSizeSelector";
 import type { Scene } from "../../../lib/scene";
 import type { SelectionState } from "../../../lib/selection";
 import type { CustomSceneTemplate, SceneSlotInfo } from "../../../hooks/useTemplateManager";
+import type { CanvasSize, CanvasSizePreset } from "../../../hooks/useCanvasSize";
 
 type SidebarSectionId = "scene" | "sources" | "templates" | "layers";
 
@@ -27,6 +29,14 @@ type LeftSidebarProps = {
   // Scene settings
   scene: Scene;
   changeScene: (updater: (currentScene: Scene) => Scene, description?: string) => void;
+  
+  // Canvas size
+  canvasSize: CanvasSize;
+  presets: CanvasSizePreset[];
+  currentPreset?: CanvasSizePreset;
+  isCustomSize: boolean;
+  onPresetSizeChange: (preset: CanvasSizePreset) => void;
+  onCustomSizeChange: (width: number, height: number) => void;
   
   // Sources
   templateSlots: SceneSlotInfo[];
@@ -66,6 +76,12 @@ export function LeftSidebar({
   toggleSidebarSection,
   scene,
   changeScene,
+  canvasSize,
+  presets,
+  currentPreset,
+  isCustomSize,
+  onPresetSizeChange,
+  onCustomSizeChange,
   templateSlots,
   customTemplates,
   activeSlotId,
@@ -108,11 +124,19 @@ export function LeftSidebar({
 
       <SidebarSection
         title="场景"
-        caption="941×1672 竖屏"
+        caption={`${canvasSize.width}×${canvasSize.height}`}
         collapsed={collapsedSections.scene}
         onToggle={() => toggleSidebarSection("scene")}
       >
         <div className="section-fields">
+          <CanvasSizeSelector
+            canvasSize={canvasSize}
+            presets={presets}
+            currentPreset={currentPreset}
+            isCustomSize={isCustomSize}
+            onPresetChange={onPresetSizeChange}
+            onCustomSizeChange={onCustomSizeChange}
+          />
           <ColorField
             label="背景颜色"
             value={scene.backgroundColor}

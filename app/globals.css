@@ -1141,6 +1141,19 @@ h1 {
   }
 }
 
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
 .stage-panel {
   display: flex;
   flex-direction: column;
@@ -1252,8 +1265,7 @@ h1 {
 
 .scene-preview {
   width: 100%;
-  height: auto;
-  aspect-ratio: 941 / 1672;
+  height: 100%;
   display: block;
   border-radius: 4px;
   box-shadow: 0 18px 50px rgba(15, 23, 42, 0.26);

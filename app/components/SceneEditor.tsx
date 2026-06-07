@@ -12,8 +12,8 @@ import {
   useState,
 } from "react";
 import {
-  CANVAS_HEIGHT,
-  CANVAS_WIDTH,
+  DEFAULT_CANVAS_HEIGHT,
+  DEFAULT_CANVAS_WIDTH,
   DEFAULT_FONT_FAMILY,
   DEFAULT_TEMPLATE_ID,
   cloneScene,
@@ -49,6 +49,7 @@ import { useHistory } from "../hooks/useHistory";
 import { useClipboard } from "../hooks/useClipboard";
 import { useEditorShortcuts } from "../hooks/useEditorShortcuts";
 import { useCanvasZoom } from "../hooks/useCanvasZoom";
+import { useCanvasSize } from "../hooks/useCanvasSize";
 import { useTemplateManager, type CustomSceneTemplate, type SceneSlotInfo } from "../hooks/useTemplateManager";
 import { useSlotManager } from "../hooks/useSlotManager";
 import { useDragManager } from "../hooks/useDragManager";
@@ -87,6 +88,16 @@ export default function SceneEditor() {
 
   const { leftPanelRef, rightPanelRef, stageViewportRef } = useScrollVisibility();
   const { panelWidths, resizerLeftRef, resizerRightRef, handleMouseDown } = usePanelResize();
+  
+  const {
+    canvasSize,
+    setPresetSize,
+    setCustomSize,
+    isCustomSize,
+    currentPreset,
+    presets,
+  } = useCanvasSize();
+  
   const {
     canvasZoom,
     canvasPreviewWidth,
@@ -100,7 +111,7 @@ export default function SceneEditor() {
     CANVAS_ZOOM_MIN,
     CANVAS_ZOOM_MAX,
     CANVAS_ZOOM_STEP,
-  } = useCanvasZoom({ stageViewportRef });
+  } = useCanvasZoom({ stageViewportRef, canvasWidth: canvasSize.width, canvasHeight: canvasSize.height });
   const { history, saveHistory, undo, redo } = useHistory({
     scene,
     selectedIds: selection.selectedIds,
@@ -154,7 +165,7 @@ export default function SceneEditor() {
     setActiveSlotId,
   });
 
-  const { exportScene } = useExportScene(scene, setStatus, exportTemplateJson);
+  const { exportScene } = useExportScene(scene, setStatus, exportTemplateJson, canvasSize.width, canvasSize.height);
 
   const activeSlot = templateSlots.find((slot) => slot.slotId === activeSlotId) ?? null;
   const editingContextCaption = activeCustomTemplate
@@ -211,6 +222,8 @@ export default function SceneEditor() {
     setScene,
     setSelection,
     setEditingTextId,
+    canvasWidth: canvasSize.width,
+    canvasHeight: canvasSize.height,
   });
 
   const selectedElement = useMemo(() => {
@@ -265,24 +278,8 @@ export default function SceneEditor() {
     setSelection,
     markSceneEdited,
     setStatus,
-  });
-
-  useEditorShortcuts({
-    scene,
-    selection,
-    editingTextId,
-    undo,
-    redo,
-    copySelectedElement,
-    pasteCopiedElement,
-    selectedElementRef,
-    elementClipboardRef,
-    spatialIndexRef,
-    setGuidesSelectedIds,
-    setGuides,
-    setSpacingGuides,
-    setScene,
-    markSceneEdited,
+    canvasWidth: canvasSize.width,
+    canvasHeight: canvasSize.height,
   });
 
   const {
@@ -300,6 +297,25 @@ export default function SceneEditor() {
     selection,
     changeScene,
     setSelection,
+  });
+
+  useEditorShortcuts({
+    scene,
+    selection,
+    editingTextId,
+    undo,
+    redo,
+    copySelectedElement,
+    pasteCopiedElement,
+    deleteSelected,
+    selectedElementRef,
+    elementClipboardRef,
+    spatialIndexRef,
+    setGuidesSelectedIds,
+    setGuides,
+    setSpacingGuides,
+    setScene,
+    markSceneEdited,
   });
 
   const { handleAssetInput } = useAssetManager({
@@ -372,6 +388,12 @@ export default function SceneEditor() {
           toggleSidebarSection={toggleSidebarSection}
           scene={scene}
           changeScene={changeScene}
+          canvasSize={canvasSize}
+          presets={presets}
+          currentPreset={currentPreset}
+          isCustomSize={isCustomSize}
+          onPresetSizeChange={setPresetSize}
+          onCustomSizeChange={setCustomSize}
           templateSlots={templateSlots}
           customTemplates={customTemplates}
           activeSlotId={activeSlotId}
@@ -426,6 +448,8 @@ export default function SceneEditor() {
           hitTestStrategy={hitTestStrategy}
           editingTextId={editingTextId}
           isGroupDragging={drag?.mode === "group-move"}
+          canvasWidth={canvasSize.width}
+          canvasHeight={canvasSize.height}
           onCanvasPointerDown={handleCanvasPointerDown}
           onElementPointerDown={handleElementPointerDown}
           onResizePointerDown={handleResizePointerDown}
@@ -444,6 +468,7 @@ export default function SceneEditor() {
           rightPanelRef={rightPanelRef}
           rightPanelWidth={panelWidths.rightPanel}
           selectedElement={selectedElement}
+          allElements={scene.elements}
           patchSelected={(patch) => patchSelected(selectedElement, patch)}
           copySelectedElement={copySelectedElement}
           pasteCopiedElement={pasteCopiedElement}
