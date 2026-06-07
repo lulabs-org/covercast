@@ -3,7 +3,6 @@
 import { useState, useCallback, useEffect } from "react";
 import type { Scene } from "@/app/lib/scene";
 import type { TemplateSource } from "../types";
-import { BUILT_IN_TEMPLATES } from "@/app/lib/scene";
 import { useAIConnection } from "../hooks/useAIConnection";
 import { useAITemplateGenerator } from "../hooks/useAITemplateGenerator";
 import { AIConfigModal } from "./AIConfigModal";
@@ -17,6 +16,7 @@ interface AITemplateDialogProps {
   activeTemplateId: string;
   customTemplates: CustomSceneTemplate[];
   onApplyScene: (scene: Scene) => void;
+  onSaveAsTemplate: (scene: Scene, templateName: string) => void;
 }
 
 export function AITemplateDialog({
@@ -26,12 +26,15 @@ export function AITemplateDialog({
   activeTemplateId,
   customTemplates,
   onApplyScene,
+  onSaveAsTemplate,
 }: AITemplateDialogProps) {
   const [templateSource, setTemplateSource] = useState<TemplateSource>("current");
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [userPrompt, setUserPrompt] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false);
+  const [showSaveTemplateForm, setShowSaveTemplateForm] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState("");
 
   const {
     config,
@@ -58,17 +61,14 @@ export function AITemplateDialog({
       resetGeneratedScene();
       setSelectedTemplateId(null);
       setTemplateSource("current");
+      setShowSaveTemplateForm(false);
+      setNewTemplateName("");
     }
   }, [isOpen, resetGeneratedScene]);
 
   const getSelectedScene = useCallback((): Scene => {
     if (templateSource === "current") {
       return currentScene;
-    }
-
-    if (templateSource === "builtin") {
-      const template = BUILT_IN_TEMPLATES.find((t) => t.id === selectedTemplateId);
-      return template?.scene ?? currentScene;
     }
 
     if (templateSource === "custom") {
@@ -82,11 +82,6 @@ export function AITemplateDialog({
   const getTemplateName = useCallback((): string | undefined => {
     if (templateSource === "current") {
       return "当前画布";
-    }
-
-    if (templateSource === "builtin") {
-      const template = BUILT_IN_TEMPLATES.find((t) => t.id === selectedTemplateId);
-      return template?.name;
     }
 
     if (templateSource === "custom") {
@@ -121,6 +116,15 @@ export function AITemplateDialog({
   const handleCancel = useCallback(() => {
     onClose();
   }, [onClose]);
+
+  const handleSaveAsTemplate = useCallback(() => {
+    if (!generatedScene) {
+      return;
+    }
+    const templateName = newTemplateName.trim() || `AI优化模板 ${customTemplates.length + 1}`;
+    onSaveAsTemplate(generatedScene, templateName);
+    onClose();
+  }, [generatedScene, newTemplateName, customTemplates.length, onSaveAsTemplate, onClose]);
 
   const canGenerate =
     connectionStatus.isConnected &&
@@ -189,17 +193,6 @@ export function AITemplateDialog({
                     </button>
                     <button
                       type="button"
-                      className={`ai-source-button ${templateSource === "builtin" ? "active" : ""}`}
-                      onClick={() => setTemplateSource("builtin")}
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                      </svg>
-                      <span>内置模板</span>
-                    </button>
-                    <button
-                      type="button"
                       className={`ai-source-button ${templateSource === "custom" ? "active" : ""}`}
                       onClick={() => setTemplateSource("custom")}
                     >
@@ -213,44 +206,30 @@ export function AITemplateDialog({
                     </button>
                   </div>
 
-                  {templateSource !== "current" && (
+                  {templateSource === "custom" && (
                     <div className="ai-template-list">
-                      {templateSource === "builtin" &&
-                        BUILT_IN_TEMPLATES.map((template) => (
-                          <button
-                            key={template.id}
-                            type="button"
-                            className={`ai-template-item ${selectedTemplateId === template.id ? "active" : ""}`}
-                            onClick={() => setSelectedTemplateId(template.id)}
-                          >
-                            <span className="ai-template-item-name">{template.name}</span>
-                            <span className="ai-template-item-desc">{template.description}</span>
-                          </button>
-                        ))}
-                      {templateSource === "custom" &&
-                        customTemplates.length === 0 && (
-                          <div className="ai-template-empty">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
-                              <polyline points="13 2 13 9 20 9" />
-                            </svg>
-                            <span>暂无自定义模板</span>
-                          </div>
-                        )}
-                      {templateSource === "custom" &&
-                        customTemplates.map((template) => (
-                          <button
-                            key={template.id}
-                            type="button"
-                            className={`ai-template-item ${selectedTemplateId === template.id ? "active" : ""}`}
-                            onClick={() => setSelectedTemplateId(template.id)}
-                          >
-                            <span className="ai-template-item-name">{template.name}</span>
-                            <span className="ai-template-item-desc">
-                              {template.updatedAt ?? template.createdAt}
-                            </span>
-                          </button>
-                        ))}
+                      {customTemplates.length === 0 && (
+                        <div className="ai-template-empty">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+                            <polyline points="13 2 13 9 20 9" />
+                          </svg>
+                          <span>暂无自定义模板</span>
+                        </div>
+                      )}
+                      {customTemplates.map((template) => (
+                        <button
+                          key={template.id}
+                          type="button"
+                          className={`ai-template-item ${selectedTemplateId === template.id ? "active" : ""}`}
+                          onClick={() => setSelectedTemplateId(template.id)}
+                        >
+                          <span className="ai-template-item-name">{template.name}</span>
+                          <span className="ai-template-item-desc">
+                            {template.updatedAt ?? template.createdAt}
+                          </span>
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -318,10 +297,39 @@ export function AITemplateDialog({
                 )}
               </>
             ) : (
-              <AITemplatePreview
-                scene={generatedScene}
-                isGenerating={generateStatus.isGenerating}
-              />
+              <>
+                {/* Save Template Form */}
+                {showSaveTemplateForm && (
+                  <div className="ai-save-template-form">
+                    <h3 className="ai-section-title">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="12" y1="18" x2="12" y2="12" />
+                        <line x1="9" y1="15" x2="15" y2="15" />
+                      </svg>
+                      <span>保存为新模板</span>
+                    </h3>
+                    <div className="ai-save-template-input-wrapper">
+                      <input
+                        type="text"
+                        className="ai-save-template-input"
+                        placeholder={`AI优化模板 ${customTemplates.length + 1}`}
+                        value={newTemplateName}
+                        onChange={(e) => setNewTemplateName(e.currentTarget.value)}
+                      />
+                      <span className="ai-save-template-hint">
+                        保存后将添加到自定义模板列表
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <AITemplatePreview
+                  scene={generatedScene}
+                  isGenerating={generateStatus.isGenerating}
+                />
+              </>
             )}
           </div>
 
@@ -386,18 +394,58 @@ export function AITemplateDialog({
                     </>
                   )}
                 </button>
-                <button
-                  type="button"
-                  className="ai-apply-button"
-                  disabled={!generatedScene || generateStatus.isGenerating}
-                  onClick={handleApply}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                    <polyline points="22 4 12 14.01 9 11.01" />
-                  </svg>
-                  <span>采用结果</span>
-                </button>
+                {!showSaveTemplateForm ? (
+                  <>
+                    <button
+                      type="button"
+                      className="ai-save-template-toggle-button"
+                      disabled={!generatedScene || generateStatus.isGenerating}
+                      onClick={() => setShowSaveTemplateForm(true)}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="12" y1="18" x2="12" y2="12" />
+                        <line x1="9" y1="15" x2="15" y2="15" />
+                      </svg>
+                      <span>保存为模板</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="ai-apply-button"
+                      disabled={!generatedScene || generateStatus.isGenerating}
+                      onClick={handleApply}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                        <polyline points="22 4 12 14.01 9 11.01" />
+                      </svg>
+                      <span>应用到画布</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="ai-cancel-button"
+                      onClick={() => setShowSaveTemplateForm(false)}
+                    >
+                      返回
+                    </button>
+                    <button
+                      type="button"
+                      className="ai-save-template-button"
+                      disabled={!generatedScene || generateStatus.isGenerating}
+                      onClick={handleSaveAsTemplate}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                        <polyline points="22 4 12 14.01 9 11.01" />
+                      </svg>
+                      <span>保存模板</span>
+                    </button>
+                  </>
+                )}
               </>
             )}
           </div>

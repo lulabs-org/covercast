@@ -140,6 +140,7 @@ export default function SceneEditor() {
     applyTemplate,
     applyBuiltInTemplate,
     saveCustomTemplate,
+    saveSceneAsTemplate,
     saveActiveCustomTemplate,
     deleteCustomTemplate,
     exportTemplateJson,
@@ -380,6 +381,7 @@ export default function SceneEditor() {
         activeTemplateId={activeTemplateId}
         customTemplates={customTemplates}
         onApplyScene={handleApplyAIScene}
+        onSaveAsTemplate={saveSceneAsTemplate}
       />
 
       <section className="editor-grid">

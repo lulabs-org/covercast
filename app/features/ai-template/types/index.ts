@@ -1,6 +1,6 @@
 import type { Scene } from "@/app/lib/scene";
 
-export type TemplateSource = "current" | "builtin" | "custom";
+export type TemplateSource = "current" | "custom";
 
 export interface AITemplateConfig {
   endpoint: string;
