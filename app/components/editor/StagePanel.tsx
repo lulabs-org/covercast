@@ -37,6 +37,8 @@ type StagePanelProps = {
   hitTestStrategy?: HitTestStrategy;
   editingTextId?: string | null;
   isGroupDragging?: boolean;
+  canvasWidth?: number;
+  canvasHeight?: number;
   onCanvasPointerDown?: (event: PointerEvent<SVGSVGElement>) => void;
   onElementPointerDown?: (
     elementId: string,
@@ -79,6 +81,8 @@ export function StagePanel({
   hitTestStrategy,
   editingTextId,
   isGroupDragging,
+  canvasWidth,
+  canvasHeight,
   onCanvasPointerDown,
   onElementPointerDown,
   onResizePointerDown,
@@ -143,11 +147,15 @@ export function StagePanel({
         <div className="stage-viewport-inner">
           <div
             className="scene-preview-frame"
-            style={{ width: canvasPreviewWidth }}
+            style={{ 
+              width: canvasPreviewWidth,
+              aspectRatio: `${canvasWidth} / ${canvasHeight}`,
+            }}
           >
             <SceneCanvas
               scene={scene}
               className="scene-preview"
+              style={{ aspectRatio: `${canvasWidth} / ${canvasHeight}` }}
               idPrefix="editor"
               interactive
               selectedIds={selectedIds}
@@ -159,6 +167,8 @@ export function StagePanel({
               hitTestStrategy={hitTestStrategy}
               editingTextId={editingTextId}
               isGroupDragging={isGroupDragging}
+              canvasWidth={canvasWidth}
+              canvasHeight={canvasHeight}
               onCanvasPointerDown={onCanvasPointerDown}
               onElementPointerDown={onElementPointerDown}
               onResizePointerDown={onResizePointerDown}

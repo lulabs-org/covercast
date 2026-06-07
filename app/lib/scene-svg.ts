@@ -1,6 +1,6 @@
 import {
-  CANVAS_HEIGHT,
-  CANVAS_WIDTH,
+  DEFAULT_CANVAS_HEIGHT,
+  DEFAULT_CANVAS_WIDTH,
   type ImageElement,
   type Scene,
   type SceneElement,
@@ -54,20 +54,29 @@ export function elementBounds(element: SceneElement) {
   };
 }
 
-export function sceneToSvgMarkup(scene: Scene): string {
+export function sceneToSvgMarkup(
+  scene: Scene,
+  canvasWidth = DEFAULT_CANVAS_WIDTH,
+  canvasHeight = DEFAULT_CANVAS_HEIGHT,
+): string {
   const visibleElements = scene.elements.filter((element) => element.hidden !== true);
   const visibleScene = { ...scene, elements: visibleElements };
 
   return [
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" viewBox="0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}" role="img" aria-label="Covercast OBS live background">`,
-    renderDefs("covercast", visibleScene),
-    renderBackground(scene.backgroundColor, scene.backgroundOpacity, "covercast", visibleScene),
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${canvasWidth}" height="${canvasHeight}" viewBox="0 0 ${canvasWidth} ${canvasHeight}" role="img" aria-label="Covercast OBS live background">`,
+    renderDefs("covercast", visibleScene, canvasWidth, canvasHeight),
+    renderBackground(scene.backgroundColor, scene.backgroundOpacity, "covercast", visibleScene, canvasWidth, canvasHeight),
     ...visibleElements.map((element) => renderElement(element, "covercast")),
     "</svg>",
   ].join("");
 }
 
-export function renderDefs(prefix: string, scene?: Scene): string {
+export function renderDefs(
+  prefix: string,
+  scene?: Scene,
+  canvasWidth = DEFAULT_CANVAS_WIDTH,
+  canvasHeight = DEFAULT_CANVAS_HEIGHT,
+): string {
   const customGradients =
     scene?.elements
       .filter((element) => element.hidden !== true)
@@ -110,6 +119,8 @@ export function renderBackground(
   backgroundOpacity = 1,
   prefix = "covercast",
   scene?: Scene,
+  canvasWidth = DEFAULT_CANVAS_WIDTH,
+  canvasHeight = DEFAULT_CANVAS_HEIGHT,
 ): string {
   const opacity = clampOpacity(backgroundOpacity);
   const glowOpacity = Number((0.68 * opacity).toFixed(3));
@@ -119,8 +130,8 @@ export function renderBackground(
 
   return `
     <g${mask}>
-      <rect width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" fill="${escapeAttribute(backgroundColor)}" opacity="${opacity}" />
-      <rect width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" fill="url(#${prefix}-bg-glow)" opacity="${glowOpacity}" />
+      <rect width="${canvasWidth}" height="${canvasHeight}" fill="${escapeAttribute(backgroundColor)}" opacity="${opacity}" />
+      <rect width="${canvasWidth}" height="${canvasHeight}" fill="url(#${prefix}-bg-glow)" opacity="${glowOpacity}" />
     </g>
   `;
 }
@@ -192,7 +203,12 @@ function shapeGradientId(prefix: string, elementId: string): string {
   return `${prefix}-shape-gradient-${elementId}`;
 }
 
-function renderBackgroundMask(prefix: string, scene?: Scene): string {
+function renderBackgroundMask(
+  prefix: string,
+  scene?: Scene,
+  canvasWidth = DEFAULT_CANVAS_WIDTH,
+  canvasHeight = DEFAULT_CANVAS_HEIGHT,
+): string {
   const cutouts =
     scene?.elements
       .filter((element) => element.hidden !== true)
@@ -206,7 +222,7 @@ function renderBackgroundMask(prefix: string, scene?: Scene): string {
 
   return `
     <mask id="${backgroundMaskId(prefix)}" maskUnits="userSpaceOnUse">
-      <rect width="${CANVAS_WIDTH}" height="${CANVAS_HEIGHT}" fill="#ffffff" />
+      <rect width="${canvasWidth}" height="${canvasHeight}" fill="#ffffff" />
       ${cutouts}
     </mask>
   `;
