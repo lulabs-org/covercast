@@ -271,9 +271,10 @@ export default function SceneEditor() {
     markSceneEdited();
   }, [scene, saveHistory, markSceneEdited]);
 
-  const { elementClipboardRef, canPasteElement, copySelectedElement, pasteCopiedElement } = useClipboard({
+  const { elementClipboardRef, elementsClipboardRef, canPasteElement, copySelectedElements, pasteCopiedElements } = useClipboard({
     selectedElementRef,
     sceneElementsRef,
+    selectedIds: selection.selectedIds,
     changeScene,
     setSelection,
     markSceneEdited,
@@ -305,11 +306,12 @@ export default function SceneEditor() {
     editingTextId,
     undo,
     redo,
-    copySelectedElement,
-    pasteCopiedElement,
+    copySelectedElements,
+    pasteCopiedElements,
     deleteSelected,
     selectedElementRef,
     elementClipboardRef,
+    elementsClipboardRef,
     spatialIndexRef,
     setGuidesSelectedIds,
     setGuides,
@@ -470,8 +472,8 @@ export default function SceneEditor() {
           selectedElement={selectedElement}
           allElements={scene.elements}
           patchSelected={(patch) => patchSelected(selectedElement, patch)}
-          copySelectedElement={copySelectedElement}
-          pasteCopiedElement={pasteCopiedElement}
+          copySelectedElements={copySelectedElements}
+          pasteCopiedElements={pasteCopiedElements}
           canPasteElement={canPasteElement}
           deleteSelected={deleteSelected}
           handleAssetInput={handleAssetInput}
