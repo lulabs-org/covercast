@@ -59,7 +59,9 @@ import { useSceneActions } from "../hooks/useSceneActions";
 import { useAssetManager } from "../hooks/useAssetManager";
 import { useSceneLoader } from "../hooks/useSceneLoader";
 import { useVisibleGuides } from "../hooks/useVisibleGuides";
+import { useCreateBlankCover } from "../hooks/useCreateBlankCover";
 import { TemplateSaveForm } from "./panels/TemplatePanel";
+import { CreateBlankCoverModal } from "./panels/CreateBlankCoverModal";
 import { SceneToolbar } from "./editor/SceneToolbar";
 import { StagePanel } from "./editor/StagePanel";
 import { LeftSidebar } from "./editor/sidebar/LeftSidebar";
@@ -91,6 +93,7 @@ export default function SceneEditor() {
   
   const {
     canvasSize,
+    setCanvasSize,
     setPresetSize,
     setCustomSize,
     isCustomSize,
@@ -149,6 +152,7 @@ export default function SceneEditor() {
     applyTemplate,
     applyBuiltInTemplate,
     saveCustomTemplate,
+    saveCustomTemplateWithScene,
     saveActiveCustomTemplate,
     deleteCustomTemplate,
     duplicateCustomTemplate,
@@ -163,6 +167,26 @@ export default function SceneEditor() {
     setStatus,
     templateSlots,
     setActiveSlotId,
+  });
+
+  const {
+    isModalOpen: isCreateBlankCoverModalOpen,
+    config: createBlankCoverConfig,
+    openModal: openCreateBlankCoverModal,
+    closeModal: closeCreateBlankCoverModal,
+    updateConfig: updateCreateBlankCoverConfig,
+    createBlankCover,
+    presetOptions: createBlankCoverPresetOptions,
+    templateOptions: createBlankCoverTemplateOptions,
+  } = useCreateBlankCover({
+    setScene,
+    setSelection,
+    setCanvasSize,
+    setActiveTemplateId,
+    setStatus,
+    saveCustomTemplate: saveCustomTemplateWithScene,
+    canvasSizePresets: presets,
+    customTemplates,
   });
 
   const { exportScene } = useExportScene(scene, setStatus, exportTemplateJson, canvasSize.width, canvasSize.height);
@@ -345,39 +369,51 @@ export default function SceneEditor() {
   }
 
   return (
-    <main className="editor-shell">
-      <SceneToolbar
-        undo={undo}
-        redo={redo}
-        canUndo={history.past.length > 0}
-        canRedo={history.future.length > 0}
-        addTextElement={addTextElement}
-        addRectElement={addRectElement}
-        addEllipseElement={addEllipseElement}
-        handleAssetInput={handleAssetInput}
-        activeCustomTemplate={activeCustomTemplate}
-        hasUnsavedCustomTemplateChanges={hasUnsavedCustomTemplateChanges}
-        saveActiveCustomTemplate={saveActiveCustomTemplate}
-        showTemplateForm={showTemplateForm}
-        setShowTemplateForm={setShowTemplateForm}
-        importTemplateFile={importTemplateFile}
-        exportFormat={exportFormat}
-        setExportFormat={setExportFormat}
-        exportScene={exportScene}
-        EXPORT_FORMAT_OPTIONS={EXPORT_FORMAT_OPTIONS}
+    <>
+      <CreateBlankCoverModal
+        isOpen={isCreateBlankCoverModalOpen}
+        config={createBlankCoverConfig}
+        presetOptions={createBlankCoverPresetOptions}
+        templateOptions={createBlankCoverTemplateOptions}
+        onUpdateConfig={updateCreateBlankCoverConfig}
+        onCreate={createBlankCover}
+        onCancel={closeCreateBlankCoverModal}
       />
 
-      <TemplateSaveForm
-        show={showTemplateForm}
-        activeCustomTemplate={activeCustomTemplate}
-        customTemplateName={customTemplateName}
-        customTemplates={customTemplates}
-        onSetName={setCustomTemplateName}
-        onSave={saveCustomTemplate}
-        onCancel={() => setShowTemplateForm(false)}
-      />
+      <main className="editor-shell">
+        <SceneToolbar
+          undo={undo}
+          redo={redo}
+          canUndo={history.past.length > 0}
+          canRedo={history.future.length > 0}
+          addTextElement={addTextElement}
+          addRectElement={addRectElement}
+          addEllipseElement={addEllipseElement}
+          handleAssetInput={handleAssetInput}
+          onCreateBlankCover={openCreateBlankCoverModal}
+          activeCustomTemplate={activeCustomTemplate}
+          hasUnsavedCustomTemplateChanges={hasUnsavedCustomTemplateChanges}
+          saveActiveCustomTemplate={saveActiveCustomTemplate}
+          showTemplateForm={showTemplateForm}
+          setShowTemplateForm={setShowTemplateForm}
+          importTemplateFile={importTemplateFile}
+          exportFormat={exportFormat}
+          setExportFormat={setExportFormat}
+          exportScene={exportScene}
+          EXPORT_FORMAT_OPTIONS={EXPORT_FORMAT_OPTIONS}
+        />
 
-      <section className="editor-grid">
+        <TemplateSaveForm
+          show={showTemplateForm}
+          activeCustomTemplate={activeCustomTemplate}
+          customTemplateName={customTemplateName}
+          customTemplates={customTemplates}
+          onSetName={setCustomTemplateName}
+          onSave={saveCustomTemplate}
+          onCancel={() => setShowTemplateForm(false)}
+        />
+
+        <section className="editor-grid">
         <LeftSidebar
           leftPanelRef={leftPanelRef}
           leftPanelWidth={panelWidths.leftPanel}
@@ -470,13 +506,14 @@ export default function SceneEditor() {
           selectedElement={selectedElement}
           allElements={scene.elements}
           patchSelected={(patch) => patchSelected(selectedElement, patch)}
-          copySelectedElement={copySelectedElement}
-          pasteCopiedElement={pasteCopiedElement}
+          copySelectedElements={copySelectedElement}
+          pasteCopiedElements={pasteCopiedElement}
           canPasteElement={canPasteElement}
           deleteSelected={deleteSelected}
           handleAssetInput={handleAssetInput}
         />
       </section>
     </main>
+    </>
   );
 }
