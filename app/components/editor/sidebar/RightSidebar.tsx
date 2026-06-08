@@ -15,8 +15,8 @@ type RightSidebarProps = {
   
   // ElementInspector actions
   patchSelected: (patch: Partial<SceneElement>) => void;
-  copySelectedElement: () => void;
-  pasteCopiedElement: () => void;
+  copySelectedElements: () => void;
+  pasteCopiedElements: () => void;
   canPasteElement: boolean;
   deleteSelected: () => void;
   handleAssetInput: (event: React.ChangeEvent<HTMLInputElement>, mode: "add" | "replace") => void;
@@ -28,8 +28,8 @@ export function RightSidebar({
   selectedElement,
   allElements,
   patchSelected,
-  copySelectedElement,
-  pasteCopiedElement,
+  copySelectedElements,
+  pasteCopiedElements,
   canPasteElement,
   deleteSelected,
   handleAssetInput,
@@ -51,8 +51,8 @@ export function RightSidebar({
           element={selectedElement}
           allElements={allElements}
           onPatch={patchSelected}
-          onCopy={copySelectedElement}
-          onPaste={pasteCopiedElement}
+          onCopy={copySelectedElements}
+          onPaste={pasteCopiedElements}
           canPaste={canPasteElement}
           onDelete={deleteSelected}
           onReplaceImage={(event) => handleAssetInput(event, "replace")}

@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback } from "react";
 import { DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT, type Scene, type SceneElement } from "../lib/scene";
-import { selectSingle, type SelectionState } from "../lib/selection";
+import { selectSingle, selectMultiple, type SelectionState } from "../lib/selection";
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -35,24 +35,24 @@ function uniqueSceneElementName(name: string, elements: SceneElement[]) {
 function createPastedSceneElement(
   element: SceneElement,
   elements: SceneElement[],
-  offsetMultiplier: number,
+  offsetX: number,
+  offsetY: number,
   canvasWidth: number,
   canvasHeight: number,
 ): SceneElement {
-  const offset = 24 * offsetMultiplier;
-
   return {
     ...cloneSceneElement(element),
     id: createSceneElementId(element.type),
     name: uniqueSceneElementName(`${element.name} 副本`, elements),
-    x: clamp(element.x + offset, -element.width + 24, canvasWidth - 24),
-    y: clamp(element.y + offset, -element.height + 24, canvasHeight - 24),
+    x: clamp(element.x + offsetX, -element.width + 24, canvasWidth - 24),
+    y: clamp(element.y + offsetY, -element.height + 24, canvasHeight - 24),
   } as SceneElement;
 }
 
 type UseClipboardOptions = {
   selectedElementRef: React.MutableRefObject<SceneElement | null>;
   sceneElementsRef: React.MutableRefObject<SceneElement[]>;
+  selectedIds: string[];
   changeScene: (updater: (currentScene: Scene) => Scene, description?: string) => void;
   setSelection: (updater: (prev: SelectionState) => SelectionState) => void;
   markSceneEdited: () => void;
@@ -65,6 +65,7 @@ export function useClipboard(options: UseClipboardOptions) {
   const {
     selectedElementRef,
     sceneElementsRef,
+    selectedIds,
     changeScene,
     setSelection,
     markSceneEdited,
@@ -74,55 +75,109 @@ export function useClipboard(options: UseClipboardOptions) {
   } = options;
 
   const elementClipboardRef = useRef<SceneElement | null>(null);
+  const elementsClipboardRef = useRef<SceneElement[] | null>(null);
   const pasteOffsetRef = useRef(1);
   const [canPasteElement, setCanPasteElement] = useState(false);
 
-  const copySelectedElement = useCallback(() => {
-    const element = selectedElementRef.current;
+  const copySelectedElements = useCallback(() => {
+    const selectedCount = selectedIds.length;
 
-    if (!element) {
-      setStatus("请先选择一个画布组件");
+    if (selectedCount === 0) {
+      setStatus("请先选择画布组件");
       return;
     }
 
-    elementClipboardRef.current = cloneSceneElement(element);
-    pasteOffsetRef.current = 1;
-    setCanPasteElement(true);
-    setStatus(`已复制「${element.name}」`);
-  }, [selectedElementRef, setStatus]);
+    const elements = sceneElementsRef.current;
+    const selectedElements = elements.filter((el) => selectedIds.includes(el.id));
 
-  const pasteCopiedElement = useCallback(() => {
+    if (selectedElements.length === 0) {
+      setStatus("未找到选中的组件");
+      return;
+    }
+
+    if (selectedElements.length === 1) {
+      elementClipboardRef.current = cloneSceneElement(selectedElements[0]);
+      elementsClipboardRef.current = null;
+      pasteOffsetRef.current = 1;
+      setCanPasteElement(true);
+      setStatus(`已复制「${selectedElements[0].name}」`);
+    } else {
+      elementsClipboardRef.current = selectedElements.map((el) => cloneSceneElement(el));
+      elementClipboardRef.current = null;
+      pasteOffsetRef.current = 1;
+      setCanPasteElement(true);
+      setStatus(`已复制 ${selectedElements.length} 个组件`);
+    }
+  }, [selectedIds, sceneElementsRef, setStatus]);
+
+  const pasteCopiedElements = useCallback(() => {
+    const sourceElements = elementsClipboardRef.current;
     const sourceElement = elementClipboardRef.current;
 
-    if (!sourceElement) {
+    if (!sourceElements && !sourceElement) {
       setStatus("没有可粘贴的组件");
       return;
     }
 
-    const pastedElement = createPastedSceneElement(
-      sourceElement,
-      sceneElementsRef.current,
-      pasteOffsetRef.current,
-      canvasWidth,
-      canvasHeight,
-    );
-    pasteOffsetRef.current += 1;
-    sceneElementsRef.current = [...sceneElementsRef.current, pastedElement];
-    selectedElementRef.current = pastedElement;
+    const offset = 24 * pasteOffsetRef.current;
+    const currentElements = sceneElementsRef.current;
 
-    changeScene((currentScene) => ({
-      ...currentScene,
-      elements: [...currentScene.elements, pastedElement],
-    }), `粘贴元素「${pastedElement.name}」`);
-    setSelection((prev) => selectSingle(prev, pastedElement.id));
-    markSceneEdited();
-    setStatus(`已粘贴「${pastedElement.name}」`);
-  }, [sceneElementsRef, selectedElementRef, changeScene, setSelection, markSceneEdited, setStatus]);
+    if (sourceElement) {
+      const pastedElement = createPastedSceneElement(
+        sourceElement,
+        currentElements,
+        offset,
+        offset,
+        canvasWidth,
+        canvasHeight,
+      );
+      pasteOffsetRef.current += 1;
+      sceneElementsRef.current = [...currentElements, pastedElement];
+      selectedElementRef.current = pastedElement;
+
+      changeScene((currentScene) => ({
+        ...currentScene,
+        elements: [...currentScene.elements, pastedElement],
+      }), `粘贴元素「${pastedElement.name}」`);
+      setSelection((prev) => selectSingle(prev, pastedElement.id));
+      markSceneEdited();
+      setStatus(`已粘贴「${pastedElement.name}」`);
+    } else if (sourceElements && sourceElements.length > 0) {
+      const pastedElements: SceneElement[] = [];
+      let updatedElements = [...currentElements];
+
+      for (const element of sourceElements) {
+        const pastedElement = createPastedSceneElement(
+          element,
+          updatedElements,
+          offset,
+          offset,
+          canvasWidth,
+          canvasHeight,
+        );
+        pastedElements.push(pastedElement);
+        updatedElements = [...updatedElements, pastedElement];
+      }
+
+      pasteOffsetRef.current += 1;
+      sceneElementsRef.current = updatedElements;
+      const pastedIds = pastedElements.map((el) => el.id);
+
+      changeScene((currentScene) => ({
+        ...currentScene,
+        elements: [...currentScene.elements, ...pastedElements],
+      }), `粘贴 ${pastedElements.length} 个元素`);
+      setSelection((prev) => selectMultiple(prev, pastedIds, false));
+      markSceneEdited();
+      setStatus(`已粘贴 ${pastedElements.length} 个组件`);
+    }
+  }, [sceneElementsRef, selectedElementRef, changeScene, setSelection, markSceneEdited, setStatus, canvasWidth, canvasHeight]);
 
   return {
     elementClipboardRef,
+    elementsClipboardRef,
     canPasteElement,
-    copySelectedElement,
-    pasteCopiedElement,
+    copySelectedElements,
+    pasteCopiedElements,
   };
 }

@@ -28,11 +28,12 @@ type UseEditorShortcutsOptions = {
   editingTextId: string | null;
   undo: () => void;
   redo: () => void;
-  copySelectedElement: () => void;
-  pasteCopiedElement: () => void;
+  copySelectedElements: () => void;
+  pasteCopiedElements: () => void;
   deleteSelected: () => void;
   selectedElementRef: React.MutableRefObject<SceneElement | null>;
   elementClipboardRef: React.MutableRefObject<SceneElement | null>;
+  elementsClipboardRef: React.MutableRefObject<SceneElement[] | null>;
   spatialIndexRef: React.MutableRefObject<SpatialIndex>;
   setGuidesSelectedIds: (ids: string[]) => void;
   setGuides: (guides: GuideLine[]) => void;
@@ -48,11 +49,12 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
     editingTextId,
     undo,
     redo,
-    copySelectedElement,
-    pasteCopiedElement,
+    copySelectedElements,
+    pasteCopiedElements,
     deleteSelected,
     selectedElementRef,
     elementClipboardRef,
+    elementsClipboardRef,
     spatialIndexRef,
     setGuidesSelectedIds,
     setGuides,
@@ -273,15 +275,15 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
         return;
       }
 
-      if (key === "c" && selectedElementRef.current) {
+      if (key === "c" && selection.selectedIds.length > 0) {
         event.preventDefault();
-        copySelectedElement();
+        copySelectedElements();
         return;
       }
 
-      if (key === "v" && elementClipboardRef.current) {
+      if (key === "v" && (elementClipboardRef.current || elementsClipboardRef.current)) {
         event.preventDefault();
-        pasteCopiedElement();
+        pasteCopiedElements();
       }
     }
 
@@ -290,5 +292,5 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
     return () => {
       window.removeEventListener("keydown", handleEditorKeyDown);
     };
-  }, [copySelectedElement, pasteCopiedElement, deleteSelected, undo, redo, selection.selectedIds, editingTextId, scene.elements, markSceneEdited]);
+  }, [copySelectedElements, pasteCopiedElements, deleteSelected, undo, redo, selection.selectedIds, editingTextId, scene.elements, markSceneEdited]);
 }
