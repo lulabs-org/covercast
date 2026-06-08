@@ -48,6 +48,7 @@ export function RightSidebar({
 
       {selectedElement ? (
         <ElementInspector
+          key={selectedElement.id}
           element={selectedElement}
           allElements={allElements}
           onPatch={patchSelected}

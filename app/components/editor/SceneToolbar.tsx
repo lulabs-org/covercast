@@ -1,6 +1,5 @@
 "use client";
 
-import type { Dispatch, SetStateAction } from "react";
 import { TemplateToolbarButtons } from "../panels/TemplatePanel";
 import type { ExportFormat, EXPORT_FORMAT_OPTIONS } from "../../hooks/useExportScene";
 import type { CustomSceneTemplate } from "../../hooks/useTemplateManager";
@@ -22,8 +21,7 @@ type SceneToolbarProps = {
   activeCustomTemplate: CustomSceneTemplate | null;
   hasUnsavedCustomTemplateChanges: boolean;
   saveActiveCustomTemplate: () => void;
-  showTemplateForm: boolean;
-  setShowTemplateForm: Dispatch<SetStateAction<boolean>>;
+  onOpenSaveTemplateDialog: () => void;
   importTemplateFile: (file: File) => Promise<void>;
   
   // Export
@@ -45,8 +43,7 @@ export function SceneToolbar({
   activeCustomTemplate,
   hasUnsavedCustomTemplateChanges,
   saveActiveCustomTemplate,
-  showTemplateForm,
-  setShowTemplateForm,
+  onOpenSaveTemplateDialog,
   importTemplateFile,
   exportFormat,
   setExportFormat,
@@ -107,9 +104,8 @@ export function SceneToolbar({
           </button>
         ) : null}
         <TemplateToolbarButtons
-          showTemplateForm={showTemplateForm}
           activeCustomTemplate={activeCustomTemplate}
-          onToggleSaveForm={() => setShowTemplateForm((visible) => !visible)}
+          onOpenSaveTemplateDialog={onOpenSaveTemplateDialog}
           onImport={(file) => void importTemplateFile(file)}
         />
         <div className="export-control" aria-label="导出场景">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, type ChangeEvent } from "react";
+import { useState, type ChangeEvent } from "react";
 import {
   DEFAULT_FONT_FAMILY,
   isImageElement,
@@ -535,10 +535,6 @@ export function ElementInspector({
   onReplaceImage: (event: ChangeEvent<HTMLInputElement>) => void;
 }) {
   const [pendingName, setPendingName] = useState<string>(element.name);
-
-  useEffect(() => {
-    setPendingName(element.name);
-  }, [element.id, element.name]);
 
   const nameError = allElements.some(
     (el) => el.id !== element.id && el.name === pendingName
