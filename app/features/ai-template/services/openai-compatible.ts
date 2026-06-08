@@ -115,4 +115,77 @@ export class OpenAICompatibleProvider implements AIProvider {
 
     return data.choices[0].message.content;
   }
+
+  async generateStream(
+    prompt: string,
+    model: string,
+    onChunk: (chunk: string) => void
+  ): Promise<string> {
+    const response = await fetch(`${this.endpoint}/v1/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        temperature: 0.7,
+        stream: true,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`AI 生成失败: ${response.status} ${errorText}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error("无法读取响应流");
+    }
+
+    const decoder = new TextDecoder();
+    let fullContent = "";
+    let buffer = "";
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (!trimmedLine || trimmedLine === "data: [DONE]") continue;
+
+          if (trimmedLine.startsWith("data: ")) {
+            const jsonStr = trimmedLine.slice(6);
+            try {
+              const data = JSON.parse(jsonStr);
+              const content = data.choices?.[0]?.delta?.content;
+              if (content) {
+                fullContent += content;
+                onChunk(content);
+              }
+            } catch {
+              // Skip invalid JSON
+            }
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+
+    return fullContent;
+  }
 }

@@ -51,6 +51,7 @@ export interface AIProvider {
   testConnection(): Promise<boolean>;
   fetchModels(): Promise<AIModelInfo[]>;
   generate(prompt: string): Promise<string>;
+  generateStream?(prompt: string, model: string, onChunk: (chunk: string) => void): Promise<string>;
 }
 
 export interface AITemplateDialogProps {

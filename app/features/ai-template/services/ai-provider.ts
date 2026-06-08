@@ -24,3 +24,12 @@ export async function generateWithAI(
   const provider = new OpenAICompatibleProvider(config.endpoint, config.apiKey);
   return provider.generateWithModel(prompt, config.model);
 }
+
+export async function generateStreamWithAI(
+  config: AITemplateConfig,
+  prompt: string,
+  onChunk: (chunk: string) => void
+): Promise<string> {
+  const provider = new OpenAICompatibleProvider(config.endpoint, config.apiKey);
+  return provider.generateStream(prompt, config.model, onChunk);
+}

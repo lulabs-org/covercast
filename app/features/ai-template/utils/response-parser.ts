@@ -127,6 +127,37 @@ export function parseAIResponse(response: string): ParsedAIResponse {
   }
 }
 
+/**
+ * 流式解析：从部分内容中尝试提取 JSON。
+ * 当 AI 还在输出时，提前检测 ```json 块并尝试解析。
+ * 返回 null 表示尚未完成，返回 Scene 表示成功提取。
+ */
+export function tryParsePartialStream(content: string): Scene | null {
+  // 检查是否有 ```json 开始标记
+  const jsonStart = content.indexOf("```json");
+  if (jsonStart === -1) return null;
+
+  const afterMarker = content.slice(jsonStart + 7);
+
+  // 检查是否有 ``` 结束标记
+  const jsonEnd = afterMarker.indexOf("```");
+  if (jsonEnd === -1) return null;
+
+  const jsonText = afterMarker.slice(0, jsonEnd).trim();
+  if (!jsonText) return null;
+
+  try {
+    const parsed = JSON.parse(jsonText);
+    if (isValidScene(parsed)) {
+      return parsed;
+    }
+  } catch {
+    // JSON 不完整，继续等待
+  }
+
+  return null;
+}
+
 export function validateScene(scene: Scene): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
