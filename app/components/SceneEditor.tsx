@@ -59,7 +59,8 @@ import { useSceneActions } from "../hooks/useSceneActions";
 import { useAssetManager } from "../hooks/useAssetManager";
 import { useSceneLoader } from "../hooks/useSceneLoader";
 import { useVisibleGuides } from "../hooks/useVisibleGuides";
-import { TemplateSaveForm } from "./panels/TemplatePanel";
+import { SaveTemplateDialog } from "./dialogs/SaveTemplateDialog";
+import { useSaveTemplateDialog } from "../hooks/useSaveTemplateDialog";
 import { SceneToolbar } from "./editor/SceneToolbar";
 import { StagePanel } from "./editor/StagePanel";
 import { LeftSidebar } from "./editor/sidebar/LeftSidebar";
@@ -136,19 +137,15 @@ export default function SceneEditor() {
   });
   const {
     customTemplates,
-    customTemplateName,
     activeTemplateId,
-    showTemplateForm,
     activeBuiltInTemplate,
     activeCustomTemplate,
     activeTemplate,
     hasUnsavedCustomTemplateChanges,
-    setCustomTemplateName,
-    setShowTemplateForm,
     setActiveTemplateId,
     applyTemplate,
     applyBuiltInTemplate,
-    saveCustomTemplate,
+    saveCustomTemplateWithName,
     saveActiveCustomTemplate,
     deleteCustomTemplate,
     duplicateCustomTemplate,
@@ -163,6 +160,11 @@ export default function SceneEditor() {
     setStatus,
     templateSlots,
     setActiveSlotId,
+  });
+
+  const saveTemplateDialog = useSaveTemplateDialog({
+    customTemplates,
+    onSave: saveCustomTemplateWithName,
   });
 
   const { exportScene } = useExportScene(scene, setStatus, exportTemplateJson, canvasSize.width, canvasSize.height);
@@ -360,8 +362,7 @@ export default function SceneEditor() {
         activeCustomTemplate={activeCustomTemplate}
         hasUnsavedCustomTemplateChanges={hasUnsavedCustomTemplateChanges}
         saveActiveCustomTemplate={saveActiveCustomTemplate}
-        showTemplateForm={showTemplateForm}
-        setShowTemplateForm={setShowTemplateForm}
+        onOpenSaveTemplateDialog={() => saveTemplateDialog.openDialog(activeTemplate?.name)}
         importTemplateFile={importTemplateFile}
         exportFormat={exportFormat}
         setExportFormat={setExportFormat}
@@ -369,14 +370,14 @@ export default function SceneEditor() {
         EXPORT_FORMAT_OPTIONS={EXPORT_FORMAT_OPTIONS}
       />
 
-      <TemplateSaveForm
-        show={showTemplateForm}
-        activeCustomTemplate={activeCustomTemplate}
-        customTemplateName={customTemplateName}
-        customTemplates={customTemplates}
-        onSetName={setCustomTemplateName}
-        onSave={saveCustomTemplate}
-        onCancel={() => setShowTemplateForm(false)}
+      <SaveTemplateDialog
+        show={saveTemplateDialog.showDialog}
+        title="另存为模板"
+        templateName={saveTemplateDialog.templateName}
+        nameError={saveTemplateDialog.nameError}
+        onSetName={saveTemplateDialog.setTemplateName}
+        onSave={saveTemplateDialog.handleSave}
+        onCancel={saveTemplateDialog.closeDialog}
       />
 
       <section className="editor-grid">

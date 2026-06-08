@@ -279,6 +279,28 @@ export function useTemplateManager(options: UseTemplateManagerOptions) {
     applyTemplate(template);
   }
 
+  function saveCustomTemplateWithName(name: string) {
+    const timestamp = new Date().toISOString();
+    const templateName = name.trim() || `自定义模板 ${customTemplates.length + 1}`;
+    const template: CustomSceneTemplate = {
+      id: createCustomTemplateId(),
+      name: templateName,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      scene: cloneScene(scene),
+    };
+    const nextTemplates = [template, ...customTemplates];
+
+    try {
+      writeCustomTemplatesToStorage(nextTemplates);
+      setCustomTemplates(nextTemplates);
+      setActiveTemplateId(template.id);
+      setStatus(`已保存「${template.name}」到浏览器缓存`);
+    } catch {
+      setStatus("自定义模板保存失败，浏览器缓存空间可能不足");
+    }
+  }
+
   function saveCustomTemplate() {
     const timestamp = new Date().toISOString();
     const templateName =
@@ -474,6 +496,7 @@ export function useTemplateManager(options: UseTemplateManagerOptions) {
     applyTemplate,
     applyBuiltInTemplate,
     saveCustomTemplate,
+    saveCustomTemplateWithName,
     saveActiveCustomTemplate,
     deleteCustomTemplate,
     duplicateCustomTemplate,

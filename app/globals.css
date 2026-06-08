@@ -1502,3 +1502,68 @@ h1 {
     min-height: 640px;
   }
 }
+
+/* Dialog styles */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 100;
+  animation: fadeInBackdrop 0.15s ease;
+}
+
+@keyframes fadeInBackdrop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.dialog-content {
+  min-width: 320px;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.2);
+  animation: slideInDialog 0.2s ease;
+}
+
+@keyframes slideInDialog {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dialog-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--foreground);
+}
+
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.dialog-actions .primary-button,
+.dialog-actions .secondary-button {
+  min-width: 96px;
+}
