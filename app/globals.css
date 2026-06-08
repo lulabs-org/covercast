@@ -1060,7 +1060,39 @@ h1 {
   white-space: nowrap;
 }
 
-.template-card-delete {
+.template-card-rename-input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.3;
+  color: #243247;
+  background: #ffffff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(78, 114, 255, 0.2);
+}
+
+.template-card-rename-input.error {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 2px rgba(217, 45, 32, 0.2);
+}
+
+.template-card-rename-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.template-card-rename-error {
+  color: var(--danger);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.template-card-more {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1069,18 +1101,64 @@ h1 {
   border: 0;
   border-radius: 6px;
   padding: 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 900;
   line-height: 1;
-  color: var(--danger);
-  background: #fff1f0;
+  color: #6b7280;
+  background: transparent;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.template-card-delete:hover {
-  background: #ffe3e0;
-  transform: scale(1.05);
+.template-card-more:hover {
+  background: rgba(39, 100, 246, 0.1);
+  color: var(--accent);
+}
+
+.template-card-menu {
+  min-width: 140px;
+  background: #ffffff;
+  border: 1px solid #d9e0ee;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 4px;
+  animation: fadeInMenu 0.15s ease;
+}
+
+@keyframes fadeInMenu {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.template-card-menu-item {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #39485f;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s ease;
+}
+
+.template-card-menu-item:hover {
+  background: rgba(39, 100, 246, 0.08);
+}
+
+.template-card-menu-item-danger {
+  color: var(--danger);
+}
+
+.template-card-menu-item-danger:hover {
+  background: #fff1f0;
 }
 
 @keyframes slideDown {
@@ -1092,6 +1170,19 @@ h1 {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
 }
 
 .stage-panel {
@@ -3248,8 +3339,7 @@ h1 {
 
 .scene-preview {
   width: 100%;
-  height: auto;
-  aspect-ratio: 941 / 1672;
+  height: 100%;
   display: block;
   border-radius: 4px;
   box-shadow: 0 18px 50px rgba(15, 23, 42, 0.26);
@@ -3303,6 +3393,22 @@ h1 {
 .field select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(39, 100, 246, 0.14);
+}
+
+.field.field-error input {
+  border-color: var(--danger);
+}
+
+.field.field-error input:focus {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(217, 45, 32, 0.14);
+}
+
+.field.field-error .field-error-message {
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 4px;
 }
 
 .checkbox-field {
@@ -3469,4 +3575,69 @@ h1 {
   .stage-viewport {
     min-height: 640px;
   }
+}
+
+/* Dialog styles */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 100;
+  animation: fadeInBackdrop 0.15s ease;
+}
+
+@keyframes fadeInBackdrop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.dialog-content {
+  min-width: 320px;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.2);
+  animation: slideInDialog 0.2s ease;
+}
+
+@keyframes slideInDialog {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dialog-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--foreground);
+}
+
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.dialog-actions .primary-button,
+.dialog-actions .secondary-button {
+  min-width: 96px;
 }

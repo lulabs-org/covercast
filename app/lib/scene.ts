@@ -1,5 +1,9 @@
-export const CANVAS_WIDTH = 941;
-export const CANVAS_HEIGHT = 1672;
+export const DEFAULT_CANVAS_WIDTH = 941;
+export const DEFAULT_CANVAS_HEIGHT = 1672;
+
+// Legacy constants for backward compatibility
+export const CANVAS_WIDTH = DEFAULT_CANVAS_WIDTH;
+export const CANVAS_HEIGHT = DEFAULT_CANVAS_HEIGHT;
 
 export const DEFAULT_FONT_FAMILY =
   '"PingFang SC", "Microsoft YaHei", "Noto Sans SC", Arial, sans-serif';
@@ -182,6 +186,17 @@ export function createImageElement(src: string, name = "自定义素材"): Image
     fit: "contain",
     shape: "rect",
   };
+}
+
+const emptyScene: Scene = {
+  version: 1,
+  backgroundColor: "#1e293b",
+  backgroundOpacity: 1,
+  elements: [],
+};
+
+export function createEmptyScene(): Scene {
+  return cloneScene(emptyScene);
 }
 
 const defaultScene: Scene = {
@@ -1035,6 +1050,12 @@ const courseSprintScene: Scene = {
 };
 
 export const BUILT_IN_TEMPLATES = [
+  {
+    id: "empty",
+    name: "空白封面",
+    description: "从空白画布开始创作",
+    scene: emptyScene,
+  },
   {
     id: DEFAULT_TEMPLATE_ID,
     name: "双讲师课程",

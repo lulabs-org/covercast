@@ -1,7 +1,7 @@
 import { useEffect, useState, type PointerEvent, type Ref } from "react";
 import {
-  CANVAS_HEIGHT,
-  CANVAS_WIDTH,
+  DEFAULT_CANVAS_WIDTH,
+  DEFAULT_CANVAS_HEIGHT,
   type ImageElement,
   type Scene,
   type SceneElement,
@@ -32,6 +32,7 @@ import {
 type SceneCanvasProps = {
   scene: Scene;
   className?: string;
+  style?: React.CSSProperties;
   idPrefix?: string;
   interactive?: boolean;
   selectedIds?: string[];
@@ -43,6 +44,8 @@ type SceneCanvasProps = {
   hitTestStrategy?: HitTestStrategy;
   editingTextId?: string | null;
   isGroupDragging?: boolean;
+  canvasWidth?: number;
+  canvasHeight?: number;
   onCanvasPointerDown?: (event: PointerEvent<SVGSVGElement>) => void;
   onElementPointerDown?: (
     elementId: string,
@@ -63,6 +66,7 @@ type SceneCanvasProps = {
 export default function SceneCanvas({
   scene,
   className,
+  style,
   idPrefix = "scene",
   interactive = false,
   selectedIds = [],
@@ -74,6 +78,8 @@ export default function SceneCanvas({
   hitTestStrategy = "intersection",
   editingTextId,
   isGroupDragging = false,
+  canvasWidth = DEFAULT_CANVAS_WIDTH,
+  canvasHeight = DEFAULT_CANVAS_HEIGHT,
   onCanvasPointerDown,
   onElementPointerDown,
   onResizePointerDown,
@@ -121,18 +127,19 @@ export default function SceneCanvas({
     <svg
       ref={svgRef}
       className={className}
-      viewBox={`0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}`}
+      viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
       role="img"
       aria-label="Covercast OBS live background"
       preserveAspectRatio="xMidYMid meet"
       onPointerDown={onCanvasPointerDown}
       style={{
+        ...style,
         touchAction: interactive ? "none" : undefined,
         userSelect: "none",
         WebkitUserSelect: "none",
       }}
     >
-      <SceneDefs visibleElements={visibleElements} idPrefix={idPrefix} />
+      <SceneDefs visibleElements={visibleElements} idPrefix={idPrefix} canvasWidth={canvasWidth} canvasHeight={canvasHeight} />
 
       <g
         mask={
@@ -142,14 +149,14 @@ export default function SceneCanvas({
         }
       >
         <rect
-          width={CANVAS_WIDTH}
-          height={CANVAS_HEIGHT}
+          width={canvasWidth}
+          height={canvasHeight}
           fill={scene.backgroundColor}
           opacity={clampOpacity(scene.backgroundOpacity)}
         />
         <rect
-          width={CANVAS_WIDTH}
-          height={CANVAS_HEIGHT}
+          width={canvasWidth}
+          height={canvasHeight}
           fill={`url(#${idPrefix}-bg-glow)`}
           opacity={0.68 * clampOpacity(scene.backgroundOpacity)}
         />

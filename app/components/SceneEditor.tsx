@@ -12,8 +12,8 @@ import {
   useState,
 } from "react";
 import {
-  CANVAS_HEIGHT,
-  CANVAS_WIDTH,
+  DEFAULT_CANVAS_HEIGHT,
+  DEFAULT_CANVAS_WIDTH,
   DEFAULT_FONT_FAMILY,
   DEFAULT_TEMPLATE_ID,
   cloneScene,
@@ -49,6 +49,7 @@ import { useHistory } from "../hooks/useHistory";
 import { useClipboard } from "../hooks/useClipboard";
 import { useEditorShortcuts } from "../hooks/useEditorShortcuts";
 import { useCanvasZoom } from "../hooks/useCanvasZoom";
+import { useCanvasSize } from "../hooks/useCanvasSize";
 import { useTemplateManager, type CustomSceneTemplate, type SceneSlotInfo } from "../hooks/useTemplateManager";
 import { useSlotManager } from "../hooks/useSlotManager";
 import { useDragManager } from "../hooks/useDragManager";
@@ -58,7 +59,8 @@ import { useSceneActions } from "../hooks/useSceneActions";
 import { useAssetManager } from "../hooks/useAssetManager";
 import { useSceneLoader } from "../hooks/useSceneLoader";
 import { useVisibleGuides } from "../hooks/useVisibleGuides";
-import { TemplateSaveForm } from "./panels/TemplatePanel";
+import { SaveTemplateDialog } from "./dialogs/SaveTemplateDialog";
+import { useSaveTemplateDialog } from "../hooks/useSaveTemplateDialog";
 import { SceneToolbar } from "./editor/SceneToolbar";
 import { StagePanel } from "./editor/StagePanel";
 import { LeftSidebar } from "./editor/sidebar/LeftSidebar";
@@ -89,6 +91,16 @@ export default function SceneEditor() {
 
   const { leftPanelRef, rightPanelRef, stageViewportRef } = useScrollVisibility();
   const { panelWidths, resizerLeftRef, resizerRightRef, handleMouseDown } = usePanelResize();
+  
+  const {
+    canvasSize,
+    setPresetSize,
+    setCustomSize,
+    isCustomSize,
+    currentPreset,
+    presets,
+  } = useCanvasSize();
+  
   const {
     canvasZoom,
     canvasPreviewWidth,
@@ -102,7 +114,7 @@ export default function SceneEditor() {
     CANVAS_ZOOM_MIN,
     CANVAS_ZOOM_MAX,
     CANVAS_ZOOM_STEP,
-  } = useCanvasZoom({ stageViewportRef });
+  } = useCanvasZoom({ stageViewportRef, canvasWidth: canvasSize.width, canvasHeight: canvasSize.height });
   const { history, saveHistory, undo, redo } = useHistory({
     scene,
     selectedIds: selection.selectedIds,
@@ -127,22 +139,21 @@ export default function SceneEditor() {
   });
   const {
     customTemplates,
-    customTemplateName,
     activeTemplateId,
-    showTemplateForm,
     activeBuiltInTemplate,
     activeCustomTemplate,
     activeTemplate,
     hasUnsavedCustomTemplateChanges,
-    setCustomTemplateName,
-    setShowTemplateForm,
     setActiveTemplateId,
     applyTemplate,
     applyBuiltInTemplate,
     saveCustomTemplate,
     saveSceneAsTemplate,
+    saveCustomTemplateWithName,
     saveActiveCustomTemplate,
     deleteCustomTemplate,
+    duplicateCustomTemplate,
+    renameCustomTemplate,
     exportTemplateJson,
     importTemplateFile,
   } = useTemplateManager({
@@ -155,7 +166,12 @@ export default function SceneEditor() {
     setActiveSlotId,
   });
 
-  const { exportScene } = useExportScene(scene, setStatus, exportTemplateJson);
+  const saveTemplateDialog = useSaveTemplateDialog({
+    customTemplates,
+    onSave: saveCustomTemplateWithName,
+  });
+
+  const { exportScene } = useExportScene(scene, setStatus, exportTemplateJson, canvasSize.width, canvasSize.height);
 
   const activeSlot = templateSlots.find((slot) => slot.slotId === activeSlotId) ?? null;
   const editingContextCaption = activeCustomTemplate
@@ -212,6 +228,8 @@ export default function SceneEditor() {
     setScene,
     setSelection,
     setEditingTextId,
+    canvasWidth: canvasSize.width,
+    canvasHeight: canvasSize.height,
   });
 
   const selectedElement = useMemo(() => {
@@ -259,31 +277,16 @@ export default function SceneEditor() {
     markSceneEdited();
   }, [scene, saveHistory, markSceneEdited]);
 
-  const { elementClipboardRef, canPasteElement, copySelectedElement, pasteCopiedElement } = useClipboard({
+  const { elementClipboardRef, elementsClipboardRef, canPasteElement, copySelectedElements, pasteCopiedElements } = useClipboard({
     selectedElementRef,
     sceneElementsRef,
+    selectedIds: selection.selectedIds,
     changeScene,
     setSelection,
     markSceneEdited,
     setStatus,
-  });
-
-  useEditorShortcuts({
-    scene,
-    selection,
-    editingTextId,
-    undo,
-    redo,
-    copySelectedElement,
-    pasteCopiedElement,
-    selectedElementRef,
-    elementClipboardRef,
-    spatialIndexRef,
-    setGuidesSelectedIds,
-    setGuides,
-    setSpacingGuides,
-    setScene,
-    markSceneEdited,
+    canvasWidth: canvasSize.width,
+    canvasHeight: canvasSize.height,
   });
 
   const {
@@ -301,6 +304,26 @@ export default function SceneEditor() {
     selection,
     changeScene,
     setSelection,
+  });
+
+  useEditorShortcuts({
+    scene,
+    selection,
+    editingTextId,
+    undo,
+    redo,
+    copySelectedElements,
+    pasteCopiedElements,
+    deleteSelected,
+    selectedElementRef,
+    elementClipboardRef,
+    elementsClipboardRef,
+    spatialIndexRef,
+    setGuidesSelectedIds,
+    setGuides,
+    setSpacingGuides,
+    setScene,
+    markSceneEdited,
   });
 
   const { handleAssetInput } = useAssetManager({
@@ -354,8 +377,7 @@ export default function SceneEditor() {
         activeCustomTemplate={activeCustomTemplate}
         hasUnsavedCustomTemplateChanges={hasUnsavedCustomTemplateChanges}
         saveActiveCustomTemplate={saveActiveCustomTemplate}
-        showTemplateForm={showTemplateForm}
-        setShowTemplateForm={setShowTemplateForm}
+        onOpenSaveTemplateDialog={() => saveTemplateDialog.openDialog(activeTemplate?.name)}
         importTemplateFile={importTemplateFile}
         showAITemplateDialog={showAITemplateDialog}
         setShowAITemplateDialog={setShowAITemplateDialog}
@@ -365,13 +387,14 @@ export default function SceneEditor() {
         EXPORT_FORMAT_OPTIONS={EXPORT_FORMAT_OPTIONS}
       />
 
-      <TemplateSaveForm
-        show={showTemplateForm}
-        activeCustomTemplate={activeCustomTemplate}
-        customTemplateName={customTemplateName}
-        onSetName={setCustomTemplateName}
-        onSave={saveCustomTemplate}
-        onCancel={() => setShowTemplateForm(false)}
+      <SaveTemplateDialog
+        show={saveTemplateDialog.showDialog}
+        title="另存为模板"
+        templateName={saveTemplateDialog.templateName}
+        nameError={saveTemplateDialog.nameError}
+        onSetName={saveTemplateDialog.setTemplateName}
+        onSave={saveTemplateDialog.handleSave}
+        onCancel={saveTemplateDialog.closeDialog}
       />
 
       <AITemplateDialog
@@ -395,6 +418,12 @@ export default function SceneEditor() {
           toggleSidebarSection={toggleSidebarSection}
           scene={scene}
           changeScene={changeScene}
+          canvasSize={canvasSize}
+          presets={presets}
+          currentPreset={currentPreset}
+          isCustomSize={isCustomSize}
+          onPresetSizeChange={setPresetSize}
+          onCustomSizeChange={setCustomSize}
           templateSlots={templateSlots}
           customTemplates={customTemplates}
           activeSlotId={activeSlotId}
@@ -408,6 +437,8 @@ export default function SceneEditor() {
           activeTemplateId={activeTemplateId}
           applyBuiltInTemplate={applyBuiltInTemplate}
           applyTemplate={applyTemplate}
+          duplicateCustomTemplate={duplicateCustomTemplate}
+          renameCustomTemplate={renameCustomTemplate}
           deleteCustomTemplate={deleteCustomTemplate}
           selection={selection}
           setSelection={setSelection}
@@ -447,6 +478,8 @@ export default function SceneEditor() {
           hitTestStrategy={hitTestStrategy}
           editingTextId={editingTextId}
           isGroupDragging={drag?.mode === "group-move"}
+          canvasWidth={canvasSize.width}
+          canvasHeight={canvasSize.height}
           onCanvasPointerDown={handleCanvasPointerDown}
           onElementPointerDown={handleElementPointerDown}
           onResizePointerDown={handleResizePointerDown}
@@ -465,9 +498,10 @@ export default function SceneEditor() {
           rightPanelRef={rightPanelRef}
           rightPanelWidth={panelWidths.rightPanel}
           selectedElement={selectedElement}
+          allElements={scene.elements}
           patchSelected={(patch) => patchSelected(selectedElement, patch)}
-          copySelectedElement={copySelectedElement}
-          pasteCopiedElement={pasteCopiedElement}
+          copySelectedElements={copySelectedElements}
+          pasteCopiedElements={pasteCopiedElements}
           canPasteElement={canPasteElement}
           deleteSelected={deleteSelected}
           handleAssetInput={handleAssetInput}
