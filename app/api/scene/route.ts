@@ -5,7 +5,7 @@ import {
   writeSceneBySlot,
   deleteSceneSlot,
   listAllSlots,
-} from "../../lib/storage";
+} from "../../lib/scene-storage";
 import type { Scene } from "../../lib/scene";
 
 export const runtime = "nodejs";
@@ -18,6 +18,12 @@ export async function GET(request: Request) {
 
   if (templateId && slotId) {
     const scene = await readSceneBySlot(templateId, slotId);
+    if (!scene) {
+      return Response.json(
+        { error: "场景不存在", message: "指定的 OBS 源未找到，请检查 URL 参数是否正确" },
+        { status: 404, headers: { "Cache-Control": "no-store" } }
+      );
+    }
     return Response.json(scene, {
       headers: { "Cache-Control": "no-store" },
     });

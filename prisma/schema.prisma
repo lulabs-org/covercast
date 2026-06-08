@@ -1,0 +1,29 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Scene {
+  id         String   @id @default(cuid())
+  templateId String
+  slotId     String
+  name       String   @default("")
+  data       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([templateId, slotId])
+}
+
+model Asset {
+  id        String   @id @default(cuid())
+  name      String
+  mime      String
+  blobUrl   String   @default("")
+  localPath String   @default("")
+  createdAt DateTime @default(now())
+}

@@ -23,6 +23,11 @@
 # local runtime data
 /.covercast/
 
+# prisma
+/prisma/dev.db
+/prisma/dev.db-journal
+/app/generated/
+
 # misc
 .DS_Store
 *.pem
