@@ -1,6 +1,6 @@
 "use client";
 
-import { CANVAS_HEIGHT, CANVAS_WIDTH, isImageElement, type ImageElement, type Scene } from "../lib/scene";
+import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH, isImageElement, type ImageElement, type Scene } from "../lib/scene";
 import { sceneToSvgMarkup } from "../lib/scene-svg";
 
 export type ExportFormat = "png" | "jpeg" | "svg" | "json";
@@ -50,6 +50,8 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 async function renderSvgToCanvas(
   svgMarkup: string,
   backgroundColor: string | null,
+  canvasWidth: number,
+  canvasHeight: number,
 ): Promise<HTMLCanvasElement> {
   const svgBlob = new Blob([svgMarkup], { type: "image/svg+xml;charset=utf-8" });
   const svgUrl = URL.createObjectURL(svgBlob);
@@ -59,8 +61,8 @@ async function renderSvgToCanvas(
       const image = new Image();
       image.onload = () => {
         const canvas = document.createElement("canvas");
-        canvas.width = CANVAS_WIDTH;
-        canvas.height = CANVAS_HEIGHT;
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
         const context = canvas.getContext("2d");
         if (!context) {
           reject(new Error("Canvas context unavailable"));
@@ -69,10 +71,10 @@ async function renderSvgToCanvas(
 
         if (backgroundColor) {
           context.fillStyle = backgroundColor;
-          context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+          context.fillRect(0, 0, canvasWidth, canvasHeight);
         }
 
-        context.drawImage(image, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        context.drawImage(image, 0, 0, canvasWidth, canvasHeight);
         resolve(canvas);
       };
       image.onerror = () => reject(new Error("SVG render failed"));
@@ -119,6 +121,8 @@ export function useExportScene(
   scene: Scene,
   setStatus: (status: string) => void,
   exportTemplateJson: () => void,
+  canvasWidth = DEFAULT_CANVAS_WIDTH,
+  canvasHeight = DEFAULT_CANVAS_HEIGHT,
 ) {
   const exportScene = async (format: ExportFormat) => {
     const formatOption = EXPORT_FORMAT_OPTIONS.find((option) => option.value === format)
@@ -132,13 +136,13 @@ export function useExportScene(
       }
 
       const exportScene = await inlineSceneAssets(scene);
-      const svgMarkup = sceneToSvgMarkup(exportScene);
+      const svgMarkup = sceneToSvgMarkup(exportScene, canvasWidth, canvasHeight);
       const filename = `covercast-${new Date().toISOString().slice(0, 10)}.${formatOption.extension}`;
 
       if (format === "svg") {
         downloadBlob(new Blob([svgMarkup], { type: formatOption.mimeType }), filename);
       } else {
-        const canvas = await renderSvgToCanvas(svgMarkup, format === "jpeg" ? "#ffffff" : null);
+        const canvas = await renderSvgToCanvas(svgMarkup, format === "jpeg" ? "#ffffff" : null, canvasWidth, canvasHeight);
         const blob = await canvasToBlob(
           canvas,
           formatOption.mimeType,
@@ -147,7 +151,7 @@ export function useExportScene(
         downloadBlob(blob, filename);
       }
 
-      setStatus(`${formatOption.label} 已导出，尺寸 ${CANVAS_WIDTH}×${CANVAS_HEIGHT}`);
+      setStatus(`${formatOption.label} 已导出，尺寸 ${canvasWidth}×${canvasHeight}`);
     } catch {
       setStatus("导出失败，请确认所有素材都能正常显示");
     }
