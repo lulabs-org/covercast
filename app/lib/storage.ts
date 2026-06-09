@@ -1,10 +1,10 @@
 import { randomUUID } from "crypto";
-import { mkdir, readFile, readdir, stat, unlink, writeFile } from "fs/promises";
+import { mkdir, readFile, readdir, unlink, writeFile } from "fs/promises";
 import path from "path";
+import { put } from "@vercel/blob";
 import { createDefaultScene, type Scene } from "./scene";
 
 const DATA_DIR = path.join(process.cwd(), ".covercast");
-const ASSETS_DIR = path.join(DATA_DIR, "assets");
 const SCENE_FILE = path.join(DATA_DIR, "scene.json");
 const SCENES_DIR = path.join(DATA_DIR, "scenes");
 
@@ -12,13 +12,6 @@ const MIME_TO_EXT: Record<string, string> = {
   "image/png": "png",
   "image/jpeg": "jpg",
   "image/webp": "webp",
-};
-
-const EXT_TO_MIME: Record<string, string> = {
-  png: "image/png",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  webp: "image/webp",
 };
 
 export async function readStoredScene(): Promise<Scene> {
@@ -108,43 +101,18 @@ export async function saveAssetFile(file: File) {
     throw new Error("Asset too large");
   }
 
-  await mkdir(ASSETS_DIR, { recursive: true });
-
+  // 使用 Vercel Blob 存储
   const id = `${randomUUID()}.${extension}`;
-  const assetPath = path.join(ASSETS_DIR, id);
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(assetPath, buffer);
+  const blob = await put(id, file, {
+    access: "public",
+  });
 
   return {
     id,
     name: file.name,
     mime: file.type,
-    src: `/api/assets/${id}`,
+    src: blob.url,  // Blob 直接返回可访问的 URL
   };
-}
-
-export async function readAssetFile(id: string) {
-  if (!isSafeAssetId(id)) {
-    return null;
-  }
-
-  const assetPath = path.join(ASSETS_DIR, id);
-
-  try {
-    const fileStat = await stat(assetPath);
-    if (!fileStat.isFile()) {
-      return null;
-    }
-
-    const buffer = await readFile(assetPath);
-    const extension = path.extname(id).slice(1).toLowerCase();
-    return {
-      buffer,
-      mime: EXT_TO_MIME[extension] ?? "application/octet-stream",
-    };
-  } catch {
-    return null;
-  }
 }
 
 function normalizeScene(value: unknown): Scene {
@@ -195,10 +163,6 @@ function normalizeElement(element: unknown) {
     ...elementRecord,
     backgroundCutout: true,
   };
-}
-
-function isSafeAssetId(id: string) {
-  return /^[a-f0-9-]+\.(png|jpg|jpeg|webp)$/i.test(id);
 }
 
 function clamp(value: number, min: number, max: number) {
