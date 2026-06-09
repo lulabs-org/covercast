@@ -2,7 +2,6 @@
 
 import { useState, type ChangeEvent } from "react";
 import {
-  DEFAULT_FONT_FAMILY,
   isImageElement,
   isShapeElement,
   isTextElement,
@@ -14,255 +13,24 @@ import {
   type TextAlign,
   type TextElement,
 } from "../../lib/scene";
-
-const CUSTOM_FONT_FAMILY_VALUE = "__custom-font-family__";
-
-const FONT_FAMILY_OPTIONS = [
-  {
-    label: "系统默认",
-    value: DEFAULT_FONT_FAMILY,
-  },
-  {
-    label: "苹方 / PingFang SC",
-    value: '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
-  },
-  {
-    label: "微软雅黑",
-    value: '"Microsoft YaHei", "PingFang SC", sans-serif',
-  },
-  {
-    label: "思源黑体 / Noto Sans SC",
-    value: '"Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif',
-  },
-  {
-    label: "阿里巴巴普惠体",
-    value: '"Alibaba PuHuiTi", "Alibaba PuHuiTi 2.0", "PingFang SC", sans-serif',
-  },
-  {
-    label: "黑体 / SimHei",
-    value: 'SimHei, "Microsoft YaHei", sans-serif',
-  },
-  {
-    label: "宋体 / SimSun",
-    value: 'SimSun, "Songti SC", serif',
-  },
-  {
-    label: "楷体 / KaiTi",
-    value: 'KaiTi, "Kaiti SC", serif',
-  },
-  {
-    label: "等距更纱黑体 / Sarasa Mono SC",
-    value: '"Sarasa Mono SC", "Source Han Mono SC", "Microsoft YaHei", monospace',
-  },
-  {
-    label: "等宽字体 / Monospace",
-    value: '"SF Mono", "Cascadia Code", "Fira Code", "Consolas", monospace',
-  },
-];
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
-}
+import { useFontManager } from "../../hooks/useFontManager";
+import { FontSelector } from "../controls/FontSelector";
+import { TextField, TextAreaField, NumberField, ColorField } from "../controls/InspectorFields";
 
 function isHexColor(value: string) {
   return /^#[0-9a-fA-F]{6}$/.test(value);
 }
 
-function findFontFamilyOption(value: string) {
-  const normalizedValue = value.trim();
-
-  return FONT_FAMILY_OPTIONS.find((option) => option.value.trim() === normalizedValue) ?? null;
-}
-
 function minimumWidth(element: SceneElement) {
-  if (isTextElement(element)) {
-    return 40;
-  }
-
-  if (element.type === "ellipse") {
-    return 14;
-  }
-
+  if (isTextElement(element)) return 40;
+  if (element.type === "ellipse") return 14;
   return 28;
 }
 
 function minimumHeight(element: SceneElement) {
-  if (isTextElement(element)) {
-    return Math.max(24, element.fontSize);
-  }
-
-  if (element.type === "ellipse") {
-    return 14;
-  }
-
+  if (isTextElement(element)) return Math.max(24, element.fontSize);
+  if (element.type === "ellipse") return 14;
   return 28;
-}
-
-function TextField({
-  label,
-  value,
-  onChange,
-  placeholder,
-  error,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  error?: string;
-}) {
-  return (
-    <label className={`field${error ? " field-error" : ""}`}>
-      <span>{label}</span>
-      <input
-        type="text"
-        value={value}
-        placeholder={placeholder}
-        onChange={(event) => onChange(event.currentTarget.value)}
-      />
-      {error ? <span className="field-error-message">{error}</span> : null}
-    </label>
-  );
-}
-
-function TextAreaField({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <label className="field">
-      <span>{label}</span>
-      <textarea value={value} rows={5} onChange={(event) => onChange(event.currentTarget.value)} />
-    </label>
-  );
-}
-
-function NumberField({
-  label,
-  value,
-  onChange,
-  min,
-  max,
-  step = 1,
-  precision = 0,
-}: {
-  label: string;
-  value: number;
-  onChange: (value: number) => void;
-  min?: number;
-  max?: number;
-  step?: number;
-  precision?: number;
-}) {
-  return (
-    <label className="field">
-      <span>{label}</span>
-      <input
-        type="number"
-        value={Number.isFinite(value) ? value.toFixed(precision) : "0"}
-        min={min}
-        max={max}
-        step={step}
-        onChange={(event) => {
-          const nextValue = Number(event.currentTarget.value);
-          if (Number.isFinite(nextValue)) {
-            onChange(nextValue);
-          }
-        }}
-      />
-    </label>
-  );
-}
-
-function ColorField({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  const colorValue = isHexColor(value) ? value : "#ffffff";
-
-  return (
-    <label className="field color-field">
-      <span>{label}</span>
-      <div>
-        <input
-          type="color"
-          value={colorValue}
-          onChange={(event) => onChange(event.currentTarget.value)}
-        />
-        <input
-          type="text"
-          value={value}
-          onChange={(event) => onChange(event.currentTarget.value)}
-          placeholder="#ffffff"
-        />
-      </div>
-    </label>
-  );
-}
-
-function FontFamilyField({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  const [customOpen, setCustomOpen] = useState(false);
-  const matchedOption = findFontFamilyOption(value);
-  const usesCustomFont = customOpen || !matchedOption;
-  const selectedValue = usesCustomFont
-    ? CUSTOM_FONT_FAMILY_VALUE
-    : matchedOption.value;
-
-  return (
-    <div className="font-family-field">
-      <label className="field">
-        <span>字体</span>
-        <select
-          value={selectedValue}
-          onChange={(event) => {
-            const nextValue = event.currentTarget.value;
-
-            if (nextValue === CUSTOM_FONT_FAMILY_VALUE) {
-              setCustomOpen(true);
-              return;
-            }
-
-            setCustomOpen(false);
-            onChange(nextValue);
-          }}
-        >
-          {FONT_FAMILY_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-          <option value={CUSTOM_FONT_FAMILY_VALUE}>自定义字体栈</option>
-        </select>
-      </label>
-      {usesCustomFont ? (
-        <TextField
-          label="自定义字体栈"
-          value={value}
-          placeholder={DEFAULT_FONT_FAMILY}
-          onChange={onChange}
-        />
-      ) : null}
-      <div className="font-preview" style={{ fontFamily: value }}>
-        直播背景 Aa 123
-      </div>
-    </div>
-  );
 }
 
 function defaultShapeGradient(element: ShapeElement) {
@@ -276,9 +44,11 @@ function defaultShapeGradient(element: ShapeElement) {
 function TextInspector({
   element,
   onPatch,
+  fontManager,
 }: {
   element: TextElement;
   onPatch: (patch: Partial<SceneElement>) => void;
+  fontManager: ReturnType<typeof useFontManager>;
 }) {
   return (
     <>
@@ -292,10 +62,21 @@ function TextInspector({
         value={element.fill}
         onChange={(value) => onPatch({ fill: value } as Partial<TextElement>)}
       />
-      <FontFamilyField
+      <FontSelector
         key={element.id}
         value={element.fontFamily}
         onChange={(value) => onPatch({ fontFamily: value } as Partial<TextElement>)}
+        allFonts={fontManager.allFonts}
+        fontsByCategory={fontManager.fontsByCategory}
+        searchQuery={fontManager.searchQuery}
+        setSearchQuery={fontManager.setSearchQuery}
+        filteredFonts={fontManager.filteredFonts}
+        localFonts={fontManager.localFonts}
+        importLocalFont={fontManager.importLocalFont}
+        removeLocalFont={fontManager.removeLocalFont}
+        renameLocalFont={fontManager.renameLocalFont}
+        webFontsLoaded={fontManager.webFontsLoaded}
+        findFontByStack={fontManager.findFontByStack}
       />
       <div className="field-grid">
         <NumberField
@@ -534,6 +315,7 @@ export function ElementInspector({
   onDelete: () => void;
   onReplaceImage: (event: ChangeEvent<HTMLInputElement>) => void;
 }) {
+  const fontManager = useFontManager();
   const [pendingName, setPendingName] = useState<string>(element.name);
 
   const nameError = allElements.some(
@@ -544,7 +326,6 @@ export function ElementInspector({
 
   const handleNameChange = (value: string) => {
     setPendingName(value);
-    // 只有当名称不重复时才更新元素
     const isDuplicate = allElements.some(
       (el) => el.id !== element.id && el.name === value
     );
@@ -588,7 +369,7 @@ export function ElementInspector({
       />
 
       {isTextElement(element) ? (
-        <TextInspector element={element} onPatch={onPatch} />
+        <TextInspector element={element} onPatch={onPatch} fontManager={fontManager} />
       ) : null}
 
       {isShapeElement(element) ? (

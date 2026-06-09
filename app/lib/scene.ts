@@ -6,7 +6,7 @@ export const CANVAS_WIDTH = DEFAULT_CANVAS_WIDTH;
 export const CANVAS_HEIGHT = DEFAULT_CANVAS_HEIGHT;
 
 export const DEFAULT_FONT_FAMILY =
-  '"PingFang SC", "Microsoft YaHei", "Noto Sans SC", Arial, sans-serif';
+  '"Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
 
 export type TextAlign = "left" | "center" | "right";
 export type ImageFit = "cover" | "contain";
