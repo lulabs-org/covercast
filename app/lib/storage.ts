@@ -101,17 +101,19 @@ export async function saveAssetFile(file: File) {
     throw new Error("Asset too large");
   }
 
-  // 使用 Vercel Blob 存储
+  // 使用 Vercel Blob 存储（私有模式）
   const id = `${randomUUID()}.${extension}`;
   const blob = await put(id, file, {
-    access: "public",
+    access: "private",
   });
 
+  // 私有 Blob 需要通过 API 代理访问
   return {
     id,
     name: file.name,
     mime: file.type,
-    src: blob.url,  // Blob 直接返回可访问的 URL
+    src: `/api/assets/proxy/${id}`,
+    blobUrl: blob.url,
   };
 }
 
