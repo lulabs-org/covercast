@@ -60,7 +60,7 @@ export type LocalFontEntry = {
 // ────────────────────────────────────────────
 
 export const DEFAULT_FONT_FAMILY =
-  '"Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
+  '"PingFang SC", "Microsoft YaHei", "Noto Sans SC", Arial, sans-serif';
 
 // ────────────────────────────────────────────
 // 内置字体列表
