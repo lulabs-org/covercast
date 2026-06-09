@@ -101,11 +101,11 @@ export function AITemplateDialog({
     const dialogBody = dialogBodyRef.current;
     if (!dialogBody || !isUserAtBottomRef.current) return;
 
-    // 当思考过程内容更新、生成完成、预览出现时，滚动到底部
-    if (progress.streamContent || progress.currentStage === "completed" || generatedScene) {
+    // 当生成完成、预览出现时，滚动到底部
+    if (progress.currentStage === "completed" || generatedScene) {
       dialogBody.scrollTop = dialogBody.scrollHeight;
     }
-  }, [progress.streamContent, progress.currentStage, generatedScene]);
+  }, [progress.currentStage, generatedScene]);
 
   const getSelectedScene = useCallback((): Scene => {
     if (templateSource === "current") {
@@ -530,7 +530,7 @@ export function AITemplateDialog({
                       type="button"
                       className="ai-save-template-button"
                       disabled={!newTemplateName.trim()}
-                      onClick={handleSaveTemplate}
+                      onClick={handleSaveAsTemplate}
                     >
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
