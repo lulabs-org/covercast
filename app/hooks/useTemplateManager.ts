@@ -326,6 +326,28 @@ export function useTemplateManager(options: UseTemplateManagerOptions) {
     }
   }
 
+  function saveCustomTemplateWithScene(name: string, sceneToSave: Scene) {
+    const timestamp = new Date().toISOString();
+    const templateName = name.trim() || `自定义模板 ${customTemplates.length + 1}`;
+    const template: CustomSceneTemplate = {
+      id: createCustomTemplateId(),
+      name: templateName,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      scene: cloneScene(sceneToSave),
+    };
+    const nextTemplates = [template, ...customTemplates];
+
+    try {
+      writeCustomTemplatesToStorage(nextTemplates);
+      setCustomTemplates(nextTemplates);
+      setActiveTemplateId(template.id);
+      setStatus(`已创建「${template.name}」`);
+    } catch {
+      setStatus("自定义模板保存失败，浏览器缓存空间可能不足");
+    }
+  }
+
   function saveActiveCustomTemplate() {
     if (!activeCustomTemplate) {
       setShowTemplateForm(true);
@@ -497,6 +519,7 @@ export function useTemplateManager(options: UseTemplateManagerOptions) {
     applyBuiltInTemplate,
     saveCustomTemplate,
     saveCustomTemplateWithName,
+    saveCustomTemplateWithScene,
     saveActiveCustomTemplate,
     deleteCustomTemplate,
     duplicateCustomTemplate,
