@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAssetFromIndexedDB } from "../lib/storage";
+import { getAssetFromIndexedDB } from "../lib/indexeddb";
 
 export function useIndexedDBImage(src: string | undefined): string | undefined {
   const [resolvedSrc, setResolvedSrc] = useState<string | undefined>(undefined);
