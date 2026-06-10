@@ -6,15 +6,16 @@ import type { FontOption } from "../lib/fonts";
 /**
  * 字体按需加载器
  *
- * 使用 FontFace API 在用户选择字体时动态加载 woff2 文件。
- * 已加载的字体会被缓存，避免重复加载。
+ * 所有字体通过 fonts.css 中的 @font-face 声明定义，
+ * 浏览器会在使用到对应 font-family 时自动下载字体文件。
+ * 此 hook 负责等待字体加载完成，以便 UI 可以显示加载状态。
  */
 export function useFontLoader() {
   const [loadedFamilies, setLoadedFamilies] = useState<Set<string>>(new Set());
   const [loadingFamilies, setLoadingFamilies] = useState<Set<string>>(new Set());
   const failedRef = useRef<Set<string>>(new Set());
 
-  /** 加载某个字体的所有字重文件 */
+  /** 确保某个字体已加载 */
   const loadFont = useCallback(async (font: FontOption) => {
     // 系统字体无需加载
     if (font.files.length === 0) return;
@@ -25,44 +26,22 @@ export function useFontLoader() {
     // 正在加载，跳过
     if (loadingFamilies.has(font.family)) return;
 
-    // 之前加载失败，不重试（避免反复请求不存在的文件）
+    // 之前加载失败，不重试
     if (failedRef.current.has(font.family)) return;
 
     setLoadingFamilies((prev) => new Set(prev).add(font.family));
 
     try {
-      // 并行加载所有字重
-      const promises = font.files.map(async (file) => {
-        // 优先加载 woff2，失败后回退 ttf
-        const ttfPath = file.path.replace(/\.woff2$/, ".ttf");
-        const sources = [
-          { url: file.path, format: "woff2" },
-          { url: ttfPath, format: "truetype" },
-        ];
-
-        let lastError: Error | null = null;
-        for (const src of sources) {
-          try {
-            const fontFace = new FontFace(
-              font.family,
-              `url(${src.url})`,
-              { weight: String(file.weight), style: "normal" }
-            );
-            const loaded = await fontFace.load();
-            document.fonts.add(loaded);
-            return;
-          } catch (err) {
-            lastError = err as Error;
-          }
-        }
-        throw lastError;
-      });
-
+      // 使用 document.fonts.load() 触发并等待字体加载
+      // @font-face 声明已在 fonts.css 中，浏览器知道如何获取字体文件
+      const promises = font.files.map((file) =>
+        document.fonts.load(`${file.weight} 12px "${font.family}"`)
+      );
       await Promise.all(promises);
 
       setLoadedFamilies((prev) => new Set(prev).add(font.family));
     } catch {
-      // 字体文件不存在时静默失败，浏览器会使用 fallback 字体
+      // 字体加载失败，静默处理，浏览器会使用 fallback 字体
       failedRef.current.add(font.family);
     } finally {
       setLoadingFamilies((prev) => {
@@ -85,7 +64,7 @@ export function useFontLoader() {
     [loadingFamilies]
   );
 
-  /** 检查字体是否加载失败（文件不存在） */
+  /** 检查字体是否加载失败 */
   const isFailed = useCallback(
     (family: string) => failedRef.current.has(family),
     []

@@ -1361,6 +1361,231 @@ h1 {
   gap: 8px;
 }
 
+/* ─── 字体选择触发按钮 ─── */
+.font-trigger {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  background: #f8fbff;
+  border: 1px solid #c8d3e5;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  font-family: inherit;
+}
+
+.font-trigger:hover {
+  border-color: #9fb3d4;
+}
+
+.font-trigger-open {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(39, 100, 246, 0.15);
+}
+
+.font-trigger-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: #1d2b43;
+}
+
+.font-trigger-arrow {
+  flex-shrink: 0;
+  margin-left: 6px;
+  color: #65728a;
+  transition: transform 0.2s;
+}
+
+.font-trigger-open .font-trigger-arrow {
+  transform: scaleX(-1);
+}
+
+/* ─── 字体下拉面板（fixed 定位） ─── */
+.font-dropdown {
+  background: #fff;
+  border: 1px solid #d9e0ee;
+  border-radius: 10px;
+  box-shadow:
+    0 4px 6px -1px rgba(21, 32, 51, 0.06),
+    0 10px 30px -5px rgba(21, 32, 51, 0.12);
+  display: flex;
+  flex-direction: column;
+  max-height: min(420px, calc(100vh - 80px));
+  overflow: hidden;
+  animation: font-dropdown-in 0.15s ease-out;
+}
+
+@keyframes font-dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.font-dropdown-list {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 0;
+}
+
+.font-group-label {
+  padding: 8px 12px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8b99b0;
+  user-select: none;
+  letter-spacing: 0.02em;
+}
+
+.font-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+  font-family: inherit;
+  position: relative;
+}
+
+.font-option:hover {
+  background: #f0f4ff;
+}
+
+.font-option-active {
+  background: #e8eeff;
+}
+
+.font-option-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--accent);
+}
+
+.font-option-preview {
+  flex: 1;
+  font-size: 15px;
+  color: #1d2b43;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.font-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+.font-badge[data-license="SIL OFL 1.1"] {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.font-badge[data-license="免费商用"] {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.font-badge[data-license="系统字体"] {
+  color: #6b7280;
+  background: #f3f4f6;
+}
+
+.font-badge[data-license="本地字体"] {
+  color: #9333ea;
+  background: #f3e8ff;
+}
+
+.font-dropdown-footer {
+  border-top: 1px solid #eef1f6;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.font-dropdown-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid #d9e0ee;
+  border-radius: 6px;
+  background: #f8fbff;
+}
+
+.font-search-icon {
+  flex-shrink: 0;
+  color: #9fb3d4;
+}
+
+.font-dropdown-search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: #1d2b43;
+  background: transparent;
+  font-family: inherit;
+}
+
+.font-dropdown-search input::placeholder {
+  color: #9fb3d4;
+}
+
+.font-import-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px dashed #c8d3e5;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+  transition: background 0.15s, border-color 0.15s;
+  font-family: inherit;
+}
+
+.font-import-btn:hover {
+  background: #f0f4ff;
+  border-color: var(--accent);
+}
+
+/* ─── 字体预览行 ─── */
 .font-preview-row {
   display: flex;
   align-items: center;
@@ -1409,6 +1634,11 @@ h1 {
 .font-license-badge[data-license="系统字体"] {
   color: #6b7280;
   background: #f3f4f6;
+}
+
+.font-license-badge[data-license="本地字体"] {
+  color: #9333ea;
+  background: #f3e8ff;
 }
 
 .field-grid {

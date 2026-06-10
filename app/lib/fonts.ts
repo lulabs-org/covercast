@@ -77,14 +77,14 @@ const OPEN_SOURCE_FONTS: FontOption[] = [
   {
     label: "阿里巴巴普惠体",
     family: "Alibaba PuHuiTi",
-    value: '"Alibaba PuHuiTi", "Alibaba PuHuiTi 2.0", sans-serif',
+    value: '"Alibaba PuHuiTi", "Alibaba PuHuiTi 3.0", sans-serif',
     category: "sans-serif",
     license: "免费商用",
     group: GROUP_OPEN_SOURCE,
     files: [
-      { weight: 400, path: "/fonts/alibaba-puhuiti-400.woff2" },
-      { weight: 700, path: "/fonts/alibaba-puhuiti-700.woff2" },
-      { weight: 900, path: "/fonts/alibaba-puhuiti-900.woff2" },
+      { weight: 400, path: "/fonts/AlibabaPuHuiTi-3-55-RegularL3.woff2" },
+      { weight: 500, path: "/fonts/AlibabaPuHuiTi-3-65-Medium.woff2" },
+      { weight: 700, path: "/fonts/AlibabaPuHuiTi-3-85-Bold.woff2" },
     ],
   },
   // 站酷系列
@@ -123,7 +123,7 @@ const OPEN_SOURCE_FONTS: FontOption[] = [
     category: "display",
     license: "免费商用",
     group: GROUP_OPEN_SOURCE,
-    files: [{ weight: 400, path: "/fonts/youshe-biaoti-400.woff2" }],
+    files: [{ weight: 400, path: "/fonts/YouSheBiaoTiHei-2.woff2" }],
   },
   // 等宽字体
   {
@@ -134,8 +134,9 @@ const OPEN_SOURCE_FONTS: FontOption[] = [
     license: "SIL OFL 1.1",
     group: GROUP_OPEN_SOURCE,
     files: [
-      { weight: 400, path: "/fonts/sarasa-mono-sc-400.woff2" },
-      { weight: 700, path: "/fonts/sarasa-mono-sc-700.woff2" },
+      { weight: 300, path: "/fonts/SarasaGothicSC-Light.woff2" },
+      { weight: 400, path: "/fonts/SarasaGothicSC-Regular.woff2" },
+      { weight: 700, path: "/fonts/SarasaGothicSC-Bold.woff2" },
     ],
   },
   {
@@ -295,12 +296,9 @@ export const FONT_GROUPS: { label: string; options: FontOption[] }[] = [
   { label: GROUP_SYSTEM, options: SYSTEM_FONTS },
 ];
 
-/** 自定义字体栈的占位值 */
-export const CUSTOM_FONT_FAMILY_VALUE = "__custom-font-family__";
-
-/** 默认字体（思源黑体） */
+/** 默认字体（优先系统字体，回退到阿里巴巴普惠体） */
 export const DEFAULT_FONT_FAMILY =
-  '"Noto Sans SC", "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif';
+  '"PingFang SC", "Microsoft YaHei", "Alibaba PuHuiTi", "Noto Sans SC", sans-serif';
 
 /** 根据 CSS font-family 值查找对应的 FontOption */
 export function findFontOption(value: string): FontOption | null {

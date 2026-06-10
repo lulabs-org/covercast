@@ -14,12 +14,7 @@ import {
   type TextAlign,
   type TextElement,
 } from "../../lib/scene";
-import {
-  CUSTOM_FONT_FAMILY_VALUE,
-  FONT_GROUPS,
-  findFontOption,
-} from "../../lib/fonts";
-import { useFontLoader } from "../../hooks/useFontLoader";
+import { FontFamilyField } from "../FontFamilyField";
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -162,84 +157,6 @@ function ColorField({
         />
       </div>
     </label>
-  );
-}
-
-function FontFamilyField({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  const [customOpen, setCustomOpen] = useState(false);
-  const { loadFont, isLoading, isFailed } = useFontLoader();
-  const matchedOption = findFontOption(value);
-  const usesCustomFont = customOpen || !matchedOption;
-  const selectedValue = usesCustomFont
-    ? CUSTOM_FONT_FAMILY_VALUE
-    : matchedOption.value;
-
-  const handleFontChange = (nextValue: string) => {
-    if (nextValue === CUSTOM_FONT_FAMILY_VALUE) {
-      setCustomOpen(true);
-      return;
-    }
-
-    setCustomOpen(false);
-    onChange(nextValue);
-
-    // 按需加载字体文件
-    const font = findFontOption(nextValue);
-    if (font && font.files.length > 0) {
-      loadFont(font);
-    }
-  };
-
-  const loading = matchedOption ? isLoading(matchedOption.family) : false;
-  const failed = matchedOption ? isFailed(matchedOption.family) : false;
-
-  return (
-    <div className="font-family-field">
-      <label className="field">
-        <span>字体</span>
-        <select
-          value={selectedValue}
-          onChange={(event) => handleFontChange(event.currentTarget.value)}
-        >
-          {FONT_GROUPS.map((group) =>
-            group.options.length > 0 ? (
-              <optgroup key={group.label} label={group.label}>
-                {group.options.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </optgroup>
-            ) : null
-          )}
-          <option value={CUSTOM_FONT_FAMILY_VALUE}>自定义字体栈…</option>
-        </select>
-      </label>
-      {usesCustomFont ? (
-        <TextField
-          label="自定义字体栈"
-          value={value}
-          placeholder={DEFAULT_FONT_FAMILY}
-          onChange={onChange}
-        />
-      ) : null}
-      <div className="font-preview-row">
-        <div className="font-preview" style={{ fontFamily: value }}>
-          {loading ? "加载中…" : failed ? "字体文件缺失" : "直播背景 Aa 123"}
-        </div>
-        {matchedOption ? (
-          <span className="font-license-badge" data-license={matchedOption.license}>
-            {matchedOption.license}
-          </span>
-        ) : null}
-      </div>
-    </div>
   );
 }
 

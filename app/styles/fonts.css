@@ -1,41 +1,257 @@
 /**
- * Web 字体声明
+ * Web 字体声明（由 scripts/download-fonts.mjs 自动生成）
  *
- * 默认字体（思源黑体）通过 @font-face 预加载，确保首屏渲染时即可使用。
- * 其他字体通过 FontFace API 在用户选择时按需加载（见 useFontLoader.ts）。
- *
- * 字体文件来源：运行 `node scripts/download-fonts.mjs` 下载到 public/fonts/
- * 下载脚本优先获取 woff2，如不可用则回退到 ttf。
+ * 重新生成：node scripts/download-fonts.mjs
  */
-
-/* ─── 思源黑体 / Noto Sans SC（默认字体，预加载） ─── */
 
 @font-face {
   font-family: "Noto Sans SC";
-  src: local("Noto Sans SC"), local("Source Han Sans SC"),
-       url("/fonts/noto-sans-sc-400.woff2") format("woff2"),
-       url("/fonts/noto-sans-sc-400.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+  src: url("/fonts/noto-sans-sc-400.woff2") format("woff2");
 }
 
 @font-face {
   font-family: "Noto Sans SC";
-  src: local("Noto Sans SC Bold"), local("Noto Sans SC"), local("Source Han Sans SC Bold"),
-       url("/fonts/noto-sans-sc-700.woff2") format("woff2"),
-       url("/fonts/noto-sans-sc-700.ttf") format("truetype");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
+  src: url("/fonts/noto-sans-sc-700.woff2") format("woff2");
 }
 
 @font-face {
   font-family: "Noto Sans SC";
-  src: local("Noto Sans SC Black"), local("Noto Sans SC"), local("Source Han Sans SC Heavy"),
-       url("/fonts/noto-sans-sc-900.woff2") format("woff2"),
-       url("/fonts/noto-sans-sc-900.ttf") format("truetype");
   font-weight: 900;
   font-style: normal;
   font-display: swap;
+  src: url("/fonts/noto-sans-sc-900.woff2") format("woff2");
 }
+
+@font-face {
+  font-family: "Noto Serif SC";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/noto-serif-sc-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Noto Serif SC";
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/noto-serif-sc-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Noto Serif SC";
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/noto-serif-sc-900.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "ZCOOL KuaiLe";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/zcool-kuaile-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "ZCOOL QingKe HuangYou";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/zcool-qingke-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "ZCOOL XiaoWei";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/zcool-xiaowei-400.woff2") format("woff2");
+}
+
+/* 阿里巴巴普惠体（手动托管） */
+@font-face {
+  font-family: "Alibaba PuHuiTi";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/AlibabaPuHuiTi-3-55-RegularL3.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Alibaba PuHuiTi";
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/AlibabaPuHuiTi-3-65-Medium.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Alibaba PuHuiTi";
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/AlibabaPuHuiTi-3-85-Bold.woff2") format("woff2");
+}
+
+/* 优设标题黑（手动托管） */
+@font-face {
+  font-family: "YouSheBiaoTiHei";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/YouSheBiaoTiHei-2.woff2") format("woff2");
+}
+
+/* 等距更纱黑体（手动托管） */
+@font-face {
+  font-family: "Sarasa Mono SC";
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/SarasaGothicSC-Light.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Sarasa Mono SC";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/SarasaGothicSC-Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Sarasa Mono SC";
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/SarasaGothicSC-Bold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Fira Code";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/fira-code-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Fira Code";
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/fira-code-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/jetbrains-mono-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/jetbrains-mono-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/inter-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/inter-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/inter-900.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Montserrat";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/montserrat-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Montserrat";
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/montserrat-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Montserrat";
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/montserrat-900.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Playfair Display";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/playfair-display-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Playfair Display";
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/playfair-display-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Playfair Display";
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/playfair-display-900.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Pacifico";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/pacifico-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Bebas Neue";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url("/fonts/bebas-neue-400.woff2") format("woff2");
+}
+
