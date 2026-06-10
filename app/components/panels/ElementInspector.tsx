@@ -15,6 +15,9 @@ import {
   type TextElement,
 } from "../../lib/scene";
 import { FontFamilyField } from "../FontFamilyField";
+import type { useLocalFonts } from "../../hooks/useLocalFonts";
+
+type LocalFontManager = ReturnType<typeof useLocalFonts>;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -171,9 +174,11 @@ function defaultShapeGradient(element: ShapeElement) {
 function TextInspector({
   element,
   onPatch,
+  localFontManager,
 }: {
   element: TextElement;
   onPatch: (patch: Partial<SceneElement>) => void;
+  localFontManager: LocalFontManager;
 }) {
   return (
     <>
@@ -191,6 +196,7 @@ function TextInspector({
         key={element.id}
         value={element.fontFamily}
         onChange={(value) => onPatch({ fontFamily: value } as Partial<TextElement>)}
+        localFontManager={localFontManager}
       />
       <div className="field-grid">
         <NumberField
@@ -419,6 +425,7 @@ export function ElementInspector({
   canPaste,
   onDelete,
   onReplaceImage,
+  localFontManager,
 }: {
   element: SceneElement;
   allElements: SceneElement[];
@@ -428,6 +435,7 @@ export function ElementInspector({
   canPaste: boolean;
   onDelete: () => void;
   onReplaceImage: (event: ChangeEvent<HTMLInputElement>) => void;
+  localFontManager: LocalFontManager;
 }) {
   const [pendingName, setPendingName] = useState<string>(element.name);
 
@@ -483,7 +491,7 @@ export function ElementInspector({
       />
 
       {isTextElement(element) ? (
-        <TextInspector element={element} onPatch={onPatch} />
+        <TextInspector element={element} onPatch={onPatch} localFontManager={localFontManager} />
       ) : null}
 
       {isShapeElement(element) ? (

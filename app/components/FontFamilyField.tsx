@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, type ChangeEvent } from "react";
 import { FONT_GROUPS, findFontOption, type FontOption } from "../lib/fonts";
 import { useFontLoader } from "../hooks/useFontLoader";
+import type { useLocalFonts } from "../hooks/useLocalFonts";
 
 // 扩展 FontFaceSet 类型声明
 declare global {
@@ -11,15 +12,16 @@ declare global {
   }
 }
 
-/** 本地导入的字体列表（运行时状态） */
-const localFonts: FontOption[] = [];
+type LocalFontManager = ReturnType<typeof useLocalFonts>;
 
 export function FontFamilyField({
   value,
   onChange,
+  localFontManager,
 }: {
   value: string;
   onChange: (value: string) => void;
+  localFontManager: LocalFontManager;
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -29,7 +31,10 @@ export function FontFamilyField({
   const searchRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const matchedOption = findFontOption(value);
+  const { localFontOptions, importLocalFont } = localFontManager;
+
+  // 先从内置字体查找，再从本地字体查找
+  const matchedOption = findFontOption(value) ?? localFontOptions.find((f) => f.value === value);
   const loading = matchedOption ? isLoading(matchedOption.family) : false;
   const failed = matchedOption ? isFailed(matchedOption.family) : false;
 
@@ -128,31 +133,11 @@ export function FontFamilyField({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const familyName = file.name.replace(/\.(ttf|otf|woff2|woff)$/i, "").trim();
-    const url = URL.createObjectURL(file);
-
     try {
-      const fontFace = new FontFace(familyName, `url(${url})`);
-      const loaded = await fontFace.load();
-      document.fonts.add(loaded);
-
-      const newOption: FontOption = {
-        label: familyName,
-        family: familyName,
-        value: `"${familyName}", sans-serif`,
-        category: "sans-serif",
-        license: "本地字体" as FontOption["license"],
-        group: "本地字体",
-        files: [],
-      };
-
-      if (!localFonts.some((f) => f.family === familyName)) {
-        localFonts.push(newOption);
-      }
-
-      onChange(newOption.value);
+      const meta = await importLocalFont(file);
+      onChange(meta.value);
     } catch {
-      console.warn("字体加载失败:", familyName);
+      console.warn("字体加载失败:", file.name);
     }
 
     e.target.value = "";
@@ -162,12 +147,12 @@ export function FontFamilyField({
   const query = search.trim().toLowerCase();
   const filteredGroups: { label: string; options: FontOption[] }[] = [];
 
-  if (localFonts.length > 0) {
+  if (localFontOptions.length > 0) {
     const filtered = query
-      ? localFonts.filter(
+      ? localFontOptions.filter(
           (f) => f.label.toLowerCase().includes(query) || f.family.toLowerCase().includes(query)
         )
-      : localFonts;
+      : localFontOptions;
     if (filtered.length > 0) filteredGroups.push({ label: "本地字体", options: filtered });
   }
 
@@ -182,7 +167,6 @@ export function FontFamilyField({
 
   // 显示标签：优先使用匹配的字体名称，否则提取字体栈中的第一个字体
   const displayLabel = matchedOption?.label ?? (() => {
-    // 从字体栈中提取第一个字体名称
     const firstFont = value.match(/"([^"]+)"/)?.[1] ?? value.split(",")[0].trim().replace(/"/g, "");
     return firstFont;
   })();
