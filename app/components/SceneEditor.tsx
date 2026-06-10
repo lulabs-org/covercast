@@ -60,12 +60,14 @@ import { useAssetManager } from "../hooks/useAssetManager";
 import { useSceneLoader } from "../hooks/useSceneLoader";
 import { useVisibleGuides } from "../hooks/useVisibleGuides";
 import { useLocalFonts } from "../hooks/useLocalFonts";
+import { useCreateBlankCover } from "../hooks/useCreateBlankCover";
 import { SaveTemplateDialog } from "./dialogs/SaveTemplateDialog";
 import { useSaveTemplateDialog } from "../hooks/useSaveTemplateDialog";
 import { SceneToolbar } from "./editor/SceneToolbar";
 import { StagePanel } from "./editor/StagePanel";
 import { LeftSidebar } from "./editor/sidebar/LeftSidebar";
 import { RightSidebar } from "./editor/sidebar/RightSidebar";
+import { CreateBlankCoverModal } from "./panels/CreateBlankCoverModal";
 
 type SidebarSectionId = "scene" | "sources" | "templates" | "layers";
 
@@ -96,6 +98,7 @@ export default function SceneEditor() {
   
   const {
     canvasSize,
+    setCanvasSize,
     setPresetSize,
     setCustomSize,
     isCustomSize,
@@ -150,6 +153,7 @@ export default function SceneEditor() {
     applyTemplate,
     applyBuiltInTemplate,
     saveCustomTemplateWithName,
+    saveCustomTemplateWithScene,
     saveActiveCustomTemplate,
     deleteCustomTemplate,
     duplicateCustomTemplate,
@@ -164,6 +168,26 @@ export default function SceneEditor() {
     setStatus,
     templateSlots,
     setActiveSlotId,
+  });
+
+  const {
+    isModalOpen: isCreateBlankCoverModalOpen,
+    config: createBlankCoverConfig,
+    openModal: openCreateBlankCoverModal,
+    closeModal: closeCreateBlankCoverModal,
+    updateConfig: updateCreateBlankCoverConfig,
+    createBlankCover,
+    presetOptions: createBlankCoverPresetOptions,
+    templateOptions: createBlankCoverTemplateOptions,
+  } = useCreateBlankCover({
+    setScene,
+    setSelection,
+    setCanvasSize,
+    setActiveTemplateId,
+    setStatus,
+    saveCustomTemplate: saveCustomTemplateWithScene,
+    canvasSizePresets: presets,
+    customTemplates,
   });
 
   const saveTemplateDialog = useSaveTemplateDialog({
@@ -353,8 +377,19 @@ export default function SceneEditor() {
   }
 
   return (
-    <main className="editor-shell">
-      <SceneToolbar
+    <>
+      <CreateBlankCoverModal
+        isOpen={isCreateBlankCoverModalOpen}
+        config={createBlankCoverConfig}
+        presetOptions={createBlankCoverPresetOptions}
+        templateOptions={createBlankCoverTemplateOptions}
+        onCancel={closeCreateBlankCoverModal}
+        onConfirm={createBlankCover}
+        onUpdateConfig={updateCreateBlankCoverConfig}
+      />
+
+      <main className="editor-shell">
+        <SceneToolbar
         undo={undo}
         redo={redo}
         canUndo={history.past.length > 0}
@@ -363,6 +398,7 @@ export default function SceneEditor() {
         addRectElement={addRectElement}
         addEllipseElement={addEllipseElement}
         handleAssetInput={handleAssetInput}
+        onCreateBlankCover={openCreateBlankCoverModal}
         activeCustomTemplate={activeCustomTemplate}
         hasUnsavedCustomTemplateChanges={hasUnsavedCustomTemplateChanges}
         saveActiveCustomTemplate={saveActiveCustomTemplate}
@@ -486,5 +522,6 @@ export default function SceneEditor() {
         />
       </section>
     </main>
+    </>
   );
 }
