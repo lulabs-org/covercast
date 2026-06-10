@@ -14,51 +14,12 @@ import {
   type TextAlign,
   type TextElement,
 } from "../../lib/scene";
-
-const CUSTOM_FONT_FAMILY_VALUE = "__custom-font-family__";
-
-const FONT_FAMILY_OPTIONS = [
-  {
-    label: "系统默认",
-    value: DEFAULT_FONT_FAMILY,
-  },
-  {
-    label: "苹方 / PingFang SC",
-    value: '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
-  },
-  {
-    label: "微软雅黑",
-    value: '"Microsoft YaHei", "PingFang SC", sans-serif',
-  },
-  {
-    label: "思源黑体 / Noto Sans SC",
-    value: '"Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif',
-  },
-  {
-    label: "阿里巴巴普惠体",
-    value: '"Alibaba PuHuiTi", "Alibaba PuHuiTi 2.0", "PingFang SC", sans-serif',
-  },
-  {
-    label: "黑体 / SimHei",
-    value: 'SimHei, "Microsoft YaHei", sans-serif',
-  },
-  {
-    label: "宋体 / SimSun",
-    value: 'SimSun, "Songti SC", serif',
-  },
-  {
-    label: "楷体 / KaiTi",
-    value: 'KaiTi, "Kaiti SC", serif',
-  },
-  {
-    label: "等距更纱黑体 / Sarasa Mono SC",
-    value: '"Sarasa Mono SC", "Source Han Mono SC", "Microsoft YaHei", monospace',
-  },
-  {
-    label: "等宽字体 / Monospace",
-    value: '"SF Mono", "Cascadia Code", "Fira Code", "Consolas", monospace',
-  },
-];
+import {
+  CUSTOM_FONT_FAMILY_VALUE,
+  FONT_GROUPS,
+  findFontOption,
+} from "../../lib/fonts";
+import { useFontLoader } from "../../hooks/useFontLoader";
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -66,12 +27,6 @@ function clamp(value: number, min: number, max: number) {
 
 function isHexColor(value: string) {
   return /^#[0-9a-fA-F]{6}$/.test(value);
-}
-
-function findFontFamilyOption(value: string) {
-  const normalizedValue = value.trim();
-
-  return FONT_FAMILY_OPTIONS.find((option) => option.value.trim() === normalizedValue) ?? null;
 }
 
 function minimumWidth(element: SceneElement) {
@@ -218,11 +173,31 @@ function FontFamilyField({
   onChange: (value: string) => void;
 }) {
   const [customOpen, setCustomOpen] = useState(false);
-  const matchedOption = findFontFamilyOption(value);
+  const { loadFont, isLoading, isFailed } = useFontLoader();
+  const matchedOption = findFontOption(value);
   const usesCustomFont = customOpen || !matchedOption;
   const selectedValue = usesCustomFont
     ? CUSTOM_FONT_FAMILY_VALUE
     : matchedOption.value;
+
+  const handleFontChange = (nextValue: string) => {
+    if (nextValue === CUSTOM_FONT_FAMILY_VALUE) {
+      setCustomOpen(true);
+      return;
+    }
+
+    setCustomOpen(false);
+    onChange(nextValue);
+
+    // 按需加载字体文件
+    const font = findFontOption(nextValue);
+    if (font && font.files.length > 0) {
+      loadFont(font);
+    }
+  };
+
+  const loading = matchedOption ? isLoading(matchedOption.family) : false;
+  const failed = matchedOption ? isFailed(matchedOption.family) : false;
 
   return (
     <div className="font-family-field">
@@ -230,24 +205,20 @@ function FontFamilyField({
         <span>字体</span>
         <select
           value={selectedValue}
-          onChange={(event) => {
-            const nextValue = event.currentTarget.value;
-
-            if (nextValue === CUSTOM_FONT_FAMILY_VALUE) {
-              setCustomOpen(true);
-              return;
-            }
-
-            setCustomOpen(false);
-            onChange(nextValue);
-          }}
+          onChange={(event) => handleFontChange(event.currentTarget.value)}
         >
-          {FONT_FAMILY_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-          <option value={CUSTOM_FONT_FAMILY_VALUE}>自定义字体栈</option>
+          {FONT_GROUPS.map((group) =>
+            group.options.length > 0 ? (
+              <optgroup key={group.label} label={group.label}>
+                {group.options.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </optgroup>
+            ) : null
+          )}
+          <option value={CUSTOM_FONT_FAMILY_VALUE}>自定义字体栈…</option>
         </select>
       </label>
       {usesCustomFont ? (
@@ -258,8 +229,15 @@ function FontFamilyField({
           onChange={onChange}
         />
       ) : null}
-      <div className="font-preview" style={{ fontFamily: value }}>
-        直播背景 Aa 123
+      <div className="font-preview-row">
+        <div className="font-preview" style={{ fontFamily: value }}>
+          {loading ? "加载中…" : failed ? "字体文件缺失" : "直播背景 Aa 123"}
+        </div>
+        {matchedOption ? (
+          <span className="font-license-badge" data-license={matchedOption.license}>
+            {matchedOption.license}
+          </span>
+        ) : null}
       </div>
     </div>
   );

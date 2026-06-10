@@ -1,0 +1,41 @@
+/**
+ * Web 字体声明
+ *
+ * 默认字体（思源黑体）通过 @font-face 预加载，确保首屏渲染时即可使用。
+ * 其他字体通过 FontFace API 在用户选择时按需加载（见 useFontLoader.ts）。
+ *
+ * 字体文件来源：运行 `node scripts/download-fonts.mjs` 下载到 public/fonts/
+ * 下载脚本优先获取 woff2，如不可用则回退到 ttf。
+ */
+
+/* ─── 思源黑体 / Noto Sans SC（默认字体，预加载） ─── */
+
+@font-face {
+  font-family: "Noto Sans SC";
+  src: local("Noto Sans SC"), local("Source Han Sans SC"),
+       url("/fonts/noto-sans-sc-400.woff2") format("woff2"),
+       url("/fonts/noto-sans-sc-400.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Noto Sans SC";
+  src: local("Noto Sans SC Bold"), local("Noto Sans SC"), local("Source Han Sans SC Bold"),
+       url("/fonts/noto-sans-sc-700.woff2") format("woff2"),
+       url("/fonts/noto-sans-sc-700.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Noto Sans SC";
+  src: local("Noto Sans SC Black"), local("Noto Sans SC"), local("Source Han Sans SC Heavy"),
+       url("/fonts/noto-sans-sc-900.woff2") format("woff2"),
+       url("/fonts/noto-sans-sc-900.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./styles/fonts.css";
 import JsonLd from "./components/seo/JsonLd";
 import {
   SITE_CONFIG,
