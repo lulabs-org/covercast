@@ -17,6 +17,9 @@ type SceneToolbarProps = {
   addEllipseElement: () => void;
   handleAssetInput: (event: React.ChangeEvent<HTMLInputElement>, mode: "add" | "replace") => void;
   
+  // Create blank cover
+  onCreateBlankCover: () => void;
+  
   // Template
   activeCustomTemplate: CustomSceneTemplate | null;
   hasUnsavedCustomTemplateChanges: boolean;
@@ -44,6 +47,7 @@ export function SceneToolbar({
   addRectElement,
   addEllipseElement,
   handleAssetInput,
+  onCreateBlankCover,
   activeCustomTemplate,
   hasUnsavedCustomTemplateChanges,
   saveActiveCustomTemplate,
@@ -80,6 +84,14 @@ export function SceneToolbar({
           title="重做 (Ctrl+Shift+Z 或 Ctrl+Y)"
         >
           ↷
+        </button>
+        <button 
+          type="button" 
+          className="primary-button"
+          onClick={onCreateBlankCover}
+          title="新建封面"
+        >
+          新建封面
         </button>
         <button type="button" className="secondary-button" onClick={addTextElement}>
           添加文字
