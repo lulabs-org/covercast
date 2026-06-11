@@ -3,6 +3,9 @@
 import type { Ref } from "react";
 import { ElementInspector } from "../../panels/ElementInspector";
 import type { SceneElement } from "../../../lib/scene";
+import type { useLocalFonts } from "../../../hooks/useLocalFonts";
+
+type LocalFontManager = ReturnType<typeof useLocalFonts>;
 
 type RightSidebarProps = {
   // Panel
@@ -20,6 +23,9 @@ type RightSidebarProps = {
   canPasteElement: boolean;
   deleteSelected: () => void;
   handleAssetInput: (event: React.ChangeEvent<HTMLInputElement>, mode: "add" | "replace") => void;
+
+  // Local font manager
+  localFontManager: LocalFontManager;
 };
 
 export function RightSidebar({
@@ -33,6 +39,7 @@ export function RightSidebar({
   canPasteElement,
   deleteSelected,
   handleAssetInput,
+  localFontManager,
 }: RightSidebarProps) {
   return (
     <aside
@@ -57,6 +64,7 @@ export function RightSidebar({
           canPaste={canPasteElement}
           onDelete={deleteSelected}
           onReplaceImage={(event) => handleAssetInput(event, "replace")}
+          localFontManager={localFontManager}
         />
       ) : (
         <p className="empty-state">选择文字、视频框或图片素材后，可在这里调整位置、大小和样式。</p>

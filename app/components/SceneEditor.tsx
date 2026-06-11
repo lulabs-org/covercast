@@ -59,6 +59,7 @@ import { useSceneActions } from "../hooks/useSceneActions";
 import { useAssetManager } from "../hooks/useAssetManager";
 import { useSceneLoader } from "../hooks/useSceneLoader";
 import { useVisibleGuides } from "../hooks/useVisibleGuides";
+import { useLocalFonts } from "../hooks/useLocalFonts";
 import { useCreateBlankCover } from "../hooks/useCreateBlankCover";
 import { SaveTemplateDialog } from "./dialogs/SaveTemplateDialog";
 import { useSaveTemplateDialog } from "../hooks/useSaveTemplateDialog";
@@ -88,6 +89,9 @@ export default function SceneEditor() {
     layers: false,
   });
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
+
+  // 编辑器加载时立即恢复本地字体
+  const localFontManager = useLocalFonts();
 
   const { leftPanelRef, rightPanelRef, stageViewportRef } = useScrollVisibility();
   const { panelWidths, resizerLeftRef, resizerRightRef, handleMouseDown } = usePanelResize();
@@ -514,6 +518,7 @@ export default function SceneEditor() {
           canPasteElement={canPasteElement}
           deleteSelected={deleteSelected}
           handleAssetInput={handleAssetInput}
+          localFontManager={localFontManager}
         />
       </section>
     </main>
