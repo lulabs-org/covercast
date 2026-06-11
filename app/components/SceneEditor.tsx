@@ -60,6 +60,7 @@ import { useAssetManager } from "../hooks/useAssetManager";
 import { useSceneLoader } from "../hooks/useSceneLoader";
 import { useVisibleGuides } from "../hooks/useVisibleGuides";
 import { useLocalFonts } from "../hooks/useLocalFonts";
+import { useLocalAssets } from "../hooks/useLocalAssets";
 import { useCreateBlankCover } from "../hooks/useCreateBlankCover";
 import { SaveTemplateDialog } from "./dialogs/SaveTemplateDialog";
 import { useSaveTemplateDialog } from "../hooks/useSaveTemplateDialog";
@@ -92,6 +93,9 @@ export default function SceneEditor() {
 
   // 编辑器加载时立即恢复本地字体
   const localFontManager = useLocalFonts();
+
+  // 管理本地素材的 blob URL 生命周期
+  const { resolveSrc } = useLocalAssets(scene);
 
   const { leftPanelRef, rightPanelRef, stageViewportRef } = useScrollVisibility();
   const { panelWidths, resizerLeftRef, resizerRightRef, handleMouseDown } = usePanelResize();
@@ -493,6 +497,7 @@ export default function SceneEditor() {
           isGroupDragging={drag?.mode === "group-move"}
           canvasWidth={canvasSize.width}
           canvasHeight={canvasSize.height}
+          resolveSrc={resolveSrc}
           onCanvasPointerDown={handleCanvasPointerDown}
           onElementPointerDown={handleElementPointerDown}
           onResizePointerDown={handleResizePointerDown}

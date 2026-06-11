@@ -7,6 +7,14 @@ import {
   type SceneElement,
 } from "../lib/scene";
 import { selectSingle, type SelectionState } from "../lib/selection";
+import {
+  buildLocalAssetSrc,
+  isSupportedImageType,
+  isWithinSizeLimit,
+  readFileAsArrayBuffer,
+  saveLocalAsset,
+  type LocalAssetMeta,
+} from "../lib/localAssetStorage";
 
 export function useAssetManager({
   setStatus,
@@ -24,33 +32,44 @@ export function useAssetManager({
   setSelection: React.Dispatch<React.SetStateAction<SelectionState>>;
 }) {
   async function uploadAsset(file: File, mode: "add" | "replace") {
-    setStatus("正在上传素材...");
+    if (!isSupportedImageType(file)) {
+      setStatus("素材上传失败，仅支持 PNG、JPG、WebP");
+      return;
+    }
 
-    const formData = new FormData();
-    formData.append("asset", file);
+    if (!isWithinSizeLimit(file)) {
+      setStatus("素材上传失败，文件大小不能超过 8MB");
+      return;
+    }
+
+    setStatus("正在保存素材...");
 
     try {
-      const response = await fetch("/api/assets", {
-        method: "POST",
-        body: formData,
-      });
+      const assetId = `asset-${Date.now()}`;
+      const buffer = await readFileAsArrayBuffer(file);
 
-      if (!response.ok) {
-        throw new Error("Upload failed");
-      }
+      const meta: LocalAssetMeta = {
+        id: assetId,
+        name: file.name,
+        mime: file.type,
+        size: file.size,
+        createdAt: new Date().toISOString(),
+      };
 
-      const payload = (await response.json()) as { src: string; name: string };
+      await saveLocalAsset(meta, buffer);
+
+      const src = buildLocalAssetSrc(assetId);
 
       if (mode === "replace" && selectedElement && isImageElement(selectedElement)) {
         patchElement(selectedElement.id, {
-          src: payload.src,
-          alt: payload.name,
+          src,
+          alt: file.name,
         } as Partial<ImageElement>);
         setStatus("素材已替换到当前画布");
         return;
       }
 
-      const element = createImageElement(payload.src, payload.name || "自定义素材");
+      const element = createImageElement(src, file.name || "自定义素材");
       changeScene((currentScene) => ({
         ...currentScene,
         elements: [...currentScene.elements, element],
@@ -58,7 +77,7 @@ export function useAssetManager({
       setSelection(selectSingle(selection, element.id));
       setStatus("素材已添加到当前画布");
     } catch {
-      setStatus("素材上传失败，仅支持 PNG、JPG、WebP");
+      setStatus("素材保存失败，浏览器存储空间可能不足");
     }
   }
 

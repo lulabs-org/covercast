@@ -46,6 +46,7 @@ type SceneCanvasProps = {
   isGroupDragging?: boolean;
   canvasWidth?: number;
   canvasHeight?: number;
+  resolveSrc?: (src: string) => string;
   onCanvasPointerDown?: (event: PointerEvent<SVGSVGElement>) => void;
   onElementPointerDown?: (
     elementId: string,
@@ -80,6 +81,7 @@ export default function SceneCanvas({
   isGroupDragging = false,
   canvasWidth = DEFAULT_CANVAS_WIDTH,
   canvasHeight = DEFAULT_CANVAS_HEIGHT,
+  resolveSrc,
   onCanvasPointerDown,
   onElementPointerDown,
   onResizePointerDown,
@@ -169,6 +171,7 @@ export default function SceneCanvas({
           idPrefix={idPrefix}
           interactive={interactive}
           editingTextId={editingTextId}
+          resolveSrc={resolveSrc}
           onPointerDown={onElementPointerDown}
           onDoubleClick={onTextElementDoubleClick}
         />

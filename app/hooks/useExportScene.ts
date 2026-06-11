@@ -2,6 +2,7 @@
 
 import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH, isImageElement, type ImageElement, type Scene } from "../lib/scene";
 import { sceneToSvgMarkup } from "../lib/scene-svg";
+import { isLocalAssetSrc, parseLocalAssetId, getLocalAssetDataUrl } from "../lib/localAssetStorage";
 
 export type ExportFormat = "png" | "jpeg" | "svg" | "json";
 
@@ -24,6 +25,19 @@ async function inlineSceneAssets(scene: Scene): Promise<Scene> {
         return element;
       }
 
+      // 本地素材：从 IndexedDB 读取并转为 data URL
+      if (isLocalAssetSrc(element.src)) {
+        const id = parseLocalAssetId(element.src);
+        if (id) {
+          const dataUrl = await getLocalAssetDataUrl(id);
+          if (dataUrl) {
+            return { ...element, src: dataUrl } satisfies ImageElement;
+          }
+        }
+        return element;
+      }
+
+      // 远程素材：通过 fetch 获取
       const response = await fetch(element.src, { cache: "no-store" });
       if (!response.ok) {
         return element;

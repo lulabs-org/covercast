@@ -4,14 +4,17 @@ export function ImageElementView({
   element,
   idPrefix,
   interactive,
+  resolveSrc,
 }: {
   element: ImageElement;
   idPrefix: string;
   interactive?: boolean;
+  resolveSrc?: (src: string) => string;
 }) {
   const opacity = element.opacity ?? 1;
   const preserveAspectRatio =
     element.fit === "cover" ? "xMidYMid slice" : "xMidYMid meet";
+  const src = resolveSrc ? resolveSrc(element.src) : element.src;
 
   if (!element.src) {
     const cx = element.x + element.width / 2;
@@ -63,7 +66,7 @@ export function ImageElementView({
           </clipPath>
         </defs>
         <image
-          href={element.src}
+          href={src}
           x={element.x}
           y={element.y}
           width={element.width}
@@ -87,7 +90,7 @@ export function ImageElementView({
 
   return (
     <image
-      href={element.src}
+      href={src}
       x={element.x}
       y={element.y}
       width={element.width}
