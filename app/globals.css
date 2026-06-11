@@ -1700,8 +1700,7 @@ h1 {
 .ai-apply-button,
 .ai-regenerate-button,
 .ai-cancel-button,
-.ai-save-template-toggle-button,
-.ai-save-template-button {
+.ai-save-template-toggle-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1720,8 +1719,7 @@ h1 {
 .ai-generate-button svg,
 .ai-apply-button svg,
 .ai-regenerate-button svg,
-.ai-save-template-toggle-button svg,
-.ai-save-template-button svg {
+.ai-save-template-toggle-button svg {
   width: 18px;
   height: 18px;
 }
@@ -1799,72 +1797,6 @@ h1 {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
-}
-
-/* Save Template Button */
-.ai-save-template-button {
-  color: #ffffff;
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
-}
-
-.ai-save-template-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
-}
-
-.ai-save-template-button:disabled {
-  background: #9aa9c0;
-  box-shadow: none;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Save Template Form */
-.ai-save-template-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px 20px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
-  border: 2px solid rgba(124, 58, 237, 0.2);
-  margin-bottom: 16px;
-}
-
-.ai-save-template-input-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.ai-save-template-input {
-  width: 100%;
-  min-height: 44px;
-  border: 2px solid rgba(124, 58, 237, 0.2);
-  border-radius: 10px;
-  padding: 0 16px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #1c2a3d;
-  background: #ffffff;
-  transition: all 0.2s ease;
-}
-
-.ai-save-template-input:focus {
-  outline: none;
-  border-color: #7c3aed;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
-}
-
-.ai-save-template-input::placeholder {
-  color: #9aa9c0;
-}
-
-.ai-save-template-hint {
-  font-size: 12px;
-  font-weight: 700;
-  color: #7c3aed;
 }
 
 /* Generation Workflow - Modern Design */
@@ -3587,6 +3519,10 @@ h1 {
   background: rgba(15, 23, 42, 0.45);
   z-index: 100;
   animation: fadeInBackdrop 0.15s ease;
+}
+
+.dialog-backdrop-elevated {
+  z-index: 1100;
 }
 
 @keyframes fadeInBackdrop {

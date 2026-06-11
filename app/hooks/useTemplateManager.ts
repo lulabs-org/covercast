@@ -161,7 +161,7 @@ function createCustomTemplateId() {
   return `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function uniqueTemplateName(name: string, templates: CustomSceneTemplate[]) {
+export function uniqueTemplateName(name: string, templates: CustomSceneTemplate[]) {
   const baseName = name.trim() || "导入模板";
   const existingNames = new Set(templates.map((template) => template.name));
 

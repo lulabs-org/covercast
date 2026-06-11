@@ -62,6 +62,7 @@ import { useVisibleGuides } from "../hooks/useVisibleGuides";
 import { useCreateBlankCover } from "../hooks/useCreateBlankCover";
 import { SaveTemplateDialog } from "./dialogs/SaveTemplateDialog";
 import { useSaveTemplateDialog } from "../hooks/useSaveTemplateDialog";
+import { useSaveSceneDialog } from "../hooks/useSaveSceneDialog";
 import { SceneToolbar } from "./editor/SceneToolbar";
 import { StagePanel } from "./editor/StagePanel";
 import { LeftSidebar } from "./editor/sidebar/LeftSidebar";
@@ -193,6 +194,11 @@ export default function SceneEditor() {
   const saveTemplateDialog = useSaveTemplateDialog({
     customTemplates,
     onSave: saveCustomTemplateWithName,
+  });
+
+  const aiSaveSceneDialog = useSaveSceneDialog({
+    customTemplates,
+    onSave: (name, scene) => saveSceneAsTemplate(scene, name),
   });
 
   const { exportScene } = useExportScene(scene, setStatus, exportTemplateJson, canvasSize.width, canvasSize.height);
@@ -433,14 +439,27 @@ export default function SceneEditor() {
         onCancel={saveTemplateDialog.closeDialog}
       />
 
+      <SaveTemplateDialog
+        show={aiSaveSceneDialog.showDialog}
+        title="另存为新模板"
+        templateName={aiSaveSceneDialog.templateName}
+        nameError={aiSaveSceneDialog.nameError}
+        onSetName={aiSaveSceneDialog.setTemplateName}
+        onSave={aiSaveSceneDialog.handleSave}
+        onCancel={aiSaveSceneDialog.closeDialog}
+        backdropClassName="dialog-backdrop-elevated"
+      />
+
       <AITemplateDialog
         isOpen={showAITemplateDialog}
         onClose={() => setShowAITemplateDialog(false)}
         currentScene={scene}
+        canvasWidth={canvasSize.width}
+        canvasHeight={canvasSize.height}
         activeTemplateId={activeTemplateId}
         customTemplates={customTemplates}
         onApplyScene={handleApplyAIScene}
-        onSaveAsTemplate={saveSceneAsTemplate}
+        onOpenSaveTemplateDialog={aiSaveSceneDialog.openDialog}
       />
 
       <section className="editor-grid">

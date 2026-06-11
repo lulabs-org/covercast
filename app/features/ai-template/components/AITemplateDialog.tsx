@@ -15,27 +15,29 @@ interface AITemplateDialogProps {
   isOpen: boolean;
   onClose: () => void;
   currentScene: Scene;
+  canvasWidth: number;
+  canvasHeight: number;
   activeTemplateId: string;
   customTemplates: CustomSceneTemplate[];
   onApplyScene: (scene: Scene) => void;
-  onSaveAsTemplate: (scene: Scene, templateName: string) => void;
+  onOpenSaveTemplateDialog: (scene: Scene, defaultName?: string) => void;
 }
 
 export function AITemplateDialog({
   isOpen,
   onClose,
   currentScene,
+  canvasWidth,
+  canvasHeight,
   activeTemplateId,
   customTemplates,
   onApplyScene,
-  onSaveAsTemplate,
+  onOpenSaveTemplateDialog,
 }: AITemplateDialogProps) {
   const [templateSource, setTemplateSource] = useState<TemplateSource>("current");
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [userPrompt, setUserPrompt] = useState("");
   const [showConfigModal, setShowConfigModal] = useState(false);
-  const [showSaveTemplateForm, setShowSaveTemplateForm] = useState(false);
-  const [newTemplateName, setNewTemplateName] = useState("");
 
   // 自动滚动相关
   const dialogBodyRef = useRef<HTMLDivElement>(null);
@@ -75,8 +77,6 @@ export function AITemplateDialog({
       resetProgress();
       setSelectedTemplateId(null);
       setTemplateSource("current");
-      setShowSaveTemplateForm(false);
-      setNewTemplateName("");
       isUserAtBottomRef.current = true;
     }
   }, [isOpen, resetGeneratedScene, resetProgress]);
@@ -142,6 +142,8 @@ export function AITemplateDialog({
         config,
         userPrompt,
         scene,
+        canvasWidth,
+        canvasHeight,
         templateName,
         {
           onStageChange: (stage) => {
@@ -154,7 +156,7 @@ export function AITemplateDialog({
       const errorMessage = error instanceof Error ? error.message : "生成失败";
       setError(errorMessage);
     }
-  }, [config, userPrompt, getSelectedScene, getTemplateName, generateTemplate, start, setError, complete, updateStage]);
+  }, [config, userPrompt, getSelectedScene, getTemplateName, generateTemplate, start, setError, complete, updateStage, canvasWidth, canvasHeight]);
 
   const handleApply = useCallback(() => {
     const scene = applyGeneratedScene();
@@ -175,6 +177,8 @@ export function AITemplateDialog({
         config,
         userPrompt,
         scene,
+        canvasWidth,
+        canvasHeight,
         templateName,
         {
           onStageChange: (stage) => {
@@ -187,20 +191,19 @@ export function AITemplateDialog({
       const errorMessage = error instanceof Error ? error.message : "生成失败";
       setError(errorMessage);
     }
-  }, [config, userPrompt, getSelectedScene, getTemplateName, generateTemplate, start, setError, complete, resetProgress, updateStage, resetGeneratedScene]);
+  }, [config, userPrompt, getSelectedScene, getTemplateName, generateTemplate, start, setError, complete, resetProgress, updateStage, resetGeneratedScene, canvasWidth, canvasHeight]);
 
   const handleCancel = useCallback(() => {
     onClose();
   }, [onClose]);
 
-  const handleSaveAsTemplate = useCallback(() => {
+  const handleOpenSaveTemplateDialog = useCallback(() => {
     if (!generatedScene) {
       return;
     }
-    const templateName = newTemplateName.trim() || `AI优化模板 ${customTemplates.length + 1}`;
-    onSaveAsTemplate(generatedScene, templateName);
-    onClose();
-  }, [generatedScene, newTemplateName, customTemplates.length, onSaveAsTemplate, onClose]);
+    const sourceName = getTemplateName() ?? "AI优化模板";
+    onOpenSaveTemplateDialog(generatedScene, `${sourceName} 副本`);
+  }, [generatedScene, getTemplateName, onOpenSaveTemplateDialog]);
 
   const canGenerate =
     connectionStatus.isConnected &&
@@ -383,33 +386,6 @@ export function AITemplateDialog({
             {/* Preview - Show below workflow after generation completes */}
             {generatedScene && !generateStatus.isGenerating && progress.currentStage === "completed" && (
               <>
-                {/* Save Template Form */}
-                {showSaveTemplateForm && (
-                  <div className="ai-save-template-form">
-                    <h3 className="ai-section-title">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
-                        <line x1="12" y1="18" x2="12" y2="12" />
-                        <line x1="9" y1="15" x2="15" y2="15" />
-                      </svg>
-                      <span>保存为新模板</span>
-                    </h3>
-                    <div className="ai-save-template-input-wrapper">
-                      <input
-                        type="text"
-                        className="ai-save-template-input"
-                        placeholder={`AI优化模板 ${customTemplates.length + 1}`}
-                        value={newTemplateName}
-                        onChange={(e) => setNewTemplateName(e.currentTarget.value)}
-                      />
-                      <span className="ai-save-template-hint">
-                        保存后将添加到自定义模板列表
-                      </span>
-                    </div>
-                  </div>
-                )}
-
                 {/* Preview */}
                 <div className="ai-preview-section">
                   <h3 className="ai-section-title">
@@ -488,59 +464,32 @@ export function AITemplateDialog({
                   </svg>
                   <span>重新生成</span>
                 </button>
-                {!showSaveTemplateForm ? (
-                  <>
-                    <button
-                      type="button"
-                      className="ai-save-template-toggle-button"
-                      disabled={!generatedScene}
-                      onClick={() => setShowSaveTemplateForm(true)}
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
-                        <line x1="12" y1="18" x2="12" y2="12" />
-                        <line x1="9" y1="15" x2="15" y2="15" />
-                      </svg>
-                      <span>保存为模板</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="ai-apply-button"
-                      disabled={!generatedScene}
-                      onClick={handleApply}
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                        <polyline points="22 4 12 14.01 9 11.01" />
-                      </svg>
-                      <span>应用到画布</span>
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      className="ai-cancel-button"
-                      onClick={() => setShowSaveTemplateForm(false)}
-                    >
-                      返回
-                    </button>
-                    <button
-                      type="button"
-                      className="ai-save-template-button"
-                      disabled={!newTemplateName.trim()}
-                      onClick={handleSaveAsTemplate}
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                        <polyline points="17 21 17 13 7 13 7 21" />
-                        <polyline points="7 3 7 8 15 8" />
-                      </svg>
-                      <span>保存模板</span>
-                    </button>
-                  </>
-                )}
+                <button
+                  type="button"
+                  className="ai-save-template-toggle-button"
+                  disabled={!generatedScene}
+                  onClick={handleOpenSaveTemplateDialog}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="12" y1="18" x2="12" y2="12" />
+                    <line x1="9" y1="15" x2="15" y2="15" />
+                  </svg>
+                  <span>另存为新模板</span>
+                </button>
+                <button
+                  type="button"
+                  className="ai-apply-button"
+                  disabled={!generatedScene}
+                  onClick={handleApply}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                  </svg>
+                  <span>应用到画布</span>
+                </button>
               </>
             )}
           </div>

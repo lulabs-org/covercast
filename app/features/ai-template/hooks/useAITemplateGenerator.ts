@@ -18,6 +18,8 @@ export function useAITemplateGenerator() {
       config: AITemplateConfig,
       userPrompt: string,
       currentScene: Scene,
+      canvasWidth: number,
+      canvasHeight: number,
       templateName?: string,
       callbacks?: {
         onStageChange?: (stage: GenerationStage) => void;
@@ -40,7 +42,7 @@ export function useAITemplateGenerator() {
 
       try {
         // Build prompt
-        const prompt = buildAIPrompt(userPrompt, currentScene, templateName);
+        const prompt = buildAIPrompt(userPrompt, currentScene, canvasWidth, canvasHeight, templateName);
 
         // 流式内容累积，用于提前解析
         let streamContent = "";

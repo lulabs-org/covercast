@@ -10,6 +10,7 @@ export function SaveTemplateDialog({
   onSetName,
   onSave,
   onCancel,
+  backdropClassName,
 }: {
   show: boolean;
   title: string;
@@ -18,6 +19,7 @@ export function SaveTemplateDialog({
   onSetName: (name: string) => void;
   onSave: () => void;
   onCancel: () => void;
+  backdropClassName?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -59,7 +61,7 @@ export function SaveTemplateDialog({
 
   return (
     <div
-      className="dialog-backdrop"
+      className={`dialog-backdrop${backdropClassName ? ` ${backdropClassName}` : ""}`}
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
