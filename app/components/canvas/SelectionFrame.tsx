@@ -1,19 +1,16 @@
-import { type PointerEvent } from "react";
-import { type SceneElement } from "../../lib/scene";
-import { elementBounds } from "../../lib/scene-svg";
+import { type PointerEvent } from 'react'
+import { type SceneElement } from '../../lib/scene'
+import { elementBounds } from '../../lib/scene-svg'
 
 export function SelectionFrame({
   element,
   onResizePointerDown,
 }: {
-  element: SceneElement;
-  onResizePointerDown?: (
-    elementId: string,
-    event: PointerEvent<SVGRectElement>,
-  ) => void;
+  element: SceneElement
+  onResizePointerDown?: (elementId: string, event: PointerEvent<SVGRectElement>) => void
 }) {
-  const bounds = elementBounds(element);
-  const handleSize = 20;
+  const bounds = elementBounds(element)
+  const handleSize = 20
 
   return (
     <g className="selection-frame">
@@ -40,10 +37,10 @@ export function SelectionFrame({
         strokeWidth="2"
         vectorEffect="non-scaling-stroke"
         onPointerDown={(event) => {
-          event.stopPropagation();
-          onResizePointerDown?.(element.id, event);
+          event.stopPropagation()
+          onResizePointerDown?.(element.id, event)
         }}
       />
     </g>
-  );
+  )
 }

@@ -7,42 +7,42 @@ import {
   type ShapeElement,
   type TextAlign,
   type TextElement,
-} from "./scene";
+} from './scene'
 
-export function resolvePaint(fill: string, prefix = "covercast"): string {
-  if (fill === "courseGradient") {
-    return `url(#${prefix}-course-gradient)`;
+export function resolvePaint(fill: string, prefix = 'covercast'): string {
+  if (fill === 'courseGradient') {
+    return `url(#${prefix}-course-gradient)`
   }
 
-  if (fill === "accentGradient") {
-    return `url(#${prefix}-accent-gradient)`;
+  if (fill === 'accentGradient') {
+    return `url(#${prefix}-accent-gradient)`
   }
 
-  return fill;
+  return fill
 }
 
-export function textAnchorForAlign(align: TextAlign): "start" | "middle" | "end" {
-  if (align === "center") {
-    return "middle";
+export function textAnchorForAlign(align: TextAlign): 'start' | 'middle' | 'end' {
+  if (align === 'center') {
+    return 'middle'
   }
 
-  if (align === "right") {
-    return "end";
+  if (align === 'right') {
+    return 'end'
   }
 
-  return "start";
+  return 'start'
 }
 
 export function textX(element: TextElement): number {
-  if (element.align === "center") {
-    return element.x + element.width / 2;
+  if (element.align === 'center') {
+    return element.x + element.width / 2
   }
 
-  if (element.align === "right") {
-    return element.x + element.width;
+  if (element.align === 'right') {
+    return element.x + element.width
   }
 
-  return element.x;
+  return element.x
 }
 
 export function elementBounds(element: SceneElement) {
@@ -51,7 +51,7 @@ export function elementBounds(element: SceneElement) {
     y: element.y,
     width: element.width,
     height: element.height,
-  };
+  }
 }
 
 export function sceneToSvgMarkup(
@@ -59,33 +59,39 @@ export function sceneToSvgMarkup(
   canvasWidth = DEFAULT_CANVAS_WIDTH,
   canvasHeight = DEFAULT_CANVAS_HEIGHT,
 ): string {
-  const visibleElements = scene.elements.filter((element) => element.hidden !== true);
-  const visibleScene = { ...scene, elements: visibleElements };
+  const visibleElements = scene.elements.filter((element) => element.hidden !== true)
+  const visibleScene = { ...scene, elements: visibleElements }
 
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${canvasWidth}" height="${canvasHeight}" viewBox="0 0 ${canvasWidth} ${canvasHeight}" role="img" aria-label="Covercast OBS live background">`,
-    renderDefs("covercast", visibleScene),
-    renderBackground(scene.backgroundColor, scene.backgroundOpacity, "covercast", visibleScene, canvasWidth, canvasHeight),
-    ...visibleElements.map((element) => renderElement(element, "covercast")),
-    "</svg>",
-  ].join("");
+    renderDefs('covercast', visibleScene),
+    renderBackground(
+      scene.backgroundColor,
+      scene.backgroundOpacity,
+      'covercast',
+      visibleScene,
+      canvasWidth,
+      canvasHeight,
+    ),
+    ...visibleElements.map((element) => renderElement(element, 'covercast')),
+    '</svg>',
+  ].join('')
 }
 
-export function renderDefs(
-  prefix: string,
-  scene?: Scene,
-): string {
+export function renderDefs(prefix: string, scene?: Scene): string {
   const customGradients =
     scene?.elements
       .filter((element) => element.hidden !== true)
       .filter(
-        (element): element is ShapeElement & {
-          gradient: NonNullable<ShapeElement["gradient"]>;
+        (
+          element,
+        ): element is ShapeElement & {
+          gradient: NonNullable<ShapeElement['gradient']>
         } => isGradientShape(element),
       )
       .map((element) => renderShapeGradient(element, prefix))
-      .join("") ?? "";
-  const backgroundMask = renderBackgroundMask(prefix, scene);
+      .join('') ?? ''
+  const backgroundMask = renderBackgroundMask(prefix, scene)
 
   return `
     <defs>
@@ -109,96 +115,94 @@ export function renderDefs(
       ${customGradients}
       ${backgroundMask}
     </defs>
-  `;
+  `
 }
 
 export function renderBackground(
   backgroundColor: string,
   backgroundOpacity = 1,
-  prefix = "covercast",
+  prefix = 'covercast',
   scene?: Scene,
   canvasWidth = DEFAULT_CANVAS_WIDTH,
   canvasHeight = DEFAULT_CANVAS_HEIGHT,
 ): string {
-  const opacity = clampOpacity(backgroundOpacity);
-  const glowOpacity = Number((0.68 * opacity).toFixed(3));
-  const mask = hasBackgroundCutouts(scene)
-    ? ` mask="url(#${backgroundMaskId(prefix)})"`
-    : "";
+  const opacity = clampOpacity(backgroundOpacity)
+  const glowOpacity = Number((0.68 * opacity).toFixed(3))
+  const mask = hasBackgroundCutouts(scene) ? ` mask="url(#${backgroundMaskId(prefix)})"` : ''
 
   return `
     <g${mask}>
       <rect width="${canvasWidth}" height="${canvasHeight}" fill="${escapeAttribute(backgroundColor)}" opacity="${opacity}" />
       <rect width="${canvasWidth}" height="${canvasHeight}" fill="url(#${prefix}-bg-glow)" opacity="${glowOpacity}" />
     </g>
-  `;
+  `
 }
 
 function renderElement(element: SceneElement, prefix: string): string {
-  if (element.type === "text") {
-    return renderTextElement(element);
+  if (element.type === 'text') {
+    return renderTextElement(element)
   }
 
-  if (element.type === "image") {
-    return renderImageElement(element, prefix);
+  if (element.type === 'image') {
+    return renderImageElement(element, prefix)
   }
 
-  return renderShapeElement(element, prefix);
+  return renderShapeElement(element, prefix)
 }
 
 function renderShapeElement(element: ShapeElement, prefix: string): string {
-  const opacity = element.opacity ?? 1;
+  const opacity = element.opacity ?? 1
   const fill = element.backgroundCutout
-    ? "transparent"
-    : escapeAttribute(resolveShapeFill(element, prefix));
-  const common = `fill="${fill}" opacity="${element.backgroundCutout ? 1 : opacity}"`;
+    ? 'transparent'
+    : escapeAttribute(resolveShapeFill(element, prefix))
+  const common = `fill="${fill}" opacity="${element.backgroundCutout ? 1 : opacity}"`
   const stroke = element.stroke
     ? ` stroke="${escapeAttribute(element.stroke)}" stroke-width="${element.strokeWidth ?? 1}"`
-    : "";
+    : ''
 
-  if (element.type === "ellipse") {
-    return `<ellipse cx="${element.x + element.width / 2}" cy="${element.y + element.height / 2}" rx="${element.width / 2}" ry="${element.height / 2}" ${common}${stroke} />`;
+  if (element.type === 'ellipse') {
+    return `<ellipse cx="${element.x + element.width / 2}" cy="${element.y + element.height / 2}" rx="${element.width / 2}" ry="${element.height / 2}" ${common}${stroke} />`
   }
 
-  return `<rect x="${element.x}" y="${element.y}" width="${element.width}" height="${element.height}" rx="${element.radius ?? 0}" ${common}${stroke} />`;
+  return `<rect x="${element.x}" y="${element.y}" width="${element.width}" height="${element.height}" rx="${element.radius ?? 0}" ${common}${stroke} />`
 }
 
 function resolveShapeFill(element: ShapeElement, prefix: string): string {
   if (isGradientShape(element)) {
-    return `url(#${shapeGradientId(prefix, element.id)})`;
+    return `url(#${shapeGradientId(prefix, element.id)})`
   }
 
-  return resolvePaint(element.fill, prefix);
+  return resolvePaint(element.fill, prefix)
 }
 
 function renderShapeGradient(
-  element: ShapeElement & { gradient: NonNullable<ShapeElement["gradient"]> },
+  element: ShapeElement & { gradient: NonNullable<ShapeElement['gradient']> },
   prefix: string,
 ): string {
-  const gradient = element.gradient;
-  const vector = gradientVector(gradient.direction);
+  const gradient = element.gradient
+  const vector = gradientVector(gradient.direction)
 
   return `
     <linearGradient id="${shapeGradientId(prefix, element.id)}" x1="${vector.x1}" y1="${vector.y1}" x2="${vector.x2}" y2="${vector.y2}">
       <stop offset="0%" stop-color="${escapeAttribute(gradient.startColor)}" />
       <stop offset="100%" stop-color="${escapeAttribute(gradient.endColor)}" />
     </linearGradient>
-  `;
+  `
 }
 
 function isGradientShape(element: SceneElement): element is ShapeElement & {
-  gradient: NonNullable<ShapeElement["gradient"]>;
+  gradient: NonNullable<ShapeElement['gradient']>
 } {
   return (
-    (element.type === "rect" || element.type === "ellipse") &&
+    (element.type === 'rect' || element.type === 'ellipse') &&
     element.hidden !== true &&
-    element.fillMode === "gradient" &&
+    element.fillMode === 'gradient' &&
     Boolean(element.gradient)
-  );
+  )
 }
 
 function shapeGradientId(prefix: string, elementId: string): string {
-  return `${prefix}-shape-gradient-${elementId}`;
+  return `${prefix}-shape-gradient-${elementId}`
 }
 
 function renderBackgroundMask(
@@ -212,10 +216,10 @@ function renderBackgroundMask(
       .filter((element) => element.hidden !== true)
       .filter((element): element is ShapeElement => isBackgroundCutoutShape(element))
       .map(renderCutoutMaskShape)
-      .join("") ?? "";
+      .join('') ?? ''
 
   if (!cutouts) {
-    return "";
+    return ''
   }
 
   return `
@@ -223,111 +227,107 @@ function renderBackgroundMask(
       <rect width="${canvasWidth}" height="${canvasHeight}" fill="#ffffff" />
       ${cutouts}
     </mask>
-  `;
+  `
 }
 
 function renderCutoutMaskShape(element: ShapeElement): string {
-  if (element.type === "ellipse") {
-    return `<ellipse cx="${element.x + element.width / 2}" cy="${element.y + element.height / 2}" rx="${element.width / 2}" ry="${element.height / 2}" fill="#000000" />`;
+  if (element.type === 'ellipse') {
+    return `<ellipse cx="${element.x + element.width / 2}" cy="${element.y + element.height / 2}" rx="${element.width / 2}" ry="${element.height / 2}" fill="#000000" />`
   }
 
-  return `<rect x="${element.x}" y="${element.y}" width="${element.width}" height="${element.height}" rx="${element.radius ?? 0}" fill="#000000" />`;
+  return `<rect x="${element.x}" y="${element.y}" width="${element.width}" height="${element.height}" rx="${element.radius ?? 0}" fill="#000000" />`
 }
 
 function isBackgroundCutoutShape(element: SceneElement): element is ShapeElement {
   return (
-    (element.type === "rect" || element.type === "ellipse") &&
+    (element.type === 'rect' || element.type === 'ellipse') &&
     element.hidden !== true &&
     element.backgroundCutout === true
-  );
+  )
 }
 
 function hasBackgroundCutouts(scene?: Scene): boolean {
-  return scene?.elements.some(isBackgroundCutoutShape) ?? false;
+  return scene?.elements.some(isBackgroundCutoutShape) ?? false
 }
 
 function backgroundMaskId(prefix: string): string {
-  return `${prefix}-background-mask`;
+  return `${prefix}-background-mask`
 }
 
-export function gradientVector(direction: NonNullable<ShapeElement["gradient"]>["direction"]) {
-  if (direction === "vertical") {
-    return { x1: "0%", y1: "0%", x2: "0%", y2: "100%" };
+export function gradientVector(direction: NonNullable<ShapeElement['gradient']>['direction']) {
+  if (direction === 'vertical') {
+    return { x1: '0%', y1: '0%', x2: '0%', y2: '100%' }
   }
 
-  if (direction === "diagonal-down") {
-    return { x1: "0%", y1: "0%", x2: "100%", y2: "100%" };
+  if (direction === 'diagonal-down') {
+    return { x1: '0%', y1: '0%', x2: '100%', y2: '100%' }
   }
 
-  if (direction === "diagonal-up") {
-    return { x1: "0%", y1: "100%", x2: "100%", y2: "0%" };
+  if (direction === 'diagonal-up') {
+    return { x1: '0%', y1: '100%', x2: '100%', y2: '0%' }
   }
 
-  return { x1: "0%", y1: "0%", x2: "100%", y2: "0%" };
+  return { x1: '0%', y1: '0%', x2: '100%', y2: '0%' }
 }
 
 function renderTextElement(element: TextElement): string {
-  const lines = element.text.split("\n");
-  const x = textX(element);
-  const anchor = textAnchorForAlign(element.align);
-  const lineHeight = element.fontSize * element.lineHeight;
+  const lines = element.text.split('\n')
+  const x = textX(element)
+  const anchor = textAnchorForAlign(element.align)
+  const lineHeight = element.fontSize * element.lineHeight
   const tspans = lines
     .map((line, index) => {
-      const dy = index === 0 ? 0 : lineHeight;
-      return `<tspan x="${x}" dy="${dy}">${escapeText(line || " ")}</tspan>`;
+      const dy = index === 0 ? 0 : lineHeight
+      return `<tspan x="${x}" dy="${dy}">${escapeText(line || ' ')}</tspan>`
     })
-    .join("");
+    .join('')
 
-  return `<text x="${x}" y="${element.y + element.fontSize}" fill="${escapeAttribute(element.fill)}" font-family="${escapeAttribute(element.fontFamily)}" font-size="${element.fontSize}" font-weight="${element.fontWeight}" text-anchor="${anchor}" opacity="${element.opacity ?? 1}">${tspans}</text>`;
+  return `<text x="${x}" y="${element.y + element.fontSize}" fill="${escapeAttribute(element.fill)}" font-family="${escapeAttribute(element.fontFamily)}" font-size="${element.fontSize}" font-weight="${element.fontWeight}" text-anchor="${anchor}" opacity="${element.opacity ?? 1}">${tspans}</text>`
 }
 
 function renderImageElement(element: ImageElement, prefix: string): string {
-  const opacity = element.opacity ?? 1;
-  const clipId = `${prefix}-clip-${element.id}`;
-  const preserveAspectRatio =
-    element.fit === "cover" ? "xMidYMid slice" : "xMidYMid meet";
+  const opacity = element.opacity ?? 1
+  const clipId = `${prefix}-clip-${element.id}`
+  const preserveAspectRatio = element.fit === 'cover' ? 'xMidYMid slice' : 'xMidYMid meet'
 
   if (!element.src) {
-    const cx = element.x + element.width / 2;
-    const cy = element.y + element.height / 2;
-    const r = Math.min(element.width, element.height) / 2;
-    const initials = escapeText(element.fallbackText || "图");
+    const cx = element.x + element.width / 2
+    const cy = element.y + element.height / 2
+    const r = Math.min(element.width, element.height) / 2
+    const initials = escapeText(element.fallbackText || '图')
     return `
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="#edf3ff" stroke="#ffffff" stroke-width="5" opacity="${opacity}" />
       <circle cx="${cx}" cy="${cy}" r="${r - 7}" fill="#87a9ff" opacity="0.36" />
       <text x="${cx}" y="${cy + r * 0.22}" text-anchor="middle" fill="#163690" font-family="PingFang SC, Microsoft YaHei, Arial, sans-serif" font-size="${r * 0.72}" font-weight="900">${initials}</text>
-    `;
+    `
   }
 
-  if (element.shape === "circle") {
-    const cx = element.x + element.width / 2;
-    const cy = element.y + element.height / 2;
-    const r = Math.min(element.width, element.height) / 2;
+  if (element.shape === 'circle') {
+    const cx = element.x + element.width / 2
+    const cy = element.y + element.height / 2
+    const r = Math.min(element.width, element.height) / 2
     return `
       <defs><clipPath id="${clipId}"><circle cx="${cx}" cy="${cy}" r="${r}" /></clipPath></defs>
       <image href="${escapeAttribute(element.src)}" x="${element.x}" y="${element.y}" width="${element.width}" height="${element.height}" preserveAspectRatio="${preserveAspectRatio}" clip-path="url(#${clipId})" opacity="${opacity}" />
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#ffffff" stroke-width="5" opacity="${opacity}" />
-    `;
+    `
   }
 
-  return `<image href="${escapeAttribute(element.src)}" x="${element.x}" y="${element.y}" width="${element.width}" height="${element.height}" preserveAspectRatio="${preserveAspectRatio}" opacity="${opacity}" />`;
+  return `<image href="${escapeAttribute(element.src)}" x="${element.x}" y="${element.y}" width="${element.width}" height="${element.height}" preserveAspectRatio="${preserveAspectRatio}" opacity="${opacity}" />`
 }
 
 function escapeText(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
 function escapeAttribute(value: string): string {
-  return escapeText(value).replace(/"/g, "&quot;");
+  return escapeText(value).replace(/"/g, '&quot;')
 }
 
 function clampOpacity(value: number): number {
   if (!Number.isFinite(value)) {
-    return 1;
+    return 1
   }
 
-  return Math.min(Math.max(value, 0), 1);
+  return Math.min(Math.max(value, 0), 1)
 }

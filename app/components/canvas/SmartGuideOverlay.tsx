@@ -1,35 +1,31 @@
-import type { GuideLine } from "../../lib/smart-guide";
+import type { GuideLine } from '../../lib/smart-guide'
 
 type ArrowCapLine = {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-};
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+}
 
 type CrossMarker = {
-  line1: ArrowCapLine;
-  line2: ArrowCapLine;
-};
+  line1: ArrowCapLine
+  line2: ArrowCapLine
+}
 
-function computeCrossMarker(
-  x: number,
-  y: number,
-  size: number
-): CrossMarker {
+function computeCrossMarker(x: number, y: number, size: number): CrossMarker {
   return {
     line1: { x1: x - size, y1: y - size, x2: x + size, y2: y + size },
     line2: { x1: x - size, y1: y + size, x2: x + size, y2: y - size },
-  };
+  }
 }
 
 export function SmartGuideOverlay({ guides }: { guides: GuideLine[] }) {
   return (
     <g className="smart-guides-overlay" pointerEvents="none">
       {guides.map((guide, index) => {
-        const crossSize = 6;
-        const cross1 = computeCrossMarker(guide.x1, guide.y1, crossSize);
-        const cross2 = computeCrossMarker(guide.x2, guide.y2, crossSize);
+        const crossSize = 6
+        const cross1 = computeCrossMarker(guide.x1, guide.y1, crossSize)
+        const cross2 = computeCrossMarker(guide.x2, guide.y2, crossSize)
 
         return (
           <g key={`guide-${guide.type}-${index}`}>
@@ -74,8 +70,8 @@ export function SmartGuideOverlay({ guides }: { guides: GuideLine[] }) {
               strokeWidth="2"
             />
           </g>
-        );
+        )
       })}
     </g>
-  );
+  )
 }

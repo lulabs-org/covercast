@@ -1,9 +1,9 @@
-"use client";
+'use client'
 
-import { type ReactNode } from "react";
-import { BUILT_IN_TEMPLATES } from "../../lib/scene";
-import { type CustomSceneTemplate } from "../../hooks/useTemplateManager";
-import { CustomTemplateCard } from "./CustomTemplateCard";
+import { type ReactNode } from 'react'
+import { BUILT_IN_TEMPLATES } from '../../lib/scene'
+import { type CustomSceneTemplate } from '../../hooks/useTemplateManager'
+import { CustomTemplateCard } from './CustomTemplateCard'
 
 function SidebarSection({
   title,
@@ -12,11 +12,11 @@ function SidebarSection({
   onToggle,
   children,
 }: {
-  title: string;
-  caption: string;
-  collapsed: boolean;
-  onToggle: () => void;
-  children: ReactNode;
+  title: string
+  caption: string
+  collapsed: boolean
+  onToggle: () => void
+  children: ReactNode
 }) {
   return (
     <section className="sidebar-section">
@@ -28,11 +28,11 @@ function SidebarSection({
       >
         <span>{title}</span>
         <small>{caption}</small>
-        <b>{collapsed ? "＋" : "－"}</b>
+        <b>{collapsed ? '＋' : '－'}</b>
       </button>
       {collapsed ? null : <div className="sidebar-section-body">{children}</div>}
     </section>
-  );
+  )
 }
 
 function TemplateCard({
@@ -43,19 +43,19 @@ function TemplateCard({
   dirty = false,
   onApply,
 }: {
-  name: string;
-  description: string;
-  badge: string;
-  active: boolean;
-  dirty?: boolean;
-  onApply: () => void;
+  name: string
+  description: string
+  badge: string
+  active: boolean
+  dirty?: boolean
+  onApply: () => void
 }) {
   return (
-    <div className={[
-      "template-card",
-      active ? "active" : "",
-      dirty ? "dirty" : "",
-    ].filter(Boolean).join(" ")}>
+    <div
+      className={['template-card', active ? 'active' : '', dirty ? 'dirty' : '']
+        .filter(Boolean)
+        .join(' ')}
+    >
       <button type="button" className="template-card-button" onClick={onApply}>
         <div className="template-card-content">
           <span className="template-card-name">{name}</span>
@@ -64,7 +64,7 @@ function TemplateCard({
         <span className="template-card-badge">{badge}</span>
       </button>
     </div>
-  );
+  )
 }
 
 export function TemplatePanel({
@@ -79,16 +79,16 @@ export function TemplatePanel({
   onRenameCustomTemplate,
   onDeleteCustomTemplate,
 }: {
-  customTemplates: CustomSceneTemplate[];
-  activeTemplateId: string;
-  hasUnsavedCustomTemplateChanges: boolean;
-  collapsed: boolean;
-  onToggle: () => void;
-  onApplyBuiltInTemplate: (templateId: string) => void;
-  onApplyCustomTemplate: (template: CustomSceneTemplate) => void;
-  onDuplicateCustomTemplate: (templateId: string) => void;
-  onRenameCustomTemplate: (templateId: string, newName: string) => void;
-  onDeleteCustomTemplate: (templateId: string) => void;
+  customTemplates: CustomSceneTemplate[]
+  activeTemplateId: string
+  hasUnsavedCustomTemplateChanges: boolean
+  collapsed: boolean
+  onToggle: () => void
+  onApplyBuiltInTemplate: (templateId: string) => void
+  onApplyCustomTemplate: (template: CustomSceneTemplate) => void
+  onDuplicateCustomTemplate: (templateId: string) => void
+  onRenameCustomTemplate: (templateId: string, newName: string) => void
+  onDeleteCustomTemplate: (templateId: string) => void
 }) {
   return (
     <SidebarSection
@@ -142,7 +142,7 @@ export function TemplatePanel({
         )}
       </div>
     </SidebarSection>
-  );
+  )
 }
 
 export function TemplateToolbarButtons({
@@ -150,9 +150,9 @@ export function TemplateToolbarButtons({
   onOpenSaveTemplateDialog,
   onImport,
 }: {
-  activeCustomTemplate: CustomSceneTemplate | null;
-  onOpenSaveTemplateDialog: () => void;
-  onImport: (file: File) => void;
+  activeCustomTemplate: CustomSceneTemplate | null
+  onOpenSaveTemplateDialog: () => void
+  onImport: (file: File) => void
 }) {
   return (
     <>
@@ -161,7 +161,7 @@ export function TemplateToolbarButtons({
         className="secondary-button toolbar-template-button"
         onClick={onOpenSaveTemplateDialog}
       >
-        {activeCustomTemplate ? "另存为模板" : "保存为模板"}
+        {activeCustomTemplate ? '另存为模板' : '保存为模板'}
       </button>
       <label className="secondary-button file-button">
         导入
@@ -169,14 +169,14 @@ export function TemplateToolbarButtons({
           type="file"
           accept="application/json,.json"
           onChange={(event) => {
-            const file = event.currentTarget.files?.[0];
-            event.currentTarget.value = "";
+            const file = event.currentTarget.files?.[0]
+            event.currentTarget.value = ''
             if (file) {
-              onImport(file);
+              onImport(file)
             }
           }}
         />
       </label>
     </>
-  );
+  )
 }

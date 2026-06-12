@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from 'react'
 
 export function SaveTemplateDialog({
   show,
@@ -11,51 +11,51 @@ export function SaveTemplateDialog({
   onSave,
   onCancel,
 }: {
-  show: boolean;
-  title: string;
-  templateName: string;
-  nameError: string | undefined;
-  onSetName: (name: string) => void;
-  onSave: () => void;
-  onCancel: () => void;
+  show: boolean
+  title: string
+  templateName: string
+  nameError: string | undefined
+  onSetName: (name: string) => void
+  onSave: () => void
+  onCancel: () => void
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (show && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
+      inputRef.current.focus()
+      inputRef.current.select()
     }
-  }, [show]);
+  }, [show])
 
   useEffect(() => {
     if (show) {
       const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === "Escape") {
-          onCancel();
+        if (event.key === 'Escape') {
+          onCancel()
         }
-      };
-      window.addEventListener("keydown", handleKeyDown);
-      return () => window.removeEventListener("keydown", handleKeyDown);
+      }
+      window.addEventListener('keydown', handleKeyDown)
+      return () => window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [show, onCancel]);
+  }, [show, onCancel])
 
   if (!show) {
-    return null;
+    return null
   }
 
   const handleSave = () => {
     if (nameError) {
-      return;
+      return
     }
-    onSave();
-  };
+    onSave()
+  }
 
   const handleBackdropClick = (event: React.MouseEvent) => {
     if (event.target === event.currentTarget) {
-      onCancel();
+      onCancel()
     }
-  };
+  }
 
   return (
     <div
@@ -69,7 +69,7 @@ export function SaveTemplateDialog({
         <h3 id="save-template-dialog-title" className="dialog-title">
           {title}
         </h3>
-        <label className={`field${nameError ? " field-error" : ""}`}>
+        <label className={`field${nameError ? ' field-error' : ''}`}>
           <span>模板名称</span>
           <input
             ref={inputRef}
@@ -78,20 +78,16 @@ export function SaveTemplateDialog({
             value={templateName}
             onChange={(event) => onSetName(event.currentTarget.value)}
             onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                handleSave();
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                handleSave()
               }
             }}
           />
           {nameError ? <span className="field-error-message">{nameError}</span> : null}
         </label>
         <div className="dialog-actions">
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={onCancel}
-          >
+          <button type="button" className="secondary-button" onClick={onCancel}>
             取消
           </button>
           <button
@@ -105,5 +101,5 @@ export function SaveTemplateDialog({
         </div>
       </div>
     </div>
-  );
+  )
 }

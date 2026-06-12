@@ -28,7 +28,7 @@
   margin: 0;
 }
 
-.sizeInput[type="number"] {
+.sizeInput[type='number'] {
   -moz-appearance: textfield;
 }
 

@@ -1,10 +1,10 @@
-import { getMarqueeRect, type MarqueeState } from "../../lib/marquee";
+import { getMarqueeRect, type MarqueeState } from '../../lib/marquee'
 
 export function MarqueeOverlay({ marquee }: { marquee: MarqueeState }) {
-  const rect = getMarqueeRect(marquee);
+  const rect = getMarqueeRect(marquee)
 
   if (rect.width === 0 && rect.height === 0) {
-    return null;
+    return null
   }
 
   return (
@@ -21,5 +21,5 @@ export function MarqueeOverlay({ marquee }: { marquee: MarqueeState }) {
         vectorEffect="non-scaling-stroke"
       />
     </g>
-  );
+  )
 }

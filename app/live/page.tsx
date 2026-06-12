@@ -1,6 +1,6 @@
-import type { Metadata } from "next";
-import LiveView from "../components/LiveView";
-import { PAGE_METADATA, SITE_CONFIG, OPEN_GRAPH, TWITTER_CARD } from "../lib/seo-config";
+import type { Metadata } from 'next'
+import LiveView from '../components/LiveView'
+import { PAGE_METADATA, SITE_CONFIG, OPEN_GRAPH, TWITTER_CARD } from '../lib/seo-config'
 
 export const metadata: Metadata = {
   title: PAGE_METADATA.live.title,
@@ -20,13 +20,13 @@ export const metadata: Metadata = {
   alternates: {
     canonical: `${SITE_CONFIG.url}/live`,
   },
-};
+}
 
 export default async function LivePage({
   searchParams,
 }: {
-  searchParams: Promise<{ t?: string; s?: string }>;
+  searchParams: Promise<{ t?: string; s?: string }>
 }) {
-  const params = await searchParams;
-  return <LiveView templateId={params.t} slotId={params.s} />;
+  const params = await searchParams
+  return <LiveView templateId={params.t} slotId={params.s} />
 }

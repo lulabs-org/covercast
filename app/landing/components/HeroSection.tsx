@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import Image from "next/image";
-import Link from "next/link";
+import Image from 'next/image'
+import Link from 'next/link'
 
 export default function HeroSection() {
   return (
@@ -65,5 +65,5 @@ export default function HeroSection() {
         </a>
       </div>
     </section>
-  );
+  )
 }

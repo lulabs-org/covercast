@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import { type ReactNode, useState } from "react";
-import { BUILT_IN_TEMPLATES } from "../../lib/scene";
-import { type CustomSceneTemplate, type SceneSlotInfo } from "../../hooks/useTemplateManager";
+import { type ReactNode, useState } from 'react'
+import { BUILT_IN_TEMPLATES } from '../../lib/scene'
+import { type CustomSceneTemplate, type SceneSlotInfo } from '../../hooks/useTemplateManager'
 
 function SidebarSection({
   title,
@@ -11,11 +11,11 @@ function SidebarSection({
   onToggle,
   children,
 }: {
-  title: string;
-  caption: string;
-  collapsed: boolean;
-  onToggle: () => void;
-  children: ReactNode;
+  title: string
+  caption: string
+  collapsed: boolean
+  onToggle: () => void
+  children: ReactNode
 }) {
   return (
     <section className="sidebar-section">
@@ -27,22 +27,16 @@ function SidebarSection({
       >
         <span>{title}</span>
         <small>{caption}</small>
-        <b>{collapsed ? "＋" : "－"}</b>
+        <b>{collapsed ? '＋' : '－'}</b>
       </button>
       {collapsed ? null : <div className="sidebar-section-body">{children}</div>}
     </section>
-  );
+  )
 }
 
-function EditableSlotName({
-  name,
-  onSave,
-}: {
-  name: string;
-  onSave: (value: string) => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(name);
+function EditableSlotName({ name, onSave }: { name: string; onSave: (value: string) => void }) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(name)
 
   if (editing) {
     return (
@@ -52,46 +46,46 @@ function EditableSlotName({
         value={draft}
         onChange={(e) => setDraft(e.currentTarget.value)}
         onBlur={() => {
-          const trimmed = draft.trim();
+          const trimmed = draft.trim()
           if (trimmed && trimmed !== name) {
-            onSave(trimmed);
+            onSave(trimmed)
           }
-          setEditing(false);
-          setDraft(name);
+          setEditing(false)
+          setDraft(name)
         }}
         onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            const trimmed = draft.trim();
+          if (e.key === 'Enter') {
+            const trimmed = draft.trim()
             if (trimmed && trimmed !== name) {
-              onSave(trimmed);
+              onSave(trimmed)
             }
-            setEditing(false);
-            setDraft(name);
+            setEditing(false)
+            setDraft(name)
           }
-          if (e.key === "Escape") {
-            setEditing(false);
-            setDraft(name);
+          if (e.key === 'Escape') {
+            setEditing(false)
+            setDraft(name)
           }
         }}
         autoFocus
         onClick={(e) => e.stopPropagation()}
       />
-    );
+    )
   }
 
   return (
     <span
       className="slot-name"
       onClick={(e) => {
-        e.stopPropagation();
-        setDraft(name);
-        setEditing(true);
+        e.stopPropagation()
+        setDraft(name)
+        setEditing(true)
       }}
       title="点击重命名"
     >
       {name}
     </span>
-  );
+  )
 }
 
 export function SourcesPanel({
@@ -107,17 +101,17 @@ export function SourcesPanel({
   getSlotUrl,
   setStatus,
 }: {
-  templateSlots: SceneSlotInfo[];
-  customTemplates: CustomSceneTemplate[];
-  activeSlotId: string;
-  collapsed: boolean;
-  onToggle: () => void;
-  onAddSlot: (templateId: string) => void;
-  onRemoveSlot: (templateId: string, slotId: string) => void;
-  onSelectSlot: (slotId: string) => void;
-  onRenameSlot: (templateId: string, slotId: string, newName: string) => void;
-  getSlotUrl: (templateId: string, slotId: string) => string;
-  setStatus: (status: string) => void;
+  templateSlots: SceneSlotInfo[]
+  customTemplates: CustomSceneTemplate[]
+  activeSlotId: string
+  collapsed: boolean
+  onToggle: () => void
+  onAddSlot: (templateId: string) => void
+  onRemoveSlot: (templateId: string, slotId: string) => void
+  onSelectSlot: (slotId: string) => void
+  onRenameSlot: (templateId: string, slotId: string, newName: string) => void
+  getSlotUrl: (templateId: string, slotId: string) => string
+  setStatus: (status: string) => void
 }) {
   return (
     <SidebarSection
@@ -133,13 +127,15 @@ export function SourcesPanel({
           value=""
           onChange={(e) => {
             if (e.currentTarget.value) {
-              onAddSlot(e.currentTarget.value);
-              e.currentTarget.value = "";
+              onAddSlot(e.currentTarget.value)
+              e.currentTarget.value = ''
             }
           }}
           title="选择模板创建浏览器源"
         >
-          <option value="" disabled>选择模板...</option>
+          <option value="" disabled>
+            选择模板...
+          </option>
           <optgroup label="内置模板">
             {BUILT_IN_TEMPLATES.map((template) => (
               <option key={template.id} value={template.id}>
@@ -166,16 +162,17 @@ export function SourcesPanel({
       ) : (
         <div className="slot-list">
           {templateSlots.map((slot) => {
-            const url = getSlotUrl(slot.templateId, slot.slotId);
-            const isActive = slot.slotId === activeSlotId;
-            const template = BUILT_IN_TEMPLATES.find((t) => t.id === slot.templateId)
-              ?? customTemplates.find((t) => t.id === slot.templateId);
-            const templateName = template?.name ?? "未命名模板";
+            const url = getSlotUrl(slot.templateId, slot.slotId)
+            const isActive = slot.slotId === activeSlotId
+            const template =
+              BUILT_IN_TEMPLATES.find((t) => t.id === slot.templateId) ??
+              customTemplates.find((t) => t.id === slot.templateId)
+            const templateName = template?.name ?? '未命名模板'
 
             return (
               <div
                 key={`${slot.templateId}/${slot.slotId}`}
-                className={`slot-item${isActive ? " active" : ""}`}
+                className={`slot-item${isActive ? ' active' : ''}`}
                 onClick={() => onSelectSlot(slot.slotId)}
               >
                 <div className="slot-item-header">
@@ -190,8 +187,8 @@ export function SourcesPanel({
                     type="button"
                     className="slot-delete-button"
                     onClick={(e) => {
-                      e.stopPropagation();
-                      onRemoveSlot(slot.templateId, slot.slotId);
+                      e.stopPropagation()
+                      onRemoveSlot(slot.templateId, slot.slotId)
                     }}
                     title="删除此浏览器源"
                   >
@@ -204,10 +201,10 @@ export function SourcesPanel({
                     type="button"
                     className="slot-copy-button"
                     onClick={(e) => {
-                      e.stopPropagation();
+                      e.stopPropagation()
                       navigator.clipboard.writeText(url).then(() => {
-                        setStatus("URL 已复制到剪贴板");
-                      });
+                        setStatus('URL 已复制到剪贴板')
+                      })
                     }}
                     title="复制到剪贴板"
                   >
@@ -215,10 +212,10 @@ export function SourcesPanel({
                   </button>
                 </div>
               </div>
-            );
+            )
           })}
         </div>
       )}
     </SidebarSection>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-import { type ImageElement } from "../../../lib/scene";
+import { type ImageElement } from '../../../lib/scene'
 
 export function ImageElementView({
   element,
@@ -6,20 +6,19 @@ export function ImageElementView({
   interactive,
   resolveSrc,
 }: {
-  element: ImageElement;
-  idPrefix: string;
-  interactive?: boolean;
-  resolveSrc?: (src: string) => string;
+  element: ImageElement
+  idPrefix: string
+  interactive?: boolean
+  resolveSrc?: (src: string) => string
 }) {
-  const opacity = element.opacity ?? 1;
-  const preserveAspectRatio =
-    element.fit === "cover" ? "xMidYMid slice" : "xMidYMid meet";
-  const src = resolveSrc ? resolveSrc(element.src) : element.src;
+  const opacity = element.opacity ?? 1
+  const preserveAspectRatio = element.fit === 'cover' ? 'xMidYMid slice' : 'xMidYMid meet'
+  const src = resolveSrc ? resolveSrc(element.src) : element.src
 
   if (!element.src) {
-    const cx = element.x + element.width / 2;
-    const cy = element.y + element.height / 2;
-    const r = Math.min(element.width, element.height) / 2;
+    const cx = element.x + element.width / 2
+    const cy = element.y + element.height / 2
+    const r = Math.min(element.width, element.height) / 2
 
     return (
       <>
@@ -42,21 +41,21 @@ export function ImageElementView({
           fontSize={r * 0.72}
           fontWeight="900"
           style={{
-            userSelect: interactive ? "none" : undefined,
-            pointerEvents: interactive ? "none" : undefined,
+            userSelect: interactive ? 'none' : undefined,
+            pointerEvents: interactive ? 'none' : undefined,
           }}
         >
-          {element.fallbackText || "图"}
+          {element.fallbackText || '图'}
         </text>
       </>
-    );
+    )
   }
 
-  if (element.shape === "circle") {
-    const clipId = `${idPrefix}-clip-${element.id}`;
-    const cx = element.x + element.width / 2;
-    const cy = element.y + element.height / 2;
-    const r = Math.min(element.width, element.height) / 2;
+  if (element.shape === 'circle') {
+    const clipId = `${idPrefix}-clip-${element.id}`
+    const cx = element.x + element.width / 2
+    const cy = element.y + element.height / 2
+    const r = Math.min(element.width, element.height) / 2
 
     return (
       <>
@@ -85,7 +84,7 @@ export function ImageElementView({
           opacity={opacity}
         />
       </>
-    );
+    )
   }
 
   return (
@@ -98,5 +97,5 @@ export function ImageElementView({
       preserveAspectRatio={preserveAspectRatio}
       opacity={opacity}
     />
-  );
+  )
 }

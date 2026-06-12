@@ -1,64 +1,60 @@
-import { useEffect, useState, type PointerEvent, type Ref } from "react";
+import { useEffect, useState, type PointerEvent, type Ref } from 'react'
 import {
   DEFAULT_CANVAS_WIDTH,
   DEFAULT_CANVAS_HEIGHT,
   type Scene,
   type SceneElement,
-} from "../lib/scene";
-import type { GuideLine, MeasurementGuide, ResizeLabel } from "../lib/smart-guide";
-import { getMarqueeRect, hasMarqueeSize, hitTestElements, isMarqueeActive, type HitTestStrategy, type MarqueeState } from "../lib/marquee";
-import { MarqueeOverlay } from "./canvas/MarqueeOverlay";
-import { SmartGuideOverlay } from "./canvas/SmartGuideOverlay";
-import { ResizeLabelOverlay } from "./canvas/ResizeLabelOverlay";
-import { SpacingGuideOverlay } from "./canvas/SpacingGuideOverlay";
-import { SelectionFrame } from "./canvas/SelectionFrame";
-import { GroupSelectionFrame } from "./canvas/GroupSelectionFrame";
-import { ElementView } from "./canvas/elements/ElementView";
-import { SceneDefs, backgroundMaskId, hasBackgroundCutouts } from "./canvas/SceneDefs";
+} from '../lib/scene'
+import type { GuideLine, MeasurementGuide, ResizeLabel } from '../lib/smart-guide'
 import {
-  type ResizeHandleType,
-} from "../lib/group-drag";
+  getMarqueeRect,
+  hasMarqueeSize,
+  hitTestElements,
+  isMarqueeActive,
+  type HitTestStrategy,
+  type MarqueeState,
+} from '../lib/marquee'
+import { MarqueeOverlay } from './canvas/MarqueeOverlay'
+import { SmartGuideOverlay } from './canvas/SmartGuideOverlay'
+import { ResizeLabelOverlay } from './canvas/ResizeLabelOverlay'
+import { SpacingGuideOverlay } from './canvas/SpacingGuideOverlay'
+import { SelectionFrame } from './canvas/SelectionFrame'
+import { GroupSelectionFrame } from './canvas/GroupSelectionFrame'
+import { ElementView } from './canvas/elements/ElementView'
+import { SceneDefs, backgroundMaskId, hasBackgroundCutouts } from './canvas/SceneDefs'
+import { type ResizeHandleType } from '../lib/group-drag'
 
 type SceneCanvasProps = {
-  scene: Scene;
-  className?: string;
-  style?: React.CSSProperties;
-  idPrefix?: string;
-  interactive?: boolean;
-  selectedIds?: string[];
-  guides?: GuideLine[];
-  spacingGuides?: MeasurementGuide[];
-  resizeLabel?: ResizeLabel | null;
-  svgRef?: Ref<SVGSVGElement>;
-  marquee?: MarqueeState;
-  hitTestStrategy?: HitTestStrategy;
-  editingTextId?: string | null;
-  isGroupDragging?: boolean;
-  canvasWidth?: number;
-  canvasHeight?: number;
-  resolveSrc?: (src: string) => string;
-  onCanvasPointerDown?: (event: PointerEvent<SVGSVGElement>) => void;
-  onElementPointerDown?: (
-    elementId: string,
-    event: PointerEvent<SVGGElement>,
-  ) => void;
-  onResizePointerDown?: (
-    elementId: string,
-    event: PointerEvent<SVGRectElement>,
-  ) => void;
-  onGroupDragPointerDown?: (event: PointerEvent<SVGRectElement>) => void;
-  onGroupResizePointerDown?: (
-    handle: ResizeHandleType,
-    event: PointerEvent<SVGRectElement>,
-  ) => void;
-  onTextElementDoubleClick?: (elementId: string) => void;
-};
+  scene: Scene
+  className?: string
+  style?: React.CSSProperties
+  idPrefix?: string
+  interactive?: boolean
+  selectedIds?: string[]
+  guides?: GuideLine[]
+  spacingGuides?: MeasurementGuide[]
+  resizeLabel?: ResizeLabel | null
+  svgRef?: Ref<SVGSVGElement>
+  marquee?: MarqueeState
+  hitTestStrategy?: HitTestStrategy
+  editingTextId?: string | null
+  isGroupDragging?: boolean
+  canvasWidth?: number
+  canvasHeight?: number
+  resolveSrc?: (src: string) => string
+  onCanvasPointerDown?: (event: PointerEvent<SVGSVGElement>) => void
+  onElementPointerDown?: (elementId: string, event: PointerEvent<SVGGElement>) => void
+  onResizePointerDown?: (elementId: string, event: PointerEvent<SVGRectElement>) => void
+  onGroupDragPointerDown?: (event: PointerEvent<SVGRectElement>) => void
+  onGroupResizePointerDown?: (handle: ResizeHandleType, event: PointerEvent<SVGRectElement>) => void
+  onTextElementDoubleClick?: (elementId: string) => void
+}
 
 export default function SceneCanvas({
   scene,
   className,
   style,
-  idPrefix = "scene",
+  idPrefix = 'scene',
   interactive = false,
   selectedIds = [],
   guides,
@@ -66,7 +62,7 @@ export default function SceneCanvas({
   resizeLabel,
   svgRef,
   marquee,
-  hitTestStrategy = "intersection",
+  hitTestStrategy = 'intersection',
   editingTextId,
   isGroupDragging = false,
   canvasWidth = DEFAULT_CANVAS_WIDTH,
@@ -79,40 +75,40 @@ export default function SceneCanvas({
   onGroupResizePointerDown,
   onTextElementDoubleClick,
 }: SceneCanvasProps) {
-  const [shiftKeyPressed, setShiftKeyPressed] = useState(false);
+  const [shiftKeyPressed, setShiftKeyPressed] = useState(false)
 
   useEffect(() => {
-    if (!interactive) return;
+    if (!interactive) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Shift") {
-        setShiftKeyPressed(true);
+      if (e.key === 'Shift') {
+        setShiftKeyPressed(true)
       }
-    };
+    }
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.key === "Shift") {
-        setShiftKeyPressed(false);
+      if (e.key === 'Shift') {
+        setShiftKeyPressed(false)
       }
-    };
+    }
 
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-    };
-  }, [interactive]);
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [interactive])
 
-  const visibleElements = scene.elements.filter((element) => element.hidden !== true);
-  const selectedElements = visibleElements.filter((element) => selectedIds.includes(element.id));
+  const visibleElements = scene.elements.filter((element) => element.hidden !== true)
+  const selectedElements = visibleElements.filter((element) => selectedIds.includes(element.id))
 
-  let marqueePreviewElements: SceneElement[] = [];
+  let marqueePreviewElements: SceneElement[] = []
   if (marquee && isMarqueeActive(marquee) && hasMarqueeSize(marquee, 5)) {
-    const rect = getMarqueeRect(marquee);
-    const hitIds = hitTestElements(rect, visibleElements, hitTestStrategy);
-    marqueePreviewElements = visibleElements.filter((element) => hitIds.includes(element.id));
+    const rect = getMarqueeRect(marquee)
+    const hitIds = hitTestElements(rect, visibleElements, hitTestStrategy)
+    marqueePreviewElements = visibleElements.filter((element) => hitIds.includes(element.id))
   }
 
   return (
@@ -126,18 +122,21 @@ export default function SceneCanvas({
       onPointerDown={onCanvasPointerDown}
       style={{
         ...style,
-        touchAction: interactive ? "none" : undefined,
-        userSelect: "none",
-        WebkitUserSelect: "none",
+        touchAction: interactive ? 'none' : undefined,
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
       }}
     >
-      <SceneDefs visibleElements={visibleElements} idPrefix={idPrefix} canvasWidth={canvasWidth} canvasHeight={canvasHeight} />
+      <SceneDefs
+        visibleElements={visibleElements}
+        idPrefix={idPrefix}
+        canvasWidth={canvasWidth}
+        canvasHeight={canvasHeight}
+      />
 
       <g
         mask={
-          hasBackgroundCutouts(visibleElements)
-            ? `url(#${backgroundMaskId(idPrefix)})`
-            : undefined
+          hasBackgroundCutouts(visibleElements) ? `url(#${backgroundMaskId(idPrefix)})` : undefined
         }
       >
         <rect
@@ -195,25 +194,21 @@ export default function SceneCanvas({
         <GroupSelectionFrame elements={marqueePreviewElements} shiftKeyPressed={shiftKeyPressed} />
       ) : null}
 
-      {guides && guides.length > 0 ? (
-        <SmartGuideOverlay guides={guides} />
-      ) : null}
+      {guides && guides.length > 0 ? <SmartGuideOverlay guides={guides} /> : null}
 
-      {resizeLabel ? (
-        <ResizeLabelOverlay resizeLabel={resizeLabel} />
-      ) : null}
+      {resizeLabel ? <ResizeLabelOverlay resizeLabel={resizeLabel} /> : null}
 
       {spacingGuides && spacingGuides.length > 0 ? (
         <SpacingGuideOverlay spacingGuides={spacingGuides} />
       ) : null}
     </svg>
-  );
+  )
 }
 
 function clampOpacity(value: number) {
   if (!Number.isFinite(value)) {
-    return 1;
+    return 1
   }
 
-  return Math.min(Math.max(value, 0), 1);
+  return Math.min(Math.max(value, 0), 1)
 }
