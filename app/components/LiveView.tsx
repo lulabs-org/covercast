@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createDefaultScene, type Scene } from "../lib/scene";
+import { useEffect, useState, useMemo } from "react";
+import { createDefaultScene, isImageElement, type Scene } from "../lib/scene";
+import { isLocalAssetSrc, parseLocalAssetId, getLocalAssetBlobUrl } from "../lib/localAssetStorage";
 import SceneCanvas from "./SceneCanvas";
 
 type LiveViewProps = {
@@ -11,6 +12,7 @@ type LiveViewProps = {
 
 export default function LiveView({ templateId, slotId }: LiveViewProps) {
   const [scene, setScene] = useState<Scene>(() => createDefaultScene());
+  const [blobUrlMap, setBlobUrlMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let active = true;
@@ -46,11 +48,72 @@ export default function LiveView({ templateId, slotId }: LiveViewProps) {
     };
   }, [templateId, slotId]);
 
+  // 解析 local-asset src 为 blob URL
+  const localAssetIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const element of scene.elements) {
+      if (isImageElement(element) && isLocalAssetSrc(element.src)) {
+        const id = parseLocalAssetId(element.src);
+        if (id) ids.add(id);
+      }
+    }
+    return ids;
+  }, [scene.elements]);
+
+  useEffect(() => {
+    let active = true;
+    const ids = Array.from(localAssetIds);
+
+    if (ids.length === 0) {
+      setBlobUrlMap({});
+      return;
+    }
+
+    Promise.all(
+      ids.map(async (id) => {
+        const blobUrl = await getLocalAssetBlobUrl(id);
+        return [id, blobUrl] as const;
+      }),
+    ).then((entries) => {
+      if (!active) {
+        for (const [, url] of entries) {
+          if (url) URL.revokeObjectURL(url);
+        }
+        return;
+      }
+      const nextMap: Record<string, string> = {};
+      for (const [id, url] of entries) {
+        if (url) nextMap[id] = url;
+      }
+      setBlobUrlMap(nextMap);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [localAssetIds]);
+
+  // 组件卸载时回收 blob URL
+  useEffect(() => {
+    return () => {
+      for (const url of Object.values(blobUrlMap)) {
+        URL.revokeObjectURL(url);
+      }
+    };
+  }, [blobUrlMap]);
+
+  function resolveSrc(src: string): string {
+    if (!isLocalAssetSrc(src)) return src;
+    const id = parseLocalAssetId(src);
+    if (!id) return src;
+    return blobUrlMap[id] ?? src;
+  }
+
   return (
     <>
       <style>{`html, body { background: transparent !important; }`}</style>
       <main className="live-shell">
-        <SceneCanvas scene={scene} className="live-canvas" idPrefix="live" />
+        <SceneCanvas scene={scene} className="live-canvas" idPrefix="live" resolveSrc={resolveSrc} />
       </main>
     </>
   );

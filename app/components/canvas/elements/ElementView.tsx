@@ -11,6 +11,7 @@ export function ElementView({
   editingTextId,
   onPointerDown,
   onDoubleClick,
+  resolveSrc,
 }: {
   element: SceneElement;
   idPrefix: string;
@@ -21,6 +22,7 @@ export function ElementView({
     event: PointerEvent<SVGGElement>,
   ) => void;
   onDoubleClick?: (elementId: string) => void;
+  resolveSrc?: (src: string) => string;
 }) {
   return (
     <g
@@ -42,7 +44,7 @@ export function ElementView({
         onDoubleClick?.(element.id);
       }}
     >
-      {renderElement(element, idPrefix, interactive, editingTextId)}
+      {renderElement(element, idPrefix, interactive, editingTextId, resolveSrc)}
     </g>
   );
 }
@@ -52,13 +54,14 @@ function renderElement(
   idPrefix: string,
   interactive: boolean,
   editingTextId?: string | null,
+  resolveSrc?: (src: string) => string,
 ) {
   if (element.type === "text") {
     return <TextElementView element={element} interactive={interactive} editing={editingTextId === element.id} />;
   }
 
   if (element.type === "image") {
-    return <ImageElementView element={element} idPrefix={idPrefix} interactive={interactive} />;
+    return <ImageElementView element={element} idPrefix={idPrefix} interactive={interactive} resolveSrc={resolveSrc} />;
   }
 
   return <ShapeElementView element={element} idPrefix={idPrefix} />;

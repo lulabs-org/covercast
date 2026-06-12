@@ -10,7 +10,7 @@ import type { ResizeHandleType } from "../../lib/group-drag";
 type StagePanelProps = {
   // Status
   status: string;
-  
+
   // Zoom controls
   canvasZoom: number;
   canvasZoomPercent: number;
@@ -25,7 +25,7 @@ type StagePanelProps = {
   handleZoomSliderWheel: (event: ReactWheelEvent<HTMLDivElement>) => void;
   handleStageWheel: (event: ReactWheelEvent<HTMLDivElement>) => void;
   stageViewportRef: Ref<HTMLDivElement>;
-  
+
   // SceneCanvas props
   scene: Scene;
   selectedIds: string[];
@@ -39,6 +39,7 @@ type StagePanelProps = {
   isGroupDragging?: boolean;
   canvasWidth?: number;
   canvasHeight?: number;
+  resolveSrc?: (src: string) => string;
   onCanvasPointerDown?: (event: PointerEvent<SVGSVGElement>) => void;
   onElementPointerDown?: (
     elementId: string,
@@ -83,6 +84,7 @@ export function StagePanel({
   isGroupDragging,
   canvasWidth,
   canvasHeight,
+  resolveSrc,
   onCanvasPointerDown,
   onElementPointerDown,
   onResizePointerDown,
@@ -169,6 +171,7 @@ export function StagePanel({
               isGroupDragging={isGroupDragging}
               canvasWidth={canvasWidth}
               canvasHeight={canvasHeight}
+              resolveSrc={resolveSrc}
               onCanvasPointerDown={onCanvasPointerDown}
               onElementPointerDown={onElementPointerDown}
               onResizePointerDown={onResizePointerDown}
