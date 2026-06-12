@@ -1,18 +1,18 @@
 .font-family-field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .font-trigger {
   display: flex;
   align-items: center;
   width: 100%;
-  height: 36px;
-  padding: 0 10px;
-  background: #f8fbff;
-  border: 1px solid #c8d3e5;
-  border-radius: 6px;
+  height: 28px;
+  padding: 0 8px;
+  background: #ffffff;
+  border: 1px solid var(--panel-border);
+  border-radius: 3px;
   cursor: pointer;
   text-align: left;
   transition:
@@ -27,7 +27,7 @@
 
 .font-trigger-open {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(39, 100, 246, 0.15);
+  box-shadow: 0 0 0 2px rgba(39, 100, 246, 0.1);
 }
 
 .font-trigger-name {
@@ -35,14 +35,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 13px;
-  color: #1d2b43;
+  font-size: 12px;
+  color: var(--foreground);
 }
 
 .font-trigger-arrow {
   flex-shrink: 0;
-  margin-left: 6px;
-  color: #65728a;
+  margin-left: 4px;
+  color: var(--muted);
   transition: transform 0.2s;
 }
 
@@ -52,30 +52,30 @@
 
 .font-dropdown {
   background: #fff;
-  border: 1px solid #d9e0ee;
-  border-radius: 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
   box-shadow:
-    0 4px 6px -1px rgba(21, 32, 51, 0.06),
-    0 10px 30px -5px rgba(21, 32, 51, 0.12);
+    0 2px 4px -1px rgba(21, 32, 51, 0.04),
+    0 6px 16px -2px rgba(21, 32, 51, 0.08);
   display: flex;
   flex-direction: column;
-  max-height: min(420px, calc(100vh - 80px));
+  max-height: min(380px, calc(100vh - 80px));
   overflow: hidden;
-  animation: font-dropdown-in 0.15s ease-out;
+  animation: font-dropdown-in 0.12s ease-out;
 }
 
 .font-dropdown-list {
   flex: 1;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 4px 0;
+  padding: 2px 0;
 }
 
 .font-group-label {
-  padding: 8px 12px 4px;
-  font-size: 11px;
+  padding: 6px 10px 3px;
+  font-size: 10px;
   font-weight: 600;
-  color: #8b99b0;
+  color: var(--muted);
   user-select: none;
   letter-spacing: 0.02em;
 }
@@ -83,9 +83,9 @@
 .font-option {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
-  padding: 8px 12px;
+  padding: 5px 10px;
   border: none;
   background: transparent;
   cursor: pointer;
@@ -96,28 +96,28 @@
 }
 
 .font-option:hover {
-  background: #f0f4ff;
+  background: rgba(39, 100, 246, 0.04);
 }
 
 .font-option-active {
-  background: #e8eeff;
+  background: rgba(39, 100, 246, 0.06);
 }
 
 .font-option-active::before {
   content: '';
   position: absolute;
   left: 0;
-  top: 4px;
-  bottom: 4px;
-  width: 3px;
-  border-radius: 0 2px 2px 0;
+  top: 3px;
+  bottom: 3px;
+  width: 2px;
+  border-radius: 0 1px 1px 0;
   background: var(--accent);
 }
 
 .font-option-preview {
   flex: 1;
-  font-size: 15px;
-  color: #1d2b43;
+  font-size: 13px;
+  color: var(--foreground);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -128,10 +128,10 @@
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  min-height: 18px;
-  border-radius: 4px;
-  padding: 1px 6px;
-  font-size: 10px;
+  min-height: 16px;
+  border-radius: 2px;
+  padding: 1px 5px;
+  font-size: 9px;
   font-weight: 600;
   white-space: nowrap;
   line-height: 1.3;
@@ -158,54 +158,54 @@
 }
 
 .font-dropdown-footer {
-  border-top: 1px solid #eef1f6;
-  padding: 8px;
+  border-top: 1px solid var(--panel-border);
+  padding: 6px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .font-dropdown-search {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border: 1px solid #d9e0ee;
-  border-radius: 6px;
-  background: #f8fbff;
+  gap: 4px;
+  padding: 4px 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 3px;
+  background: #ffffff;
 }
 
 .font-search-icon {
   flex-shrink: 0;
-  color: #9fb3d4;
+  color: var(--muted);
 }
 
 .font-dropdown-search input {
   flex: 1;
   border: none;
   outline: none;
-  font-size: 13px;
-  color: #1d2b43;
+  font-size: 12px;
+  color: var(--foreground);
   background: transparent;
   font-family: inherit;
 }
 
 .font-dropdown-search input::placeholder {
-  color: #9fb3d4;
+  color: var(--muted);
 }
 
 .font-import-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   width: 100%;
-  padding: 7px 8px;
-  border: 1px dashed #c8d3e5;
-  border-radius: 6px;
+  padding: 5px 6px;
+  border: 1px dashed var(--panel-border);
+  border-radius: 3px;
   background: transparent;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--accent);
   transition:
@@ -215,28 +215,28 @@
 }
 
 .font-import-btn:hover {
-  background: #f0f4ff;
+  background: rgba(39, 100, 246, 0.04);
   border-color: var(--accent);
 }
 
 .font-preview-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .font-preview {
   flex: 1;
-  min-height: 40px;
+  min-height: 32px;
   display: flex;
   align-items: center;
-  border: 1px dashed #c8d3e5;
-  border-radius: 6px;
-  padding: 8px 10px;
-  color: #1d2b43;
-  background: #f8fbff;
-  font-size: 18px;
-  font-weight: 800;
+  border: 1px dashed var(--panel-border);
+  border-radius: 3px;
+  padding: 4px 8px;
+  color: var(--foreground);
+  background: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
   line-height: 1.2;
   overflow: hidden;
 }
@@ -245,11 +245,11 @@
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  min-height: 22px;
-  border-radius: 4px;
-  padding: 2px 8px;
-  font-size: 10px;
-  font-weight: 900;
+  min-height: 18px;
+  border-radius: 2px;
+  padding: 1px 5px;
+  font-size: 9px;
+  font-weight: 600;
   white-space: nowrap;
   line-height: 1.3;
 }

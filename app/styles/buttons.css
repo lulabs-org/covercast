@@ -3,19 +3,19 @@
   align-items: center;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 6px;
 }
 
 .primary-button,
 .secondary-button,
 .danger-button {
-  min-height: 38px;
+  min-height: 30px;
   border: 0;
-  border-radius: 6px;
-  padding: 0 14px;
+  border-radius: 3px;
+  padding: 0 10px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .primary-button {
@@ -37,26 +37,26 @@
 }
 
 .secondary-button {
-  color: #1c2a3d;
-  background: #eef3fb;
-  border: 1px solid #d4deef;
+  color: var(--foreground);
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--panel-border);
 }
 
 .secondary-button:hover {
-  background: #e4ecf8;
+  background: rgba(0, 0, 0, 0.07);
 }
 
 .secondary-button:disabled {
-  color: #8a96aa;
-  background: #eef2f7;
-  border-color: #dbe3f0;
+  color: var(--muted);
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--panel-border);
   cursor: not-allowed;
 }
 
 .toolbar-template-button.active {
   border-color: var(--accent);
   color: var(--accent);
-  background: #eaf1ff;
+  background: rgba(39, 100, 246, 0.06);
 }
 
 .danger-button {
@@ -84,34 +84,34 @@
 .export-control {
   display: inline-flex;
   align-items: center;
-  min-height: 38px;
-  border-radius: 6px;
+  min-height: 30px;
+  border-radius: 3px;
   overflow: hidden;
 }
 
 .export-control .primary-button {
-  border-radius: 0 6px 6px 0;
+  border-radius: 0 3px 3px 0;
 }
 
 .export-format-select {
-  width: 76px;
-  min-height: 38px;
+  width: 72px;
+  min-height: 30px;
   border: 1px solid #111827;
   border-right: 0;
-  border-radius: 6px 0 0 6px;
-  padding: 0 26px 0 10px;
+  border-radius: 3px 0 0 3px;
+  padding: 0 22px 0 8px;
   color: #ffffff;
   background:
-    linear-gradient(45deg, transparent 50%, #ffffff 50%) calc(100% - 14px) 16px / 5px 5px no-repeat,
-    linear-gradient(135deg, #ffffff 50%, transparent 50%) calc(100% - 9px) 16px / 5px 5px no-repeat,
+    linear-gradient(45deg, transparent 50%, #ffffff 50%) calc(100% - 10px) 12px / 4px 4px no-repeat,
+    linear-gradient(135deg, #ffffff 50%, transparent 50%) calc(100% - 6px) 12px / 4px 4px no-repeat,
     #1f2937;
   cursor: pointer;
   appearance: none;
-  font-size: 14px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 600;
   outline: none;
 }
 
 .export-format-select:focus {
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.18);
 }

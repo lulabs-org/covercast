@@ -1,106 +1,114 @@
 .layer-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0;
 }
 
 .layer-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 6px;
-  border: 1px solid #d9e0ee;
-  border-radius: 8px;
-  padding: 7px;
-  background: #f8fafc;
+  gap: 4px;
+  border: none;
+  border-radius: 0;
+  padding: 3px 4px;
+  background: transparent;
+  transition: background 0.1s ease;
+}
+
+.layer-row:hover {
+  background: rgba(0, 0, 0, 0.03);
 }
 
 .layer-row.active {
-  border-color: var(--accent);
-  background: #eaf1ff;
-  box-shadow: 0 0 0 1px rgba(39, 100, 246, 0.35);
+  background: rgba(39, 100, 246, 0.06);
+  border-left: 2px solid var(--accent);
+  padding-left: 2px;
+  box-shadow: none;
 }
 
 .layer-row.muted {
-  opacity: 0.58;
+  opacity: 0.5;
 }
 
 .layer-row.locked .layer-name {
-  color: #43516a;
+  color: var(--muted);
 }
 
 .layer-main {
   min-width: 0;
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) auto;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   border: 0;
   padding: 0;
-  color: #243247;
+  color: var(--foreground);
   background: transparent;
   cursor: pointer;
   text-align: left;
 }
 
 .layer-type {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: 3px;
   color: var(--accent);
-  background: #edf4ff;
-  font-size: 11px;
-  font-weight: 900;
+  background: rgba(39, 100, 246, 0.08);
+  font-size: 10px;
+  font-weight: 700;
 }
 
 .layer-name {
   overflow: hidden;
-  font-size: 13px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .layer-main small {
   color: var(--muted);
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 10px;
+  font-weight: 500;
   white-space: nowrap;
 }
 
 .layer-actions {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
 }
 
 .layer-action {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #d9e0ee;
-  border-radius: 5px;
-  color: #46556f;
-  background: #ffffff;
+  border: none;
+  border-radius: 2px;
+  color: var(--muted);
+  background: transparent;
   cursor: pointer;
-  font-size: 11px;
-  font-weight: 900;
+  font-size: 10px;
+  font-weight: 700;
   line-height: 1;
+  transition:
+    background 0.1s,
+    color 0.1s;
 }
 
 .layer-action:hover:not(:disabled),
 .layer-action.active {
-  border-color: var(--accent);
   color: var(--accent);
-  background: #f0f4ff;
+  background: rgba(39, 100, 246, 0.08);
 }
 
 .layer-action:disabled {
   cursor: default;
-  opacity: 0.38;
+  opacity: 0.3;
 }

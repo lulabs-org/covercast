@@ -14,18 +14,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 6px 10px;
   background: var(--panel);
   border-bottom: 1px solid var(--panel-border);
   border-radius: 0;
 }
 
 .eyebrow {
-  margin: 0 0 4px;
+  margin: 0 0 2px;
   color: var(--muted);
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 700;
   letter-spacing: 0;
   text-transform: uppercase;
 }
@@ -59,7 +59,7 @@
 .left-panel,
 .right-panel {
   overflow: auto;
-  padding: 12px;
+  padding: 8px;
 }
 
 .panel-resizer {
@@ -100,34 +100,35 @@
   display: grid;
   grid-template-columns: minmax(220px, 360px) auto auto;
   align-items: end;
-  gap: 10px;
-  padding: 12px 16px;
+  gap: 8px;
+  padding: 8px 12px;
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 8px;
+  border-radius: 3px;
   animation: slideDown 0.2s ease;
 }
 
 .template-save-panel .primary-button,
 .template-save-panel .secondary-button {
-  min-width: 96px;
+  min-width: 80px;
 }
 
 .panel-title {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 10px;
-  margin: 2px 0 12px;
+  gap: 8px;
+  margin: 0 0 8px;
 }
 
 .panel-title h2 {
-  font-size: 16px;
+  font-size: 13px;
   line-height: 1.2;
+  font-weight: 700;
 }
 
 .panel-title span {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11px;
   white-space: nowrap;
 }

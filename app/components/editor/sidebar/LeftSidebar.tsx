@@ -1,6 +1,7 @@
 'use client'
 
 import type { Ref, ReactNode } from 'react'
+import { useRef } from 'react'
 import { LayerPanel } from '../../panels/LayerPanel'
 import { SourcesPanel } from '../../panels/SourcesPanel'
 import { TemplatePanel } from '../../panels/TemplatePanel'
@@ -285,18 +286,31 @@ function OpacityField({
   onChange: (value: number) => void
 }) {
   const opacity = clamp(value, 0, 1)
+  const rangeRef = useRef<HTMLInputElement>(null)
+
+  const updateProgress = (val: number) => {
+    if (rangeRef.current) {
+      rangeRef.current.style.setProperty('--range-progress', `${val * 100}%`)
+    }
+  }
 
   return (
     <label className="field opacity-field">
       <span>{label}</span>
       <div>
         <input
+          ref={rangeRef}
           type="range"
           min={0}
           max={1}
           step={0.01}
           value={opacity}
-          onChange={(event) => onChange(Number(event.currentTarget.value))}
+          onChange={(event) => {
+            const v = Number(event.currentTarget.value)
+            updateProgress(v)
+            onChange(v)
+          }}
+          style={{ '--range-progress': `${opacity * 100}%` } as React.CSSProperties}
         />
         <input
           type="number"

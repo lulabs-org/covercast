@@ -1,18 +1,19 @@
 .sidebar-context {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  margin: 0 0 12px;
-  padding: 12px;
-  border: 1px solid #cdd9ee;
-  border-radius: 8px;
-  background: #f8fbff;
+  gap: 2px;
+  margin: 0 0 8px;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
 }
 
 .context-label {
   color: var(--muted);
   font-size: 11px;
-  font-weight: 900;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .sidebar-context strong {
@@ -20,35 +21,35 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #1f2d44;
-  font-size: 14px;
-  font-weight: 900;
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .unsaved-pill {
   flex: 0 0 auto;
-  border-radius: 999px;
-  padding: 2px 6px;
+  border-radius: 3px;
+  padding: 1px 5px;
   color: #8a4b00;
   background: #fff2cc;
   font-size: 10px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .sidebar-context small {
   overflow: hidden;
   color: var(--muted);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .sidebar-section {
-  border-top: 1px solid #e4ebf6;
-  padding: 12px 0;
+  border-top: 1px solid var(--panel-border);
+  padding: 0;
 }
 
 .sidebar-section:first-of-type {
@@ -57,14 +58,14 @@
 
 .sidebar-section-header {
   width: 100%;
-  min-height: 34px;
+  min-height: 28px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto 18px;
+  grid-template-columns: minmax(0, 1fr) auto 16px;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   border: 0;
-  padding: 0;
-  color: #1f2d44;
+  padding: 4px 0;
+  color: var(--foreground);
   background: transparent;
   cursor: pointer;
   text-align: left;
@@ -72,22 +73,22 @@
 
 .sidebar-section-header span {
   overflow: hidden;
-  font-size: 15px;
-  font-weight: 900;
+  font-size: 12px;
+  font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .sidebar-section-header small {
   color: var(--muted);
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 500;
   white-space: nowrap;
 }
 
 .sidebar-section-header b {
   color: var(--muted);
-  font-size: 15px;
+  font-size: 13px;
   line-height: 1;
   text-align: right;
 }
@@ -95,56 +96,62 @@
 .sidebar-section-body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding-top: 10px;
+  gap: 6px;
+  padding-top: 4px;
+  padding-bottom: 8px;
 }
 
 .section-fields {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .source-create-row {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .source-create-row span {
-  color: #39485f;
-  font-size: 12px;
-  font-weight: 900;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .element-list,
 .inspector {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .inspector-action-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 6px;
 }
 
 .element-row {
   width: 100%;
-  min-height: 42px;
+  min-height: 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  border: 1px solid #d9e0ee;
-  border-radius: 6px;
-  padding: 8px 10px;
-  color: #243247;
-  background: #f8fafc;
+  gap: 6px;
+  border: none;
+  border-radius: 0;
+  padding: 4px 6px;
+  color: var(--foreground);
+  background: transparent;
   cursor: pointer;
   text-align: left;
+  transition: background 0.1s ease;
+}
+
+.element-row:hover {
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .element-row span {
@@ -152,7 +159,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .element-row small {
@@ -161,12 +169,13 @@
 }
 
 .element-row.active {
-  border-color: var(--accent);
-  background: #eaf1ff;
+  background: rgba(39, 100, 246, 0.08);
+  border-left: 2px solid var(--accent);
+  padding-left: 4px;
 }
 
 .empty-state {
   color: var(--muted);
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 12px;
+  line-height: 1.5;
 }

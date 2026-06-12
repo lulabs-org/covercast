@@ -112,6 +112,11 @@ export function StagePanel({
                 step={CANVAS_ZOOM_STEP}
                 value={canvasZoom}
                 onChange={(event) => setCanvasZoomLevel(Number(event.currentTarget.value))}
+                style={
+                  {
+                    '--range-progress': `${((canvasZoom - CANVAS_ZOOM_MIN) / (CANVAS_ZOOM_MAX - CANVAS_ZOOM_MIN)) * 100}%`,
+                  } as React.CSSProperties
+                }
                 title="调整画布缩放"
               />
             </label>
