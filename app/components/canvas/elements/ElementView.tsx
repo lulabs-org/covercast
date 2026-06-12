@@ -1,8 +1,8 @@
-import { type PointerEvent } from "react";
-import { type SceneElement } from "../../../lib/scene";
-import { ShapeElementView } from "./ShapeElementView";
-import { TextElementView } from "./TextElementView";
-import { ImageElementView } from "./ImageElementView";
+import { type PointerEvent } from 'react'
+import { type SceneElement } from '../../../lib/scene'
+import { ShapeElementView } from './ShapeElementView'
+import { TextElementView } from './TextElementView'
+import { ImageElementView } from './ImageElementView'
 
 export function ElementView({
   element,
@@ -13,40 +13,37 @@ export function ElementView({
   onDoubleClick,
   resolveSrc,
 }: {
-  element: SceneElement;
-  idPrefix: string;
-  interactive: boolean;
-  editingTextId?: string | null;
-  onPointerDown?: (
-    elementId: string,
-    event: PointerEvent<SVGGElement>,
-  ) => void;
-  onDoubleClick?: (elementId: string) => void;
-  resolveSrc?: (src: string) => string;
+  element: SceneElement
+  idPrefix: string
+  interactive: boolean
+  editingTextId?: string | null
+  onPointerDown?: (elementId: string, event: PointerEvent<SVGGElement>) => void
+  onDoubleClick?: (elementId: string) => void
+  resolveSrc?: (src: string) => string
 }) {
   return (
     <g
-      className={interactive ? `scene-element${element.locked ? " locked" : ""}` : undefined}
+      className={interactive ? `scene-element${element.locked ? ' locked' : ''}` : undefined}
       data-element-id={element.id}
       onPointerDown={(event) => {
         if (!interactive) {
-          return;
+          return
         }
 
-        event.stopPropagation();
-        onPointerDown?.(element.id, event);
+        event.stopPropagation()
+        onPointerDown?.(element.id, event)
       }}
       onDoubleClick={() => {
-        if (!interactive || element.type !== "text") {
-          return;
+        if (!interactive || element.type !== 'text') {
+          return
         }
-        
-        onDoubleClick?.(element.id);
+
+        onDoubleClick?.(element.id)
       }}
     >
       {renderElement(element, idPrefix, interactive, editingTextId, resolveSrc)}
     </g>
-  );
+  )
 }
 
 function renderElement(
@@ -56,13 +53,26 @@ function renderElement(
   editingTextId?: string | null,
   resolveSrc?: (src: string) => string,
 ) {
-  if (element.type === "text") {
-    return <TextElementView element={element} interactive={interactive} editing={editingTextId === element.id} />;
+  if (element.type === 'text') {
+    return (
+      <TextElementView
+        element={element}
+        interactive={interactive}
+        editing={editingTextId === element.id}
+      />
+    )
   }
 
-  if (element.type === "image") {
-    return <ImageElementView element={element} idPrefix={idPrefix} interactive={interactive} resolveSrc={resolveSrc} />;
+  if (element.type === 'image') {
+    return (
+      <ImageElementView
+        element={element}
+        idPrefix={idPrefix}
+        interactive={interactive}
+        resolveSrc={resolveSrc}
+      />
+    )
   }
 
-  return <ShapeElementView element={element} idPrefix={idPrefix} />;
+  return <ShapeElementView element={element} idPrefix={idPrefix} />
 }

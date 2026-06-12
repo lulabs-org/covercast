@@ -1,7 +1,7 @@
-import HeroSection from "./components/HeroSection";
-import FeaturesSection from "./components/FeaturesSection";
-import FooterSection from "./components/FooterSection";
-import BackgroundEffects from "./components/BackgroundEffects";
+import HeroSection from './components/HeroSection'
+import FeaturesSection from './components/FeaturesSection'
+import FooterSection from './components/FooterSection'
+import BackgroundEffects from './components/BackgroundEffects'
 
 export default function LandingPage() {
   return (
@@ -13,5 +13,5 @@ export default function LandingPage() {
       </div>
       <FooterSection />
     </main>
-  );
+  )
 }

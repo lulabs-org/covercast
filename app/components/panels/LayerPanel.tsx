@@ -1,45 +1,39 @@
-"use client";
+'use client'
 
-import { type ReactNode } from "react";
-import {
-  type SceneElement,
-} from "../../lib/scene";
-import {
-  isSelected,
-  selectSingle,
-  type SelectionState,
-} from "../../lib/selection";
+import { type ReactNode } from 'react'
+import { type SceneElement } from '../../lib/scene'
+import { isSelected, selectSingle, type SelectionState } from '../../lib/selection'
 
 function elementTypeLabel(element: SceneElement) {
-  if (element.type === "text") {
-    return "文字";
+  if (element.type === 'text') {
+    return '文字'
   }
 
-  if (element.type === "image") {
-    return "图片";
+  if (element.type === 'image') {
+    return '图片'
   }
 
-  if (element.type === "ellipse") {
-    return "椭圆";
+  if (element.type === 'ellipse') {
+    return '椭圆'
   }
 
-  return "矩形";
+  return '矩形'
 }
 
 function elementTypeGlyph(element: SceneElement) {
-  if (element.type === "text") {
-    return "T";
+  if (element.type === 'text') {
+    return 'T'
   }
 
-  if (element.type === "image") {
-    return "I";
+  if (element.type === 'image') {
+    return 'I'
   }
 
-  if (element.type === "ellipse") {
-    return "O";
+  if (element.type === 'ellipse') {
+    return 'O'
   }
 
-  return "R";
+  return 'R'
 }
 
 function SidebarSection({
@@ -49,11 +43,11 @@ function SidebarSection({
   onToggle,
   children,
 }: {
-  title: string;
-  caption: string;
-  collapsed: boolean;
-  onToggle: () => void;
-  children: ReactNode;
+  title: string
+  caption: string
+  collapsed: boolean
+  onToggle: () => void
+  children: ReactNode
 }) {
   return (
     <section className="sidebar-section">
@@ -65,11 +59,11 @@ function SidebarSection({
       >
         <span>{title}</span>
         <small>{caption}</small>
-        <b>{collapsed ? "＋" : "－"}</b>
+        <b>{collapsed ? '＋' : '－'}</b>
       </button>
       {collapsed ? null : <div className="sidebar-section-body">{children}</div>}
     </section>
-  );
+  )
 }
 
 export function LayerPanel({
@@ -82,18 +76,16 @@ export function LayerPanel({
   onToggleLocked,
   onMoveLayer,
 }: {
-  elements: SceneElement[];
-  selection: SelectionState;
-  collapsed: boolean;
-  onToggle: () => void;
-  onSelect: (selection: SelectionState) => void;
-  onToggleHidden: (elementId: string) => void;
-  onToggleLocked: (elementId: string) => void;
-  onMoveLayer: (elementId: string, direction: "forward" | "backward") => void;
+  elements: SceneElement[]
+  selection: SelectionState
+  collapsed: boolean
+  onToggle: () => void
+  onSelect: (selection: SelectionState) => void
+  onToggleHidden: (elementId: string) => void
+  onToggleLocked: (elementId: string) => void
+  onMoveLayer: (elementId: string, direction: 'forward' | 'backward') => void
 }) {
-  const visualLayers = elements
-    .map((element, index) => ({ element, index }))
-    .reverse();
+  const visualLayers = elements.map((element, index) => ({ element, index })).reverse()
 
   return (
     <SidebarSection
@@ -104,19 +96,21 @@ export function LayerPanel({
     >
       <div className="layer-list">
         {visualLayers.map(({ element, index }) => {
-          const isActive = isSelected(selection, element.id);
-          const isTop = index === elements.length - 1;
-          const isBottom = index === 0;
+          const isActive = isSelected(selection, element.id)
+          const isTop = index === elements.length - 1
+          const isBottom = index === 0
 
           return (
             <div
               key={element.id}
               className={[
-                "layer-row",
-                isActive ? "active" : "",
-                element.hidden ? "muted" : "",
-                element.locked ? "locked" : "",
-              ].filter(Boolean).join(" ")}
+                'layer-row',
+                isActive ? 'active' : '',
+                element.hidden ? 'muted' : '',
+                element.locked ? 'locked' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
             >
               <button
                 type="button"
@@ -130,25 +124,25 @@ export function LayerPanel({
               <div className="layer-actions">
                 <button
                   type="button"
-                  className={element.hidden ? "layer-action active" : "layer-action"}
+                  className={element.hidden ? 'layer-action active' : 'layer-action'}
                   onClick={() => onToggleHidden(element.id)}
-                  title={element.hidden ? "显示图层" : "隐藏图层"}
+                  title={element.hidden ? '显示图层' : '隐藏图层'}
                 >
-                  {element.hidden ? "隐" : "显"}
+                  {element.hidden ? '隐' : '显'}
                 </button>
                 <button
                   type="button"
-                  className={element.locked ? "layer-action active" : "layer-action"}
+                  className={element.locked ? 'layer-action active' : 'layer-action'}
                   onClick={() => onToggleLocked(element.id)}
-                  title={element.locked ? "解锁图层" : "锁定图层"}
+                  title={element.locked ? '解锁图层' : '锁定图层'}
                 >
-                  {element.locked ? "锁" : "解"}
+                  {element.locked ? '锁' : '解'}
                 </button>
                 <button
                   type="button"
                   className="layer-action"
                   disabled={isTop}
-                  onClick={() => onMoveLayer(element.id, "forward")}
+                  onClick={() => onMoveLayer(element.id, 'forward')}
                   title="上移一层"
                 >
                   ↑
@@ -157,16 +151,16 @@ export function LayerPanel({
                   type="button"
                   className="layer-action"
                   disabled={isBottom}
-                  onClick={() => onMoveLayer(element.id, "backward")}
+                  onClick={() => onMoveLayer(element.id, 'backward')}
                   title="下移一层"
                 >
                   ↓
                 </button>
               </div>
             </div>
-          );
+          )
         })}
       </div>
     </SidebarSection>
-  );
+  )
 }

@@ -1,9 +1,9 @@
-"use client";
+'use client'
 
 interface FeatureCardProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
+  icon: React.ReactNode
+  title: string
+  description: string
 }
 
 export default function FeatureCard({ icon, title, description }: FeatureCardProps) {
@@ -23,5 +23,5 @@ export default function FeatureCard({ icon, title, description }: FeatureCardPro
       <h3 className="text-[17px] font-extrabold text-[#152033] mb-2">{title}</h3>
       <p className="text-[14px] leading-relaxed text-[#65728a]">{description}</p>
     </div>
-  );
+  )
 }

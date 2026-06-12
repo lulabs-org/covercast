@@ -1,61 +1,52 @@
-"use client";
+'use client'
 
-import type { Ref, WheelEvent as ReactWheelEvent, PointerEvent } from "react";
-import SceneCanvas from "../SceneCanvas";
-import type { Scene } from "../../lib/scene";
-import type { GuideLine, MeasurementGuide, ResizeLabel } from "../../lib/smart-guide";
-import type { HitTestStrategy, MarqueeState } from "../../lib/marquee";
-import type { ResizeHandleType } from "../../lib/group-drag";
+import type { Ref, WheelEvent as ReactWheelEvent, PointerEvent } from 'react'
+import SceneCanvas from '../SceneCanvas'
+import type { Scene } from '../../lib/scene'
+import type { GuideLine, MeasurementGuide, ResizeLabel } from '../../lib/smart-guide'
+import type { HitTestStrategy, MarqueeState } from '../../lib/marquee'
+import type { ResizeHandleType } from '../../lib/group-drag'
 
 type StagePanelProps = {
   // Status
-  status: string;
+  status: string
 
   // Zoom controls
-  canvasZoom: number;
-  canvasZoomPercent: number;
-  canvasPreviewWidth: number;
-  CANVAS_ZOOM_MIN: number;
-  CANVAS_ZOOM_MAX: number;
-  CANVAS_ZOOM_STEP: number;
-  setCanvasZoomLevel: (value: number) => void;
-  zoomCanvasIn: () => void;
-  zoomCanvasOut: () => void;
-  resetCanvasZoom: () => void;
-  handleZoomSliderWheel: (event: ReactWheelEvent<HTMLDivElement>) => void;
-  handleStageWheel: (event: ReactWheelEvent<HTMLDivElement>) => void;
-  stageViewportRef: Ref<HTMLDivElement>;
+  canvasZoom: number
+  canvasZoomPercent: number
+  canvasPreviewWidth: number
+  CANVAS_ZOOM_MIN: number
+  CANVAS_ZOOM_MAX: number
+  CANVAS_ZOOM_STEP: number
+  setCanvasZoomLevel: (value: number) => void
+  zoomCanvasIn: () => void
+  zoomCanvasOut: () => void
+  resetCanvasZoom: () => void
+  handleZoomSliderWheel: (event: ReactWheelEvent<HTMLDivElement>) => void
+  handleStageWheel: (event: ReactWheelEvent<HTMLDivElement>) => void
+  stageViewportRef: Ref<HTMLDivElement>
 
   // SceneCanvas props
-  scene: Scene;
-  selectedIds: string[];
-  guides?: GuideLine[];
-  spacingGuides?: MeasurementGuide[];
-  resizeLabel?: ResizeLabel | null;
-  svgRef?: Ref<SVGSVGElement>;
-  marquee?: MarqueeState;
-  hitTestStrategy?: HitTestStrategy;
-  editingTextId?: string | null;
-  isGroupDragging?: boolean;
-  canvasWidth?: number;
-  canvasHeight?: number;
-  resolveSrc?: (src: string) => string;
-  onCanvasPointerDown?: (event: PointerEvent<SVGSVGElement>) => void;
-  onElementPointerDown?: (
-    elementId: string,
-    event: PointerEvent<SVGGElement>,
-  ) => void;
-  onResizePointerDown?: (
-    elementId: string,
-    event: PointerEvent<SVGRectElement>,
-  ) => void;
-  onGroupDragPointerDown?: (event: PointerEvent<SVGRectElement>) => void;
-  onGroupResizePointerDown?: (
-    handle: ResizeHandleType,
-    event: PointerEvent<SVGRectElement>,
-  ) => void;
-  onTextElementDoubleClick?: (elementId: string) => void;
-};
+  scene: Scene
+  selectedIds: string[]
+  guides?: GuideLine[]
+  spacingGuides?: MeasurementGuide[]
+  resizeLabel?: ResizeLabel | null
+  svgRef?: Ref<SVGSVGElement>
+  marquee?: MarqueeState
+  hitTestStrategy?: HitTestStrategy
+  editingTextId?: string | null
+  isGroupDragging?: boolean
+  canvasWidth?: number
+  canvasHeight?: number
+  resolveSrc?: (src: string) => string
+  onCanvasPointerDown?: (event: PointerEvent<SVGSVGElement>) => void
+  onElementPointerDown?: (elementId: string, event: PointerEvent<SVGGElement>) => void
+  onResizePointerDown?: (elementId: string, event: PointerEvent<SVGRectElement>) => void
+  onGroupDragPointerDown?: (event: PointerEvent<SVGRectElement>) => void
+  onGroupResizePointerDown?: (handle: ResizeHandleType, event: PointerEvent<SVGRectElement>) => void
+  onTextElementDoubleClick?: (elementId: string) => void
+}
 
 export function StagePanel({
   status,
@@ -98,7 +89,11 @@ export function StagePanel({
         <span className="stage-status">{status}</span>
         <div className="stage-header-tools">
           <span>拖拽移动，右下角黄点缩放</span>
-          <div className="canvas-zoom-controls" aria-label="画布缩放" onWheel={handleZoomSliderWheel}>
+          <div
+            className="canvas-zoom-controls"
+            aria-label="画布缩放"
+            onWheel={handleZoomSliderWheel}
+          >
             <button
               type="button"
               className="zoom-button"
@@ -141,15 +136,11 @@ export function StagePanel({
           </div>
         </div>
       </div>
-      <div
-        className="stage-viewport"
-        ref={stageViewportRef}
-        onWheel={handleStageWheel}
-      >
+      <div className="stage-viewport" ref={stageViewportRef} onWheel={handleStageWheel}>
         <div className="stage-viewport-inner">
           <div
             className="scene-preview-frame"
-            style={{ 
+            style={{
               width: canvasPreviewWidth,
               aspectRatio: `${canvasWidth} / ${canvasHeight}`,
             }}
@@ -183,5 +174,5 @@ export function StagePanel({
         </div>
       </div>
     </section>
-  );
+  )
 }

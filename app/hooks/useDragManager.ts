@@ -1,13 +1,19 @@
-"use client";
+'use client'
 
-import { type PointerEvent as ReactPointerEvent, useRef, useState, useEffect, useCallback } from "react";
+import {
+  type PointerEvent as ReactPointerEvent,
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+} from 'react'
 import {
   DEFAULT_CANVAS_HEIGHT,
   DEFAULT_CANVAS_WIDTH,
   isTextElement,
   type Scene,
   type SceneElement,
-} from "../lib/scene";
+} from '../lib/scene'
 import {
   computeGuidesOptimized,
   computeSnapOptimized,
@@ -20,14 +26,9 @@ import {
   type ResizeLabel,
   type ResizeSnapState,
   type SnapState,
-} from "../lib/smart-guide";
-import { SpatialIndex, buildSpatialIndex } from "../lib/spatial-index";
-import {
-  handleElementClick,
-  isSelected,
-  selectSingle,
-  type SelectionState,
-} from "../lib/selection";
+} from '../lib/smart-guide'
+import { SpatialIndex, buildSpatialIndex } from '../lib/spatial-index'
+import { handleElementClick, isSelected, selectSingle, type SelectionState } from '../lib/selection'
 import {
   computeBoundingBox,
   computeNewBoundsFromHandle,
@@ -36,58 +37,58 @@ import {
   type GroupDragState,
   type GroupResizeState,
   type ResizeHandleType,
-} from "../lib/group-drag";
+} from '../lib/group-drag'
 
 type SingleDragState = {
-  id: string;
-  mode: "move" | "resize";
-  startX: number;
-  startY: number;
-  element: SceneElement;
-};
+  id: string
+  mode: 'move' | 'resize'
+  startX: number
+  startY: number
+  element: SceneElement
+}
 
-type DragState = SingleDragState | GroupDragState | GroupResizeState;
+type DragState = SingleDragState | GroupDragState | GroupResizeState
 
 function getSvgPoint(svg: SVGSVGElement, clientX: number, clientY: number) {
-  const point = svg.createSVGPoint();
-  point.x = clientX;
-  point.y = clientY;
-  const matrix = svg.getScreenCTM();
+  const point = svg.createSVGPoint()
+  point.x = clientX
+  point.y = clientY
+  const matrix = svg.getScreenCTM()
 
   if (!matrix) {
-    return { x: 0, y: 0 };
+    return { x: 0, y: 0 }
   }
 
-  const nextPoint = point.matrixTransform(matrix.inverse());
-  return { x: nextPoint.x, y: nextPoint.y };
+  const nextPoint = point.matrixTransform(matrix.inverse())
+  return { x: nextPoint.x, y: nextPoint.y }
 }
 
 function minimumWidth(element: SceneElement) {
   if (isTextElement(element)) {
-    return 40;
+    return 40
   }
 
-  if (element.type === "ellipse") {
-    return 14;
+  if (element.type === 'ellipse') {
+    return 14
   }
 
-  return 28;
+  return 28
 }
 
 function minimumHeight(element: SceneElement) {
   if (isTextElement(element)) {
-    return Math.max(24, element.fontSize);
+    return Math.max(24, element.fontSize)
   }
 
-  if (element.type === "ellipse") {
-    return 14;
+  if (element.type === 'ellipse') {
+    return 14
   }
 
-  return 28;
+  return 28
 }
 
 function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
+  return Math.min(Math.max(value, min), max)
 }
 
 export function useDragManager({
@@ -103,183 +104,176 @@ export function useDragManager({
   canvasWidth = DEFAULT_CANVAS_WIDTH,
   canvasHeight = DEFAULT_CANVAS_HEIGHT,
 }: {
-  scene: Scene;
-  selection: SelectionState;
-  editingTextId: string | null;
-  svgRef: React.RefObject<SVGSVGElement | null>;
-  saveHistory: (description: string, snapshot: Scene) => void;
-  markSceneEdited: () => void;
-  setScene: React.Dispatch<React.SetStateAction<Scene>>;
-  setSelection: React.Dispatch<React.SetStateAction<SelectionState>>;
-  setEditingTextId: React.Dispatch<React.SetStateAction<string | null>>;
-  canvasWidth?: number;
-  canvasHeight?: number;
+  scene: Scene
+  selection: SelectionState
+  editingTextId: string | null
+  svgRef: React.RefObject<SVGSVGElement | null>
+  saveHistory: (description: string, snapshot: Scene) => void
+  markSceneEdited: () => void
+  setScene: React.Dispatch<React.SetStateAction<Scene>>
+  setSelection: React.Dispatch<React.SetStateAction<SelectionState>>
+  setEditingTextId: React.Dispatch<React.SetStateAction<string | null>>
+  canvasWidth?: number
+  canvasHeight?: number
 }) {
-  const [drag, setDrag] = useState<DragState | null>(null);
-  const [guides, setGuides] = useState<GuideLine[]>([]);
-  const [spacingGuides, setSpacingGuides] = useState<MeasurementGuide[]>([]);
-  const [resizeLabel, setResizeLabel] = useState<ResizeLabel | null>(null);
+  const [drag, setDrag] = useState<DragState | null>(null)
+  const [guides, setGuides] = useState<GuideLine[]>([])
+  const [spacingGuides, setSpacingGuides] = useState<MeasurementGuide[]>([])
+  const [resizeLabel, setResizeLabel] = useState<ResizeLabel | null>(null)
 
-  const snapStateRef = useRef<SnapState>(createSnapState());
-  const resizeSnapStateRef = useRef<ResizeSnapState>(createResizeSnapState());
-  const spatialIndexRef = useRef<SpatialIndex>(new SpatialIndex());
-  const rafHandleRef = useRef<number>(0);
-  const latestMoveRef = useRef<{ dx: number; dy: number; shiftKey: boolean } | null>(null);
+  const snapStateRef = useRef<SnapState>(createSnapState())
+  const resizeSnapStateRef = useRef<ResizeSnapState>(createResizeSnapState())
+  const spatialIndexRef = useRef<SpatialIndex>(new SpatialIndex())
+  const rafHandleRef = useRef<number>(0)
+  const latestMoveRef = useRef<{ dx: number; dy: number; shiftKey: boolean } | null>(null)
 
   useEffect(() => {
     if (!drag) {
-      return;
+      return
     }
 
-    const activeDrag = drag;
+    const activeDrag = drag
 
-    if (activeDrag.mode === "move" || activeDrag.mode === "group-move") {
-      snapStateRef.current = createSnapState();
+    if (activeDrag.mode === 'move' || activeDrag.mode === 'group-move') {
+      snapStateRef.current = createSnapState()
     } else {
-      resizeSnapStateRef.current = createResizeSnapState();
+      resizeSnapStateRef.current = createResizeSnapState()
     }
 
     function handlePointerMove(event: PointerEvent) {
-      const svg = svgRef.current;
+      const svg = svgRef.current
       if (!svg) {
-        return;
+        return
       }
 
-      const point = getSvgPoint(svg, event.clientX, event.clientY);
+      const point = getSvgPoint(svg, event.clientX, event.clientY)
       latestMoveRef.current = {
         dx: point.x - activeDrag.startX,
         dy: point.y - activeDrag.startY,
         shiftKey: event.shiftKey,
-      };
+      }
 
       if (rafHandleRef.current === 0) {
-        rafHandleRef.current = requestAnimationFrame(processMoveFrame);
+        rafHandleRef.current = requestAnimationFrame(processMoveFrame)
       }
     }
 
     function processMoveFrame() {
-      rafHandleRef.current = 0;
+      rafHandleRef.current = 0
 
-      const latest = latestMoveRef.current;
+      const latest = latestMoveRef.current
       if (!latest) {
-        return;
+        return
       }
 
-      if (activeDrag.mode === "group-move") {
-        const groupBox = computeBoundingBox(activeDrag.elements);
-        const rawX = clamp(
-          groupBox.x + latest.dx,
-          -groupBox.width + 24,
-          canvasWidth - 24,
-        );
-        const rawY = clamp(
-          groupBox.y + latest.dy,
-          -groupBox.height + 24,
-          canvasHeight - 24,
-        );
+      if (activeDrag.mode === 'group-move') {
+        const groupBox = computeBoundingBox(activeDrag.elements)
+        const rawX = clamp(groupBox.x + latest.dx, -groupBox.width + 24, canvasWidth - 24)
+        const rawY = clamp(groupBox.y + latest.dy, -groupBox.height + 24, canvasHeight - 24)
 
         const groupRect = {
           x: rawX,
           y: rawY,
           width: groupBox.width,
           height: groupBox.height,
-        };
+        }
 
         const result = computeSnapOptimized(
           groupRect,
           spatialIndexRef.current,
           snapStateRef.current,
-        );
+        )
 
-        snapStateRef.current = result.snapState;
-        setGuides(result.guides);
+        snapStateRef.current = result.snapState
+        setGuides(result.guides)
 
-        const spacing = computeSpacingGuidesOptimized(
-          result.snappedRect,
-          spatialIndexRef.current,
-        );
-        setSpacingGuides(spacing);
+        const spacing = computeSpacingGuidesOptimized(result.snappedRect, spatialIndexRef.current)
+        setSpacingGuides(spacing)
 
-        setResizeLabel(null);
+        setResizeLabel(null)
 
-        const groupDeltaX = result.snappedRect.x - groupBox.x;
-        const groupDeltaY = result.snappedRect.y - groupBox.y;
+        const groupDeltaX = result.snappedRect.x - groupBox.x
+        const groupDeltaY = result.snappedRect.y - groupBox.y
 
         setScene((currentScene) => ({
           ...currentScene,
           elements: currentScene.elements.map((element) => {
-            const dragElement = activeDrag.elements.find((el) => el.id === element.id);
+            const dragElement = activeDrag.elements.find((el) => el.id === element.id)
             if (!dragElement) {
-              return element;
+              return element
             }
 
             return {
               ...element,
               x: dragElement.x + groupDeltaX,
               y: dragElement.y + groupDeltaY,
-            } as SceneElement;
+            } as SceneElement
           }),
-        }));
-        markSceneEdited();
-        return;
+        }))
+        markSceneEdited()
+        return
       }
 
-      if (activeDrag.mode === "group-resize") {
+      if (activeDrag.mode === 'group-resize') {
         const newBounds = computeNewBoundsFromHandle(
           activeDrag.originalBounds,
           activeDrag.handle,
           latest,
           latest.shiftKey,
-        );
+        )
 
         const clampedBounds: BoundingBox = {
           x: clamp(newBounds.x, 0, canvasWidth - 10),
           y: clamp(newBounds.y, 0, canvasHeight - 10),
           width: clamp(newBounds.width, 10, canvasWidth - newBounds.x),
           height: clamp(newBounds.height, 10, canvasHeight - newBounds.y),
-        };
+        }
 
         const resizeSnap = computeResizeSnapOptimized(
           clampedBounds,
           spatialIndexRef.current,
           resizeSnapStateRef.current,
-        );
+        )
 
-        resizeSnapStateRef.current = resizeSnap.snapState;
+        resizeSnapStateRef.current = resizeSnap.snapState
 
         const snappedBounds: BoundingBox = {
           x: clampedBounds.x,
           y: clampedBounds.y,
           width: clamp(resizeSnap.snappedWidth, 10, canvasWidth - clampedBounds.x),
           height: clamp(resizeSnap.snappedHeight, 10, canvasHeight - clampedBounds.y),
-        };
+        }
 
-        const resizeGuides = computeGuidesOptimized(snappedBounds, spatialIndexRef.current);
-        setGuides(resizeGuides);
+        const resizeGuides = computeGuidesOptimized(snappedBounds, spatialIndexRef.current)
+        setGuides(resizeGuides)
 
-        const resizeSpacing = computeSpacingGuidesOptimized(snappedBounds, spatialIndexRef.current);
-        setSpacingGuides(resizeSpacing);
+        const resizeSpacing = computeSpacingGuidesOptimized(snappedBounds, spatialIndexRef.current)
+        setSpacingGuides(resizeSpacing)
 
         setResizeLabel({
           x: snappedBounds.x + snappedBounds.width / 2,
           y: snappedBounds.y + snappedBounds.height,
           w: Math.round(snappedBounds.width),
           h: Math.round(snappedBounds.height),
-        });
+        })
 
         const scaleMatrix = {
           scaleX: snappedBounds.width / activeDrag.originalBounds.width,
           scaleY: snappedBounds.height / activeDrag.originalBounds.height,
-          offsetX: snappedBounds.x - activeDrag.originalBounds.x * (snappedBounds.width / activeDrag.originalBounds.width),
-          offsetY: snappedBounds.y - activeDrag.originalBounds.y * (snappedBounds.height / activeDrag.originalBounds.height),
-        };
+          offsetX:
+            snappedBounds.x -
+            activeDrag.originalBounds.x * (snappedBounds.width / activeDrag.originalBounds.width),
+          offsetY:
+            snappedBounds.y -
+            activeDrag.originalBounds.y * (snappedBounds.height / activeDrag.originalBounds.height),
+        }
 
         setScene((currentScene) => ({
           ...currentScene,
           elements: currentScene.elements.map((element) => {
-            const dragElement = activeDrag.elements.find((el) => el.id === element.id);
+            const dragElement = activeDrag.elements.find((el) => el.id === element.id)
             if (!dragElement) {
-              return element;
+              return element
             }
 
             return {
@@ -288,296 +282,296 @@ export function useDragManager({
               y: dragElement.y * scaleMatrix.scaleY + scaleMatrix.offsetY,
               width: dragElement.width * scaleMatrix.scaleX,
               height: dragElement.height * scaleMatrix.scaleY,
-            } as SceneElement;
+            } as SceneElement
           }),
-        }));
-        markSceneEdited();
-        return;
+        }))
+        markSceneEdited()
+        return
       }
 
-      if (activeDrag.mode === "move") {
-        setResizeLabel(null);
+      if (activeDrag.mode === 'move') {
+        setResizeLabel(null)
         const rawX = clamp(
           activeDrag.element.x + latest.dx,
           -activeDrag.element.width + 24,
           canvasWidth - 24,
-        );
+        )
         const rawY = clamp(
           activeDrag.element.y + latest.dy,
           -activeDrag.element.height + 24,
           canvasHeight - 24,
-        );
+        )
 
         const result = computeSnapOptimized(
           { x: rawX, y: rawY, width: activeDrag.element.width, height: activeDrag.element.height },
           spatialIndexRef.current,
           snapStateRef.current,
-        );
+        )
 
-        snapStateRef.current = result.snapState;
-        setGuides(result.guides);
+        snapStateRef.current = result.snapState
+        setGuides(result.guides)
 
-        const spacing = computeSpacingGuidesOptimized(
-          result.snappedRect,
-          spatialIndexRef.current,
-        );
-        setSpacingGuides(spacing);
+        const spacing = computeSpacingGuidesOptimized(result.snappedRect, spatialIndexRef.current)
+        setSpacingGuides(spacing)
 
         setScene((currentScene) => ({
           ...currentScene,
           elements: currentScene.elements.map((element) => {
             if (element.id !== activeDrag.id) {
-              return element;
+              return element
             }
 
             return {
               ...element,
               x: result.snappedRect.x,
               y: result.snappedRect.y,
-            } as SceneElement;
+            } as SceneElement
           }),
-        }));
-        markSceneEdited();
-        return;
+        }))
+        markSceneEdited()
+        return
       }
 
       const rawWidth = clamp(
         activeDrag.element.width + latest.dx,
         minimumWidth(activeDrag.element),
         canvasWidth - activeDrag.element.x,
-      );
+      )
       const rawHeight = clamp(
         activeDrag.element.height + latest.dy,
         minimumHeight(activeDrag.element),
         canvasHeight - activeDrag.element.y,
-      );
+      )
 
       const resizeSnap = computeResizeSnapOptimized(
         { x: activeDrag.element.x, y: activeDrag.element.y, width: rawWidth, height: rawHeight },
         spatialIndexRef.current,
         resizeSnapStateRef.current,
-      );
+      )
 
-      resizeSnapStateRef.current = resizeSnap.snapState;
+      resizeSnapStateRef.current = resizeSnap.snapState
 
       const snappedWidth = clamp(
         resizeSnap.snappedWidth,
         minimumWidth(activeDrag.element),
         canvasWidth - activeDrag.element.x,
-      );
+      )
       const snappedHeight = clamp(
         resizeSnap.snappedHeight,
         minimumHeight(activeDrag.element),
         canvasHeight - activeDrag.element.y,
-      );
+      )
 
       const snappedRect = {
         x: activeDrag.element.x,
         y: activeDrag.element.y,
         width: snappedWidth,
         height: snappedHeight,
-      };
+      }
 
-      const resizeGuides = computeGuidesOptimized(snappedRect, spatialIndexRef.current);
-      setGuides(resizeGuides);
+      const resizeGuides = computeGuidesOptimized(snappedRect, spatialIndexRef.current)
+      setGuides(resizeGuides)
 
-      const resizeSpacing = computeSpacingGuidesOptimized(snappedRect, spatialIndexRef.current);
-      setSpacingGuides(resizeSpacing);
+      const resizeSpacing = computeSpacingGuidesOptimized(snappedRect, spatialIndexRef.current)
+      setSpacingGuides(resizeSpacing)
 
       setResizeLabel({
         x: activeDrag.element.x + snappedWidth / 2,
         y: activeDrag.element.y + snappedHeight,
         w: Math.round(snappedWidth),
         h: Math.round(snappedHeight),
-      });
+      })
 
       setScene((currentScene) => ({
         ...currentScene,
         elements: currentScene.elements.map((element) => {
           if (element.id !== activeDrag.id) {
-            return element;
+            return element
           }
 
           return {
             ...element,
             width: snappedWidth,
             height: snappedHeight,
-          } as SceneElement;
+          } as SceneElement
         }),
-      }));
-      markSceneEdited();
+      }))
+      markSceneEdited()
     }
 
     function handlePointerUp() {
       if (rafHandleRef.current !== 0) {
-        cancelAnimationFrame(rafHandleRef.current);
-        rafHandleRef.current = 0;
+        cancelAnimationFrame(rafHandleRef.current)
+        rafHandleRef.current = 0
       }
-      latestMoveRef.current = null;
-      setDrag(null);
-      setGuides([]);
-      setSpacingGuides([]);
-      setResizeLabel(null);
+      latestMoveRef.current = null
+      setDrag(null)
+      setGuides([])
+      setSpacingGuides([])
+      setResizeLabel(null)
     }
 
-    window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("pointerup", handlePointerUp, { once: true });
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerUp, { once: true })
 
     return () => {
       if (rafHandleRef.current !== 0) {
-        cancelAnimationFrame(rafHandleRef.current);
-        rafHandleRef.current = 0;
+        cancelAnimationFrame(rafHandleRef.current)
+        rafHandleRef.current = 0
       }
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
-    };
-  }, [drag, markSceneEdited, svgRef, setScene, canvasWidth, canvasHeight]);
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerUp)
+    }
+  }, [drag, markSceneEdited, svgRef, setScene, canvasWidth, canvasHeight])
 
   const handleElementPointerDown = useCallback(
     (elementId: string, event: ReactPointerEvent<SVGGElement>) => {
-      const svg = svgRef.current;
-      const element = scene.elements.find((item) => item.id === elementId);
+      const svg = svgRef.current
+      const element = scene.elements.find((item) => item.id === elementId)
       if (!svg || !element) {
-        return;
+        return
       }
 
-      const isShiftPressed = event.shiftKey;
-      const wasSelected = isSelected(selection, elementId);
+      const isShiftPressed = event.shiftKey
+      const wasSelected = isSelected(selection, elementId)
 
-      setSelection(handleElementClick(selection, elementId, isShiftPressed));
+      setSelection(handleElementClick(selection, elementId, isShiftPressed))
 
       if (editingTextId && editingTextId !== elementId) {
-        setEditingTextId(null);
+        setEditingTextId(null)
       }
 
       if (element.locked) {
-        return;
+        return
       }
 
-      const point = getSvgPoint(svg, event.clientX, event.clientY);
+      const point = getSvgPoint(svg, event.clientX, event.clientY)
 
       if (wasSelected && selection.selectedIds.length > 1 && !isShiftPressed) {
         const selectedElements = scene.elements.filter(
-          (el) => selection.selectedIds.includes(el.id) && !el.locked
-        );
+          (el) => selection.selectedIds.includes(el.id) && !el.locked,
+        )
         if (selectedElements.length > 0) {
           const otherElements = scene.elements.filter(
-            (el) => !selectedElements.some((sel) => sel.id === el.id) && !el.locked && el.hidden !== true
-          );
-          spatialIndexRef.current = buildSpatialIndex(otherElements);
+            (el) =>
+              !selectedElements.some((sel) => sel.id === el.id) && !el.locked && el.hidden !== true,
+          )
+          spatialIndexRef.current = buildSpatialIndex(otherElements)
 
           setDrag({
-            mode: "group-move",
+            mode: 'group-move',
             startX: point.x,
             startY: point.y,
             elements: selectedElements.map((el) => ({ ...el })),
-          });
-          return;
+          })
+          return
         }
       }
 
       const otherElements = scene.elements.filter(
-        (el) => el.id !== elementId && !el.locked && el.hidden !== true
-      );
-      spatialIndexRef.current = buildSpatialIndex(otherElements);
+        (el) => el.id !== elementId && !el.locked && el.hidden !== true,
+      )
+      spatialIndexRef.current = buildSpatialIndex(otherElements)
 
-      saveHistory(`移动元素「${element.name}」`, scene);
+      saveHistory(`移动元素「${element.name}」`, scene)
       setDrag({
         id: elementId,
-        mode: "move",
+        mode: 'move',
         startX: point.x,
         startY: point.y,
         element: { ...element },
-      });
+      })
     },
-    [scene, selection, editingTextId, svgRef, setSelection, setEditingTextId, saveHistory]
-  );
+    [scene, selection, editingTextId, svgRef, setSelection, setEditingTextId, saveHistory],
+  )
 
   const handleResizePointerDown = useCallback(
     (elementId: string, event: ReactPointerEvent<SVGRectElement>) => {
-      const svg = svgRef.current;
-      const element = scene.elements.find((item) => item.id === elementId);
+      const svg = svgRef.current
+      const element = scene.elements.find((item) => item.id === elementId)
       if (!svg || !element) {
-        return;
+        return
       }
 
-      setSelection(selectSingle(selection, elementId));
+      setSelection(selectSingle(selection, elementId))
       if (element.locked) {
-        return;
+        return
       }
 
       const otherElements = scene.elements.filter(
-        (el) => el.id !== elementId && !el.locked && el.hidden !== true
-      );
-      spatialIndexRef.current = buildSpatialIndex(otherElements);
+        (el) => el.id !== elementId && !el.locked && el.hidden !== true,
+      )
+      spatialIndexRef.current = buildSpatialIndex(otherElements)
 
-      saveHistory(`调整元素大小「${element.name}」`, scene);
-      const point = getSvgPoint(svg, event.clientX, event.clientY);
+      saveHistory(`调整元素大小「${element.name}」`, scene)
+      const point = getSvgPoint(svg, event.clientX, event.clientY)
       setDrag({
         id: elementId,
-        mode: "resize",
+        mode: 'resize',
         startX: point.x,
         startY: point.y,
         element: { ...element },
-      });
+      })
     },
-    [scene, selection, svgRef, setSelection, saveHistory]
-  );
+    [scene, selection, svgRef, setSelection, saveHistory],
+  )
 
   const handleGroupResizePointerDown = useCallback(
     (handle: ResizeHandleType, event: ReactPointerEvent<SVGRectElement>) => {
-      const svg = svgRef.current;
+      const svg = svgRef.current
       if (!svg) {
-        return;
+        return
       }
 
       const selectedElements = scene.elements.filter(
         (el) => selection.selectedIds.includes(el.id) && !el.locked,
-      );
+      )
       if (selectedElements.length === 0) {
-        return;
+        return
       }
 
       const otherElements = scene.elements.filter(
-        (el) => !selectedElements.some((sel) => sel.id === el.id) && !el.locked && el.hidden !== true
-      );
-      spatialIndexRef.current = buildSpatialIndex(otherElements);
+        (el) =>
+          !selectedElements.some((sel) => sel.id === el.id) && !el.locked && el.hidden !== true,
+      )
+      spatialIndexRef.current = buildSpatialIndex(otherElements)
 
-      const point = getSvgPoint(svg, event.clientX, event.clientY);
-      setDrag(createGroupResizeState(handle, point.x, point.y, selectedElements));
+      const point = getSvgPoint(svg, event.clientX, event.clientY)
+      setDrag(createGroupResizeState(handle, point.x, point.y, selectedElements))
     },
-    [scene, selection, svgRef]
-  );
+    [scene, selection, svgRef],
+  )
 
   const handleGroupDragPointerDown = useCallback(
     (event: ReactPointerEvent<SVGRectElement>) => {
-      const svg = svgRef.current;
+      const svg = svgRef.current
       if (!svg) {
-        return;
+        return
       }
 
       const selectedElements = scene.elements.filter(
         (el) => selection.selectedIds.includes(el.id) && !el.locked,
-      );
+      )
       if (selectedElements.length === 0) {
-        return;
+        return
       }
 
       const otherElements = scene.elements.filter(
-        (el) => !selectedElements.some((sel) => sel.id === el.id) && !el.locked && el.hidden !== true
-      );
-      spatialIndexRef.current = buildSpatialIndex(otherElements);
+        (el) =>
+          !selectedElements.some((sel) => sel.id === el.id) && !el.locked && el.hidden !== true,
+      )
+      spatialIndexRef.current = buildSpatialIndex(otherElements)
 
-      const point = getSvgPoint(svg, event.clientX, event.clientY);
+      const point = getSvgPoint(svg, event.clientX, event.clientY)
       setDrag({
-        mode: "group-move",
+        mode: 'group-move',
         startX: point.x,
         startY: point.y,
         elements: selectedElements.map((el) => ({ ...el })),
-      });
+      })
     },
-    [scene, selection, svgRef]
-  );
+    [scene, selection, svgRef],
+  )
 
   return {
     drag,
@@ -591,5 +585,5 @@ export function useDragManager({
     handleResizePointerDown,
     handleGroupResizePointerDown,
     handleGroupDragPointerDown,
-  };
+  }
 }

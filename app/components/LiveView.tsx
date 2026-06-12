@@ -1,122 +1,128 @@
-"use client";
+'use client'
 
-import { useEffect, useState, useMemo } from "react";
-import { createDefaultScene, isImageElement, type Scene } from "../lib/scene";
-import { isLocalAssetSrc, parseLocalAssetId, getLocalAssetBlobUrl } from "../lib/localAssetStorage";
-import SceneCanvas from "./SceneCanvas";
+import { useEffect, useState, useMemo } from 'react'
+import { createDefaultScene, isImageElement, type Scene } from '../lib/scene'
+import { isLocalAssetSrc, parseLocalAssetId, getLocalAssetBlobUrl } from '../lib/localAssetStorage'
+import SceneCanvas from './SceneCanvas'
 
 type LiveViewProps = {
-  templateId?: string;
-  slotId?: string;
-};
+  templateId?: string
+  slotId?: string
+}
 
 export default function LiveView({ templateId, slotId }: LiveViewProps) {
-  const [scene, setScene] = useState<Scene>(() => createDefaultScene());
-  const [blobUrlMap, setBlobUrlMap] = useState<Record<string, string>>({});
+  const [scene, setScene] = useState<Scene>(() => createDefaultScene())
+  const [blobUrlMap, setBlobUrlMap] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    let active = true;
+    let active = true
 
     async function refreshScene() {
       try {
-        const url = templateId && slotId
-          ? `/api/scene?t=${encodeURIComponent(templateId)}&s=${encodeURIComponent(slotId)}&ts=${Date.now()}`
-          : `/api/scene?ts=${Date.now()}`;
+        const url =
+          templateId && slotId
+            ? `/api/scene?t=${encodeURIComponent(templateId)}&s=${encodeURIComponent(slotId)}&ts=${Date.now()}`
+            : `/api/scene?ts=${Date.now()}`
 
         const response = await fetch(url, {
-          cache: "no-store",
-        });
+          cache: 'no-store',
+        })
         if (!response.ok) {
-          return;
+          return
         }
 
-        const nextScene = (await response.json()) as Scene;
+        const nextScene = (await response.json()) as Scene
         if (active) {
-          setScene(nextScene);
+          setScene(nextScene)
         }
       } catch {
         // OBS should keep rendering the last known scene if a refresh fails.
       }
     }
 
-    void refreshScene();
-    const interval = window.setInterval(refreshScene, 1000);
+    void refreshScene()
+    const interval = window.setInterval(refreshScene, 1000)
 
     return () => {
-      active = false;
-      window.clearInterval(interval);
-    };
-  }, [templateId, slotId]);
+      active = false
+      window.clearInterval(interval)
+    }
+  }, [templateId, slotId])
 
   // 解析 local-asset src 为 blob URL
   const localAssetIds = useMemo(() => {
-    const ids = new Set<string>();
+    const ids = new Set<string>()
     for (const element of scene.elements) {
       if (isImageElement(element) && isLocalAssetSrc(element.src)) {
-        const id = parseLocalAssetId(element.src);
-        if (id) ids.add(id);
+        const id = parseLocalAssetId(element.src)
+        if (id) ids.add(id)
       }
     }
-    return ids;
-  }, [scene.elements]);
+    return ids
+  }, [scene.elements])
 
   useEffect(() => {
-    let active = true;
-    const ids = Array.from(localAssetIds);
+    let active = true
+    const ids = Array.from(localAssetIds)
 
     void (async () => {
       if (ids.length === 0) {
-        if (active) setBlobUrlMap({});
-        return;
+        if (active) setBlobUrlMap({})
+        return
       }
 
       const entries = await Promise.all(
         ids.map(async (id) => {
-          const blobUrl = await getLocalAssetBlobUrl(id);
-          return [id, blobUrl] as const;
+          const blobUrl = await getLocalAssetBlobUrl(id)
+          return [id, blobUrl] as const
         }),
-      );
+      )
 
       if (!active) {
         for (const [, url] of entries) {
-          if (url) URL.revokeObjectURL(url);
+          if (url) URL.revokeObjectURL(url)
         }
-        return;
+        return
       }
-      const nextMap: Record<string, string> = {};
+      const nextMap: Record<string, string> = {}
       for (const [id, url] of entries) {
-        if (url) nextMap[id] = url;
+        if (url) nextMap[id] = url
       }
-      setBlobUrlMap(nextMap);
-    })();
+      setBlobUrlMap(nextMap)
+    })()
 
     return () => {
-      active = false;
-    };
-  }, [localAssetIds]);
+      active = false
+    }
+  }, [localAssetIds])
 
   // 组件卸载时回收 blob URL
   useEffect(() => {
     return () => {
       for (const url of Object.values(blobUrlMap)) {
-        URL.revokeObjectURL(url);
+        URL.revokeObjectURL(url)
       }
-    };
-  }, [blobUrlMap]);
+    }
+  }, [blobUrlMap])
 
   function resolveSrc(src: string): string {
-    if (!isLocalAssetSrc(src)) return src;
-    const id = parseLocalAssetId(src);
-    if (!id) return src;
-    return blobUrlMap[id] ?? src;
+    if (!isLocalAssetSrc(src)) return src
+    const id = parseLocalAssetId(src)
+    if (!id) return src
+    return blobUrlMap[id] ?? src
   }
 
   return (
     <>
       <style>{`html, body { background: transparent !important; }`}</style>
       <main className="live-shell">
-        <SceneCanvas scene={scene} className="live-canvas" idPrefix="live" resolveSrc={resolveSrc} />
+        <SceneCanvas
+          scene={scene}
+          className="live-canvas"
+          idPrefix="live"
+          resolveSrc={resolveSrc}
+        />
       </main>
     </>
-  );
+  )
 }

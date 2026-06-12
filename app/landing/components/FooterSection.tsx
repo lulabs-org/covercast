@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import Image from "next/image";
+import Image from 'next/image'
 
 export default function FooterSection() {
   return (
@@ -73,5 +73,5 @@ export default function FooterSection() {
         </p>
       </div>
     </footer>
-  );
+  )
 }

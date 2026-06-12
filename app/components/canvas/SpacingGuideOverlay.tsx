@@ -1,50 +1,50 @@
-import type { MeasurementGuide } from "../../lib/smart-guide";
+import type { MeasurementGuide } from '../../lib/smart-guide'
 
 type ArrowCapLine = {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-};
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+}
 
 type ArrowCap = {
-  line1: ArrowCapLine;
-  line2: ArrowCapLine;
-};
+  line1: ArrowCapLine
+  line2: ArrowCapLine
+}
 
-type ArrowDirection = "left" | "right" | "top" | "bottom";
+type ArrowDirection = 'left' | 'right' | 'top' | 'bottom'
 
 function computeArrowCap(
   x: number,
   y: number,
-  orientation: "horizontal" | "vertical",
+  orientation: 'horizontal' | 'vertical',
   direction: ArrowDirection,
   arrowLen: number,
-  arrowW: number
+  arrowW: number,
 ): ArrowCap {
-  if (orientation === "horizontal") {
-    if (direction === "left") {
+  if (orientation === 'horizontal') {
+    if (direction === 'left') {
       return {
         line1: { x1: x, y1: y, x2: x + arrowLen, y2: y - arrowW },
         line2: { x1: x, y1: y, x2: x + arrowLen, y2: y + arrowW },
-      };
+      }
     } else {
       return {
         line1: { x1: x, y1: y, x2: x - arrowLen, y2: y - arrowW },
         line2: { x1: x, y1: y, x2: x - arrowLen, y2: y + arrowW },
-      };
+      }
     }
   } else {
-    if (direction === "top") {
+    if (direction === 'top') {
       return {
         line1: { x1: x, y1: y, x2: x - arrowW, y2: y + arrowLen },
         line2: { x1: x, y1: y, x2: x + arrowW, y2: y + arrowLen },
-      };
+      }
     } else {
       return {
         line1: { x1: x, y1: y, x2: x - arrowW, y2: y - arrowLen },
         line2: { x1: x, y1: y, x2: x + arrowW, y2: y - arrowLen },
-      };
+      }
     }
   }
 }
@@ -53,52 +53,48 @@ export function SpacingGuideOverlay({ spacingGuides }: { spacingGuides: Measurem
   return (
     <g className="spacing-guides-overlay" pointerEvents="none">
       {spacingGuides.map((mg, index) => {
-        const { measurementLine, extensionLines, label, direction } = mg;
-        const isHorizontal = direction === "horizontal";
-        const arrowSize = 6;
+        const { measurementLine, extensionLines, label, direction } = mg
+        const isHorizontal = direction === 'horizontal'
+        const arrowSize = 6
 
         const cap1 = computeArrowCap(
           measurementLine.x1,
           measurementLine.y1,
           direction,
-          isHorizontal ? "left" : "top",
+          isHorizontal ? 'left' : 'top',
           arrowSize,
-          arrowSize
-        );
+          arrowSize,
+        )
         const cap2 = computeArrowCap(
           measurementLine.x2,
           measurementLine.y2,
           direction,
-          isHorizontal ? "right" : "bottom",
+          isHorizontal ? 'right' : 'bottom',
           arrowSize,
-          arrowSize
-        );
+          arrowSize,
+        )
 
-        const labelText = String(label.value);
-        const labelW = labelText.length * 10 + 10;
-        const labelH = 22;
-        const labelGap = 5;
+        const labelText = String(label.value)
+        const labelW = labelText.length * 10 + 10
+        const labelH = 22
+        const labelGap = 5
 
-        const labelRx = isHorizontal
-          ? label.x - labelW / 2
-          : label.x + labelGap;
-        const labelRy = isHorizontal
-          ? label.y - labelGap - labelH
-          : label.y - labelH / 2;
+        const labelRx = isHorizontal ? label.x - labelW / 2 : label.x + labelGap
+        const labelRy = isHorizontal ? label.y - labelGap - labelH : label.y - labelH / 2
 
         return (
           <g key={`measurement-${direction}-${index}`}>
             {extensionLines.map((ext, extIndex) => {
-              const extTickLen = 6;
-              const extIsVertical = ext.x1 === ext.x2;
-              const extTick1x1 = extIsVertical ? ext.x1 - extTickLen : ext.x1;
-              const extTick1y1 = extIsVertical ? ext.y1 : ext.y1 - extTickLen;
-              const extTick1x2 = extIsVertical ? ext.x1 + extTickLen : ext.x1;
-              const extTick1y2 = extIsVertical ? ext.y1 : ext.y1 + extTickLen;
-              const extTick2x1 = extIsVertical ? ext.x2 - extTickLen : ext.x2;
-              const extTick2y1 = extIsVertical ? ext.y2 : ext.y2 - extTickLen;
-              const extTick2x2 = extIsVertical ? ext.x2 + extTickLen : ext.x2;
-              const extTick2y2 = extIsVertical ? ext.y2 : ext.y2 + extTickLen;
+              const extTickLen = 6
+              const extIsVertical = ext.x1 === ext.x2
+              const extTick1x1 = extIsVertical ? ext.x1 - extTickLen : ext.x1
+              const extTick1y1 = extIsVertical ? ext.y1 : ext.y1 - extTickLen
+              const extTick1x2 = extIsVertical ? ext.x1 + extTickLen : ext.x1
+              const extTick1y2 = extIsVertical ? ext.y1 : ext.y1 + extTickLen
+              const extTick2x1 = extIsVertical ? ext.x2 - extTickLen : ext.x2
+              const extTick2y1 = extIsVertical ? ext.y2 : ext.y2 - extTickLen
+              const extTick2x2 = extIsVertical ? ext.x2 + extTickLen : ext.x2
+              const extTick2y2 = extIsVertical ? ext.y2 : ext.y2 + extTickLen
 
               return (
                 <g key={`ext-group-${extIndex}`}>
@@ -131,7 +127,7 @@ export function SpacingGuideOverlay({ spacingGuides }: { spacingGuides: Measurem
                     opacity="0.6"
                   />
                 </g>
-              );
+              )
             })}
             <line
               x1={measurementLine.x1}
@@ -199,8 +195,8 @@ export function SpacingGuideOverlay({ spacingGuides }: { spacingGuides: Measurem
               </>
             ) : null}
           </g>
-        );
+        )
       })}
     </g>
-  );
+  )
 }

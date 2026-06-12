@@ -9,57 +9,99 @@ export const SITE_CONFIG = {
   url: 'https://covercast.app',
   ogImage: '/covercast-logo.png',
   locale: 'zh_CN',
-} as const;
+} as const
 
 export const ROUTES = {
   home: '/',
   editor: '/editor',
   live: '/live',
-} as const;
+} as const
 
 export const PAGE_METADATA = {
   home: {
     title: 'Covercast - 专业封面编辑器 | 免费在线背景制作工具',
-    description: 'Covercast是免费的专业封面编辑器，支持可视化拖拽编辑、实时预览、一键导出SVG/PNG。快速创建精美的直播间背景图片，适用于抖音、快手、B站、YouTube等平台直播。无需设计经验，轻松制作专业背景。',
+    description:
+      'Covercast是免费的专业封面编辑器，支持可视化拖拽编辑、实时预览、一键导出SVG/PNG。快速创建精美的直播间背景图片，适用于抖音、快手、B站、YouTube等平台直播。无需设计经验，轻松制作专业背景。',
     keywords: [
-      '直播背景', '背景编辑器', '直播工具', '可视化编辑', '实时预览',
-      'SVG导出', 'PNG导出', '开源工具', '免费直播背景', '在线背景制作',
-      '直播间背景', '直播背景图片', '直播背景设计', '抖音直播背景', '快手直播背景',
-      'B站直播背景', 'YouTube直播背景', '直播背景模板', '直播背景素材',
-      '拖拽编辑器', '所见即所得', '直播背景生成器', '直播画面设计',
-      '直播背景制作', '直播背景下载', '免费背景设计', '在线设计工具'
+      '直播背景',
+      '背景编辑器',
+      '直播工具',
+      '可视化编辑',
+      '实时预览',
+      'SVG导出',
+      'PNG导出',
+      '开源工具',
+      '免费直播背景',
+      '在线背景制作',
+      '直播间背景',
+      '直播背景图片',
+      '直播背景设计',
+      '抖音直播背景',
+      '快手直播背景',
+      'B站直播背景',
+      'YouTube直播背景',
+      '直播背景模板',
+      '直播背景素材',
+      '拖拽编辑器',
+      '所见即所得',
+      '直播背景生成器',
+      '直播画面设计',
+      '直播背景制作',
+      '直播背景下载',
+      '免费背景设计',
+      '在线设计工具',
     ],
   },
   editor: {
     title: '在线编辑器 - Covercast | 免费直播背景制作工具',
-    description: 'Covercast在线编辑器，拖拽式画布操作，支持文本、图片、形状等多种元素编辑。实时预览直播背景效果，一键导出高清背景图片。免费使用，无需注册，立即开始设计你的直播背景。',
+    description:
+      'Covercast在线编辑器，拖拽式画布操作，支持文本、图片、形状等多种元素编辑。实时预览直播背景效果，一键导出高清背景图片。免费使用，无需注册，立即开始设计你的直播背景。',
     keywords: [
-      '直播背景编辑', '在线编辑器', '拖拽编辑', '实时预览', '背景导出',
-      '免费编辑器', '在线背景设计', '直播背景制作工具', '拖拽式编辑',
-      '可视化编辑器', '直播背景设计工具', '在线背景生成', '直播画面编辑',
-      '背景图片制作', '直播背景素材编辑', '免费背景制作'
+      '直播背景编辑',
+      '在线编辑器',
+      '拖拽编辑',
+      '实时预览',
+      '背景导出',
+      '免费编辑器',
+      '在线背景设计',
+      '直播背景制作工具',
+      '拖拽式编辑',
+      '可视化编辑器',
+      '直播背景设计工具',
+      '在线背景生成',
+      '直播画面编辑',
+      '背景图片制作',
+      '直播背景素材编辑',
+      '免费背景制作',
     ],
   },
   live: {
     title: '实时预览 - Covercast | 直播背景效果展示',
-    description: 'Covercast实时预览页面，查看直播背景的实际效果。支持不同尺寸和场景的背景预览，确保你的直播背景在各平台都能完美展示。',
+    description:
+      'Covercast实时预览页面，查看直播背景的实际效果。支持不同尺寸和场景的背景预览，确保你的直播背景在各平台都能完美展示。',
     keywords: [
-      '直播预览', '背景预览', '实时效果', '直播背景展示',
-      '背景效果查看', '直播画面预览', '背景实时渲染', '直播背景测试'
+      '直播预览',
+      '背景预览',
+      '实时效果',
+      '直播背景展示',
+      '背景效果查看',
+      '直播画面预览',
+      '背景实时渲染',
+      '直播背景测试',
     ],
   },
-} as const;
+} as const
 
 export const OPEN_GRAPH = {
   type: 'website',
   siteName: SITE_CONFIG.name,
   locale: SITE_CONFIG.locale,
-} as const;
+} as const
 
 export const TWITTER_CARD = {
   card: 'summary_large_image',
   site: '@covercast',
-} as const;
+} as const
 
 export const JSON_LD_CONFIG = {
   organization: {
@@ -68,9 +110,7 @@ export const JSON_LD_CONFIG = {
     url: SITE_CONFIG.url,
     logo: `${SITE_CONFIG.url}${SITE_CONFIG.ogImage}`,
     description: SITE_CONFIG.description,
-    sameAs: [
-      'https://github.com/lulabs-org/covercast',
-    ],
+    sameAs: ['https://github.com/lulabs-org/covercast'],
   },
   softwareApplication: {
     '@type': 'SoftwareApplication',
@@ -167,4 +207,4 @@ export const JSON_LD_CONFIG = {
     ],
     totalTime: 'PT5M',
   },
-} as const;
+} as const

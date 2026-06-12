@@ -1,13 +1,8 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import "./styles/fonts.css";
-import JsonLd from "./components/seo/JsonLd";
-import {
-  SITE_CONFIG,
-  OPEN_GRAPH,
-  TWITTER_CARD,
-  PAGE_METADATA,
-} from "./lib/seo-config";
+import type { Metadata } from 'next'
+import './globals.css'
+import './styles/fonts.css'
+import JsonLd from './components/seo/JsonLd'
+import { SITE_CONFIG, OPEN_GRAPH, TWITTER_CARD, PAGE_METADATA } from './lib/seo-config'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_CONFIG.url),
@@ -51,26 +46,26 @@ export const metadata: Metadata = {
     googleBot: {
       index: true,
       follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
     },
   },
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
     ],
   },
   alternates: {
     canonical: SITE_CONFIG.url,
   },
-};
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
     <html lang="zh-CN">
@@ -82,5 +77,5 @@ export default function RootLayout({
       </head>
       <body>{children}</body>
     </html>
-  );
+  )
 }

@@ -1,21 +1,21 @@
-"use client";
+'use client'
 
-import { useState, useRef, useEffect } from "react";
-import { type CustomSceneTemplate } from "../../hooks/useTemplateManager";
-import { useTemplateCardMenu } from "../../hooks/useTemplateCardMenu";
-import { TemplateCardMenu } from "./TemplateCardMenu";
+import { useState, useRef, useEffect } from 'react'
+import { type CustomSceneTemplate } from '../../hooks/useTemplateManager'
+import { useTemplateCardMenu } from '../../hooks/useTemplateCardMenu'
+import { TemplateCardMenu } from './TemplateCardMenu'
 
-function formatTemplateDate(value: string, prefix = "保存于") {
-  const date = new Date(value);
+function formatTemplateDate(value: string, prefix = '保存于') {
+  const date = new Date(value)
 
   if (Number.isNaN(date.getTime())) {
-    return "保存在浏览器缓存";
+    return '保存在浏览器缓存'
   }
 
-  return `${prefix} ${date.toLocaleDateString("zh-CN", {
-    month: "2-digit",
-    day: "2-digit",
-  })}`;
+  return `${prefix} ${date.toLocaleDateString('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+  })}`
 }
 
 export function CustomTemplateCard({
@@ -28,76 +28,81 @@ export function CustomTemplateCard({
   onRename,
   onDelete,
 }: {
-  template: CustomSceneTemplate;
-  active: boolean;
-  dirty: boolean;
-  customTemplates: CustomSceneTemplate[];
-  onApply: () => void;
-  onDuplicate: () => void;
-  onRename: (newName: string) => void;
-  onDelete: () => void;
+  template: CustomSceneTemplate
+  active: boolean
+  dirty: boolean
+  customTemplates: CustomSceneTemplate[]
+  onApply: () => void
+  onDuplicate: () => void
+  onRename: (newName: string) => void
+  onDelete: () => void
 }) {
-  const { isOpen, position, triggerRef, menuRef, openMenu, closeMenu } = useTemplateCardMenu();
-  const [isRenaming, setIsRenaming] = useState(false);
-  const [renameValue, setRenameValue] = useState(template.name);
-  const renameInputRef = useRef<HTMLInputElement>(null);
+  const { isOpen, position, triggerRef, menuRef, openMenu, closeMenu } = useTemplateCardMenu()
+  const [isRenaming, setIsRenaming] = useState(false)
+  const [renameValue, setRenameValue] = useState(template.name)
+  const renameInputRef = useRef<HTMLInputElement>(null)
 
   const description = dirty
-    ? "有未保存修改"
+    ? '有未保存修改'
     : formatTemplateDate(
         template.updatedAt ?? template.createdAt,
-        template.updatedAt ? "更新于" : "保存于",
-      );
+        template.updatedAt ? '更新于' : '保存于',
+      )
 
-  const badge = dirty ? "未保存" : "自定义";
+  const badge = dirty ? '未保存' : '自定义'
 
-  const renameError = renameValue.trim() && renameValue.trim() !== template.name && customTemplates.some(
-    (t) => t.id !== template.id && t.name === renameValue.trim()
-  )
-    ? "模板名称已存在"
-    : undefined;
+  const renameError =
+    renameValue.trim() &&
+    renameValue.trim() !== template.name &&
+    customTemplates.some((t) => t.id !== template.id && t.name === renameValue.trim())
+      ? '模板名称已存在'
+      : undefined
 
   useEffect(() => {
     if (isRenaming && renameInputRef.current) {
-      renameInputRef.current.focus();
-      renameInputRef.current.select();
+      renameInputRef.current.focus()
+      renameInputRef.current.select()
     }
-  }, [isRenaming]);
+  }, [isRenaming])
 
   function handleStartRename() {
-    setIsRenaming(true);
-    setRenameValue(template.name);
-    closeMenu();
+    setIsRenaming(true)
+    setRenameValue(template.name)
+    closeMenu()
   }
 
   function handleRenameSubmit() {
     if (renameError) {
-      return;
+      return
     }
-    const trimmedValue = renameValue.trim();
+    const trimmedValue = renameValue.trim()
     if (trimmedValue && trimmedValue !== template.name) {
-      onRename(trimmedValue);
+      onRename(trimmedValue)
     }
-    setIsRenaming(false);
+    setIsRenaming(false)
   }
 
   function handleRenameKeyDown(event: React.KeyboardEvent) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      handleRenameSubmit();
-    } else if (event.key === "Escape") {
-      setIsRenaming(false);
-      setRenameValue(template.name);
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      handleRenameSubmit()
+    } else if (event.key === 'Escape') {
+      setIsRenaming(false)
+      setRenameValue(template.name)
     }
   }
 
   return (
-    <div className={[
-      "template-card",
-      active ? "active" : "",
-      dirty ? "dirty" : "",
-      renameError ? "rename-error" : "",
-    ].filter(Boolean).join(" ")}>
+    <div
+      className={[
+        'template-card',
+        active ? 'active' : '',
+        dirty ? 'dirty' : '',
+        renameError ? 'rename-error' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
       <button type="button" className="template-card-button" onClick={onApply}>
         <div className="template-card-content">
           {isRenaming ? (
@@ -109,7 +114,7 @@ export function CustomTemplateCard({
                 onChange={(e) => setRenameValue(e.currentTarget.value)}
                 onKeyDown={handleRenameKeyDown}
                 onBlur={handleRenameSubmit}
-                className={`template-card-rename-input${renameError ? " error" : ""}`}
+                className={`template-card-rename-input${renameError ? ' error' : ''}`}
               />
               {renameError ? (
                 <span className="template-card-rename-error">{renameError}</span>
@@ -133,7 +138,7 @@ export function CustomTemplateCard({
         ⋯
       </button>
       <TemplateCardMenu
-        key={isOpen ? "open" : "closed"}
+        key={isOpen ? 'open' : 'closed'}
         isOpen={isOpen}
         position={position}
         menuRef={menuRef}
@@ -143,5 +148,5 @@ export function CustomTemplateCard({
         onClose={closeMenu}
       />
     </div>
-  );
+  )
 }

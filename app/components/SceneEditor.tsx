@@ -1,84 +1,67 @@
-"use client";
+'use client'
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import {
-  cloneScene,
-  createDefaultScene,
-  type Scene,
-  type SceneElement,
-} from "../lib/scene";
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { cloneScene, createDefaultScene, type Scene, type SceneElement } from '../lib/scene'
 
-import {
-  createSelectionState,
-  selectSingle,
-  type SelectionState,
-} from "../lib/selection";
-import {
-  type HitTestStrategy,
-} from "../lib/marquee";
-import { useScrollVisibility } from "../lib/use-scroll-visibility";
-import { usePanelResize } from "../lib/use-panel-resize";
-import { useHistory } from "../hooks/useHistory";
-import { useClipboard } from "../hooks/useClipboard";
-import { useEditorShortcuts } from "../hooks/useEditorShortcuts";
-import { useCanvasZoom } from "../hooks/useCanvasZoom";
-import { useCanvasSize } from "../hooks/useCanvasSize";
-import { useTemplateManager } from "../hooks/useTemplateManager";
-import { useSlotManager } from "../hooks/useSlotManager";
-import { useDragManager } from "../hooks/useDragManager";
-import { useMarqueeSelection } from "../hooks/useMarqueeSelection";
-import { useExportScene, type ExportFormat, EXPORT_FORMAT_OPTIONS } from "../hooks/useExportScene";
-import { useSceneActions } from "../hooks/useSceneActions";
-import { useAssetManager } from "../hooks/useAssetManager";
-import { useSceneLoader } from "../hooks/useSceneLoader";
-import { useVisibleGuides } from "../hooks/useVisibleGuides";
-import { useLocalFonts } from "../hooks/useLocalFonts";
-import { useLocalAssets } from "../hooks/useLocalAssets";
-import { useCreateBlankCover } from "../hooks/useCreateBlankCover";
-import { SaveTemplateDialog } from "./dialogs/SaveTemplateDialog";
-import { useSaveTemplateDialog } from "../hooks/useSaveTemplateDialog";
-import { SceneToolbar } from "./editor/SceneToolbar";
-import { StagePanel } from "./editor/StagePanel";
-import { LeftSidebar } from "./editor/sidebar/LeftSidebar";
-import { RightSidebar } from "./editor/sidebar/RightSidebar";
-import { CreateBlankCoverModal } from "./panels/CreateBlankCoverModal";
+import { createSelectionState, selectSingle, type SelectionState } from '../lib/selection'
+import { type HitTestStrategy } from '../lib/marquee'
+import { useScrollVisibility } from '../lib/use-scroll-visibility'
+import { usePanelResize } from '../lib/use-panel-resize'
+import { useHistory } from '../hooks/useHistory'
+import { useClipboard } from '../hooks/useClipboard'
+import { useEditorShortcuts } from '../hooks/useEditorShortcuts'
+import { useCanvasZoom } from '../hooks/useCanvasZoom'
+import { useCanvasSize } from '../hooks/useCanvasSize'
+import { useTemplateManager } from '../hooks/useTemplateManager'
+import { useSlotManager } from '../hooks/useSlotManager'
+import { useDragManager } from '../hooks/useDragManager'
+import { useMarqueeSelection } from '../hooks/useMarqueeSelection'
+import { useExportScene, type ExportFormat, EXPORT_FORMAT_OPTIONS } from '../hooks/useExportScene'
+import { useSceneActions } from '../hooks/useSceneActions'
+import { useAssetManager } from '../hooks/useAssetManager'
+import { useSceneLoader } from '../hooks/useSceneLoader'
+import { useVisibleGuides } from '../hooks/useVisibleGuides'
+import { useLocalFonts } from '../hooks/useLocalFonts'
+import { useLocalAssets } from '../hooks/useLocalAssets'
+import { useCreateBlankCover } from '../hooks/useCreateBlankCover'
+import { SaveTemplateDialog } from './dialogs/SaveTemplateDialog'
+import { useSaveTemplateDialog } from '../hooks/useSaveTemplateDialog'
+import { SceneToolbar } from './editor/SceneToolbar'
+import { StagePanel } from './editor/StagePanel'
+import { LeftSidebar } from './editor/sidebar/LeftSidebar'
+import { RightSidebar } from './editor/sidebar/RightSidebar'
+import { CreateBlankCoverModal } from './panels/CreateBlankCoverModal'
 
-type SidebarSectionId = "scene" | "sources" | "templates" | "layers";
+type SidebarSectionId = 'scene' | 'sources' | 'templates' | 'layers'
 
 export default function SceneEditor() {
-  const [scene, setScene] = useState<Scene>(() => createDefaultScene());
-  const [selection, setSelection] = useState<SelectionState>(() => createSelectionState());
-  const [hitTestStrategy] = useState<HitTestStrategy>("intersection");
-  const [status, setStatus] = useState("正在读取本地场景...");
-  const [appOrigin, setAppOrigin] = useState("");
-  const [exportFormat, setExportFormat] = useState<ExportFormat>("png");
-  const [guidesSelectedIds, setGuidesSelectedIds] = useState<string[]>([]);
-  const svgRef = useRef<SVGSVGElement>(null);
-  const sceneElementsRef = useRef<SceneElement[]>(scene.elements);
-  const selectedElementRef = useRef<SceneElement | null>(null);
+  const [scene, setScene] = useState<Scene>(() => createDefaultScene())
+  const [selection, setSelection] = useState<SelectionState>(() => createSelectionState())
+  const [hitTestStrategy] = useState<HitTestStrategy>('intersection')
+  const [status, setStatus] = useState('正在读取本地场景...')
+  const [appOrigin, setAppOrigin] = useState('')
+  const [exportFormat, setExportFormat] = useState<ExportFormat>('png')
+  const [guidesSelectedIds, setGuidesSelectedIds] = useState<string[]>([])
+  const svgRef = useRef<SVGSVGElement>(null)
+  const sceneElementsRef = useRef<SceneElement[]>(scene.elements)
+  const selectedElementRef = useRef<SceneElement | null>(null)
   const [collapsedSections, setCollapsedSections] = useState<Record<SidebarSectionId, boolean>>({
     scene: false,
     sources: false,
     templates: false,
     layers: false,
-  });
-  const [editingTextId, setEditingTextId] = useState<string | null>(null);
+  })
+  const [editingTextId, setEditingTextId] = useState<string | null>(null)
 
   // 编辑器加载时立即恢复本地字体
-  const localFontManager = useLocalFonts();
+  const localFontManager = useLocalFonts()
 
   // 管理本地素材的 blob URL 生命周期
-  const { resolveSrc } = useLocalAssets(scene);
+  const { resolveSrc } = useLocalAssets(scene)
 
-  const { leftPanelRef, rightPanelRef, stageViewportRef } = useScrollVisibility();
-  const { panelWidths, resizerLeftRef, resizerRightRef, handleMouseDown } = usePanelResize();
-  
+  const { leftPanelRef, rightPanelRef, stageViewportRef } = useScrollVisibility()
+  const { panelWidths, resizerLeftRef, resizerRightRef, handleMouseDown } = usePanelResize()
+
   const {
     canvasSize,
     setCanvasSize,
@@ -87,8 +70,8 @@ export default function SceneEditor() {
     isCustomSize,
     currentPreset,
     presets,
-  } = useCanvasSize();
-  
+  } = useCanvasSize()
+
   const {
     canvasZoom,
     canvasPreviewWidth,
@@ -102,14 +85,18 @@ export default function SceneEditor() {
     CANVAS_ZOOM_MIN,
     CANVAS_ZOOM_MAX,
     CANVAS_ZOOM_STEP,
-  } = useCanvasZoom({ stageViewportRef, canvasWidth: canvasSize.width, canvasHeight: canvasSize.height });
+  } = useCanvasZoom({
+    stageViewportRef,
+    canvasWidth: canvasSize.width,
+    canvasHeight: canvasSize.height,
+  })
   const { history, saveHistory, undo, redo } = useHistory({
     scene,
     selectedIds: selection.selectedIds,
     setScene,
     setSelection,
     setStatus,
-  });
+  })
   const {
     templateSlots,
     activeSlotId,
@@ -124,7 +111,7 @@ export default function SceneEditor() {
   } = useSlotManager({
     setStatus,
     appOrigin,
-  });
+  })
   const {
     customTemplates,
     activeTemplateId,
@@ -151,7 +138,7 @@ export default function SceneEditor() {
     setStatus,
     templateSlots,
     setActiveSlotId,
-  });
+  })
 
   const {
     isModalOpen: isCreateBlankCoverModalOpen,
@@ -171,46 +158,49 @@ export default function SceneEditor() {
     saveCustomTemplate: saveCustomTemplateWithScene,
     canvasSizePresets: presets,
     customTemplates,
-  });
+  })
 
   const saveTemplateDialog = useSaveTemplateDialog({
     customTemplates,
     onSave: saveCustomTemplateWithName,
-  });
+  })
 
-  const { exportScene } = useExportScene(scene, setStatus, exportTemplateJson, canvasSize.width, canvasSize.height);
+  const { exportScene } = useExportScene(
+    scene,
+    setStatus,
+    exportTemplateJson,
+    canvasSize.width,
+    canvasSize.height,
+  )
 
-  const activeSlot = templateSlots.find((slot) => slot.slotId === activeSlotId) ?? null;
+  const activeSlot = templateSlots.find((slot) => slot.slotId === activeSlotId) ?? null
   const editingContextCaption = activeCustomTemplate
     ? hasUnsavedCustomTemplateChanges
-      ? "自定义模板有未保存修改"
-      : "自定义模板已保存"
-    : activeSlot?.name ?? "未选择 OBS 源";
+      ? '自定义模板有未保存修改'
+      : '自定义模板已保存'
+    : (activeSlot?.name ?? '未选择 OBS 源')
   const markSceneEdited = useCallback(() => {
     if (activeCustomTemplate) {
-      return;
+      return
     }
 
     if (activeBuiltInTemplate) {
-      setActiveTemplateId("");
+      setActiveTemplateId('')
     }
-  }, [activeBuiltInTemplate, activeCustomTemplate, setActiveTemplateId]);
+  }, [activeBuiltInTemplate, activeCustomTemplate, setActiveTemplateId])
 
   useEffect(() => {
-    customTemplatesRef.current = customTemplates;
-  }, [customTemplates, customTemplatesRef]);
+    customTemplatesRef.current = customTemplates
+  }, [customTemplates, customTemplatesRef])
 
-  const {
-    marquee,
-    handleCanvasPointerDown,
-  } = useMarqueeSelection({
+  const { marquee, handleCanvasPointerDown } = useMarqueeSelection({
     svgRef,
     sceneElementsRef,
     hitTestStrategy,
     editingTextId,
     setSelection,
     setEditingTextId,
-  });
+  })
 
   const {
     drag,
@@ -236,54 +226,63 @@ export default function SceneEditor() {
     setEditingTextId,
     canvasWidth: canvasSize.width,
     canvasHeight: canvasSize.height,
-  });
+  })
 
   const selectedElement = useMemo(() => {
     if (selection.selectedIds.length !== 1) {
-      return null;
+      return null
     }
-    return scene.elements.find((element) => element.id === selection.selectedIds[0]) ?? null;
-  }, [scene.elements, selection.selectedIds]);
+    return scene.elements.find((element) => element.id === selection.selectedIds[0]) ?? null
+  }, [scene.elements, selection.selectedIds])
 
   const { visibleGuides, visibleSpacingGuides } = useVisibleGuides(
     guides,
     spacingGuides,
     selection.selectedIds,
-    guidesSelectedIds
-  );
+    guidesSelectedIds,
+  )
 
   useEffect(() => {
-    sceneElementsRef.current = scene.elements;
-    selectedElementRef.current = selectedElement;
-  }, [scene.elements, selectedElement]);
+    sceneElementsRef.current = scene.elements
+    selectedElementRef.current = selectedElement
+  }, [scene.elements, selectedElement])
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setAppOrigin(window.location.origin);
-    }, 0);
+      setAppOrigin(window.location.origin)
+    }, 0)
 
     return () => {
-      window.clearTimeout(timer);
-    };
-  }, []);
+      window.clearTimeout(timer)
+    }
+  }, [])
 
   function toggleSidebarSection(sectionId: SidebarSectionId) {
     setCollapsedSections((current) => ({
       ...current,
       [sectionId]: !current[sectionId],
-    }));
+    }))
   }
 
-  const changeScene = useCallback((updater: (currentScene: Scene) => Scene, description?: string) => {
-    if (description) {
-      const currentSceneSnapshot = cloneScene(scene);
-      saveHistory(description, currentSceneSnapshot);
-    }
-    setScene(updater);
-    markSceneEdited();
-  }, [scene, saveHistory, markSceneEdited]);
+  const changeScene = useCallback(
+    (updater: (currentScene: Scene) => Scene, description?: string) => {
+      if (description) {
+        const currentSceneSnapshot = cloneScene(scene)
+        saveHistory(description, currentSceneSnapshot)
+      }
+      setScene(updater)
+      markSceneEdited()
+    },
+    [scene, saveHistory, markSceneEdited],
+  )
 
-  const { elementClipboardRef, elementsClipboardRef, canPasteElement, copySelectedElements, pasteCopiedElements } = useClipboard({
+  const {
+    elementClipboardRef,
+    elementsClipboardRef,
+    canPasteElement,
+    copySelectedElements,
+    pasteCopiedElements,
+  } = useClipboard({
     selectedElementRef,
     sceneElementsRef,
     selectedIds: selection.selectedIds,
@@ -293,7 +292,7 @@ export default function SceneEditor() {
     setStatus,
     canvasWidth: canvasSize.width,
     canvasHeight: canvasSize.height,
-  });
+  })
 
   const {
     patchElement,
@@ -310,7 +309,7 @@ export default function SceneEditor() {
     selection,
     changeScene,
     setSelection,
-  });
+  })
 
   useEditorShortcuts({
     scene,
@@ -330,7 +329,7 @@ export default function SceneEditor() {
     setSpacingGuides,
     setScene,
     markSceneEdited,
-  });
+  })
 
   const { handleAssetInput } = useAssetManager({
     setStatus,
@@ -339,23 +338,23 @@ export default function SceneEditor() {
     changeScene,
     selection,
     setSelection,
-  });
+  })
 
   useSceneLoader({
     setScene,
     setStatus,
     setActiveTemplateId,
     setSelection,
-  });
+  })
 
   function handleTextElementDoubleClick(elementId: string) {
-    const element = scene.elements.find((item) => item.id === elementId);
-    if (!element || element.type !== "text") {
-      return;
+    const element = scene.elements.find((item) => item.id === elementId)
+    if (!element || element.type !== 'text') {
+      return
     }
-    
-    setSelection(selectSingle(selection, elementId));
-    setEditingTextId(elementId);
+
+    setSelection(selectSingle(selection, elementId))
+    setEditingTextId(elementId)
   }
 
   return (
@@ -372,139 +371,139 @@ export default function SceneEditor() {
 
       <main className="editor-shell">
         <SceneToolbar
-        undo={undo}
-        redo={redo}
-        canUndo={history.past.length > 0}
-        canRedo={history.future.length > 0}
-        addTextElement={addTextElement}
-        addRectElement={addRectElement}
-        addEllipseElement={addEllipseElement}
-        handleAssetInput={handleAssetInput}
-        onCreateBlankCover={openCreateBlankCoverModal}
-        activeCustomTemplate={activeCustomTemplate}
-        hasUnsavedCustomTemplateChanges={hasUnsavedCustomTemplateChanges}
-        saveActiveCustomTemplate={saveActiveCustomTemplate}
-        onOpenSaveTemplateDialog={() => saveTemplateDialog.openDialog(activeTemplate?.name)}
-        importTemplateFile={importTemplateFile}
-        exportFormat={exportFormat}
-        setExportFormat={setExportFormat}
-        exportScene={exportScene}
-        EXPORT_FORMAT_OPTIONS={EXPORT_FORMAT_OPTIONS}
-      />
-
-      <SaveTemplateDialog
-        show={saveTemplateDialog.showDialog}
-        title="另存为模板"
-        templateName={saveTemplateDialog.templateName}
-        nameError={saveTemplateDialog.nameError}
-        onSetName={saveTemplateDialog.setTemplateName}
-        onSave={saveTemplateDialog.handleSave}
-        onCancel={saveTemplateDialog.closeDialog}
-      />
-
-      <section className="editor-grid">
-        <LeftSidebar
-          leftPanelRef={leftPanelRef}
-          leftPanelWidth={panelWidths.leftPanel}
-          activeTemplate={activeCustomTemplate}
-          hasUnsavedCustomTemplateChanges={hasUnsavedCustomTemplateChanges}
-          editingContextCaption={editingContextCaption}
-          collapsedSections={collapsedSections}
-          toggleSidebarSection={toggleSidebarSection}
-          scene={scene}
-          changeScene={changeScene}
-          canvasSize={canvasSize}
-          presets={presets}
-          currentPreset={currentPreset}
-          isCustomSize={isCustomSize}
-          onPresetSizeChange={setPresetSize}
-          onCustomSizeChange={setCustomSize}
-          templateSlots={templateSlots}
-          customTemplates={customTemplates}
-          activeSlotId={activeSlotId}
-          addSlot={addSlot}
-          removeSlot={removeSlot}
-          selectSlotForEditing={selectSlotForEditing}
-          writeSlotNameToStorage={writeSlotNameToStorage}
-          setTemplateSlots={setTemplateSlots}
-          getSlotUrl={getSlotUrl}
-          setStatus={setStatus}
-          activeTemplateId={activeTemplateId}
-          applyBuiltInTemplate={applyBuiltInTemplate}
-          applyTemplate={applyTemplate}
-          duplicateCustomTemplate={duplicateCustomTemplate}
-          renameCustomTemplate={renameCustomTemplate}
-          deleteCustomTemplate={deleteCustomTemplate}
-          selection={selection}
-          setSelection={setSelection}
-          toggleElementHidden={toggleElementHidden}
-          toggleElementLocked={toggleElementLocked}
-          moveElementLayer={moveElementLayer}
-        />
-
-        <div
-          ref={resizerLeftRef}
-          className="panel-resizer"
-          onMouseDown={(e) => handleMouseDown("left", e)}
-        />
-
-        <StagePanel
-          status={status}
-          canvasZoom={canvasZoom}
-          canvasZoomPercent={canvasZoomPercent}
-          canvasPreviewWidth={canvasPreviewWidth}
-          CANVAS_ZOOM_MIN={CANVAS_ZOOM_MIN}
-          CANVAS_ZOOM_MAX={CANVAS_ZOOM_MAX}
-          CANVAS_ZOOM_STEP={CANVAS_ZOOM_STEP}
-          setCanvasZoomLevel={setCanvasZoomLevel}
-          zoomCanvasIn={zoomCanvasIn}
-          zoomCanvasOut={zoomCanvasOut}
-          resetCanvasZoom={resetCanvasZoom}
-          handleZoomSliderWheel={handleZoomSliderWheel}
-          handleStageWheel={handleStageWheel}
-          stageViewportRef={stageViewportRef}
-          scene={scene}
-          selectedIds={selection.selectedIds}
-          guides={visibleGuides}
-          spacingGuides={visibleSpacingGuides}
-          resizeLabel={resizeLabel}
-          svgRef={svgRef}
-          marquee={marquee}
-          hitTestStrategy={hitTestStrategy}
-          editingTextId={editingTextId}
-          isGroupDragging={drag?.mode === "group-move"}
-          canvasWidth={canvasSize.width}
-          canvasHeight={canvasSize.height}
-          resolveSrc={resolveSrc}
-          onCanvasPointerDown={handleCanvasPointerDown}
-          onElementPointerDown={handleElementPointerDown}
-          onResizePointerDown={handleResizePointerDown}
-          onGroupDragPointerDown={handleGroupDragPointerDown}
-          onGroupResizePointerDown={handleGroupResizePointerDown}
-          onTextElementDoubleClick={handleTextElementDoubleClick}
-        />
-
-        <div
-          ref={resizerRightRef}
-          className="panel-resizer"
-          onMouseDown={(e) => handleMouseDown("right", e)}
-        />
-
-        <RightSidebar
-          rightPanelRef={rightPanelRef}
-          rightPanelWidth={panelWidths.rightPanel}
-          selectedElement={selectedElement}
-          allElements={scene.elements}
-          patchSelected={(patch) => patchSelected(selectedElement, patch)}
-          copySelectedElements={copySelectedElements}
-          pasteCopiedElements={pasteCopiedElements}
-          canPasteElement={canPasteElement}
-          deleteSelected={deleteSelected}
+          undo={undo}
+          redo={redo}
+          canUndo={history.past.length > 0}
+          canRedo={history.future.length > 0}
+          addTextElement={addTextElement}
+          addRectElement={addRectElement}
+          addEllipseElement={addEllipseElement}
           handleAssetInput={handleAssetInput}
-          localFontManager={localFontManager}
+          onCreateBlankCover={openCreateBlankCoverModal}
+          activeCustomTemplate={activeCustomTemplate}
+          hasUnsavedCustomTemplateChanges={hasUnsavedCustomTemplateChanges}
+          saveActiveCustomTemplate={saveActiveCustomTemplate}
+          onOpenSaveTemplateDialog={() => saveTemplateDialog.openDialog(activeTemplate?.name)}
+          importTemplateFile={importTemplateFile}
+          exportFormat={exportFormat}
+          setExportFormat={setExportFormat}
+          exportScene={exportScene}
+          EXPORT_FORMAT_OPTIONS={EXPORT_FORMAT_OPTIONS}
         />
-      </section>
-    </main>
+
+        <SaveTemplateDialog
+          show={saveTemplateDialog.showDialog}
+          title="另存为模板"
+          templateName={saveTemplateDialog.templateName}
+          nameError={saveTemplateDialog.nameError}
+          onSetName={saveTemplateDialog.setTemplateName}
+          onSave={saveTemplateDialog.handleSave}
+          onCancel={saveTemplateDialog.closeDialog}
+        />
+
+        <section className="editor-grid">
+          <LeftSidebar
+            leftPanelRef={leftPanelRef}
+            leftPanelWidth={panelWidths.leftPanel}
+            activeTemplate={activeCustomTemplate}
+            hasUnsavedCustomTemplateChanges={hasUnsavedCustomTemplateChanges}
+            editingContextCaption={editingContextCaption}
+            collapsedSections={collapsedSections}
+            toggleSidebarSection={toggleSidebarSection}
+            scene={scene}
+            changeScene={changeScene}
+            canvasSize={canvasSize}
+            presets={presets}
+            currentPreset={currentPreset}
+            isCustomSize={isCustomSize}
+            onPresetSizeChange={setPresetSize}
+            onCustomSizeChange={setCustomSize}
+            templateSlots={templateSlots}
+            customTemplates={customTemplates}
+            activeSlotId={activeSlotId}
+            addSlot={addSlot}
+            removeSlot={removeSlot}
+            selectSlotForEditing={selectSlotForEditing}
+            writeSlotNameToStorage={writeSlotNameToStorage}
+            setTemplateSlots={setTemplateSlots}
+            getSlotUrl={getSlotUrl}
+            setStatus={setStatus}
+            activeTemplateId={activeTemplateId}
+            applyBuiltInTemplate={applyBuiltInTemplate}
+            applyTemplate={applyTemplate}
+            duplicateCustomTemplate={duplicateCustomTemplate}
+            renameCustomTemplate={renameCustomTemplate}
+            deleteCustomTemplate={deleteCustomTemplate}
+            selection={selection}
+            setSelection={setSelection}
+            toggleElementHidden={toggleElementHidden}
+            toggleElementLocked={toggleElementLocked}
+            moveElementLayer={moveElementLayer}
+          />
+
+          <div
+            ref={resizerLeftRef}
+            className="panel-resizer"
+            onMouseDown={(e) => handleMouseDown('left', e)}
+          />
+
+          <StagePanel
+            status={status}
+            canvasZoom={canvasZoom}
+            canvasZoomPercent={canvasZoomPercent}
+            canvasPreviewWidth={canvasPreviewWidth}
+            CANVAS_ZOOM_MIN={CANVAS_ZOOM_MIN}
+            CANVAS_ZOOM_MAX={CANVAS_ZOOM_MAX}
+            CANVAS_ZOOM_STEP={CANVAS_ZOOM_STEP}
+            setCanvasZoomLevel={setCanvasZoomLevel}
+            zoomCanvasIn={zoomCanvasIn}
+            zoomCanvasOut={zoomCanvasOut}
+            resetCanvasZoom={resetCanvasZoom}
+            handleZoomSliderWheel={handleZoomSliderWheel}
+            handleStageWheel={handleStageWheel}
+            stageViewportRef={stageViewportRef}
+            scene={scene}
+            selectedIds={selection.selectedIds}
+            guides={visibleGuides}
+            spacingGuides={visibleSpacingGuides}
+            resizeLabel={resizeLabel}
+            svgRef={svgRef}
+            marquee={marquee}
+            hitTestStrategy={hitTestStrategy}
+            editingTextId={editingTextId}
+            isGroupDragging={drag?.mode === 'group-move'}
+            canvasWidth={canvasSize.width}
+            canvasHeight={canvasSize.height}
+            resolveSrc={resolveSrc}
+            onCanvasPointerDown={handleCanvasPointerDown}
+            onElementPointerDown={handleElementPointerDown}
+            onResizePointerDown={handleResizePointerDown}
+            onGroupDragPointerDown={handleGroupDragPointerDown}
+            onGroupResizePointerDown={handleGroupResizePointerDown}
+            onTextElementDoubleClick={handleTextElementDoubleClick}
+          />
+
+          <div
+            ref={resizerRightRef}
+            className="panel-resizer"
+            onMouseDown={(e) => handleMouseDown('right', e)}
+          />
+
+          <RightSidebar
+            rightPanelRef={rightPanelRef}
+            rightPanelWidth={panelWidths.rightPanel}
+            selectedElement={selectedElement}
+            allElements={scene.elements}
+            patchSelected={(patch) => patchSelected(selectedElement, patch)}
+            copySelectedElements={copySelectedElements}
+            pasteCopiedElements={pasteCopiedElements}
+            canPasteElement={canPasteElement}
+            deleteSelected={deleteSelected}
+            handleAssetInput={handleAssetInput}
+            localFontManager={localFontManager}
+          />
+        </section>
+      </main>
     </>
-  );
+  )
 }

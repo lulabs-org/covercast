@@ -1,5 +1,5 @@
-import { MetadataRoute } from 'next';
-import { SITE_CONFIG } from './lib/seo-config';
+import { MetadataRoute } from 'next'
+import { SITE_CONFIG } from './lib/seo-config'
 
 /**
  * 动态生成robots.txt
@@ -13,5 +13,5 @@ export default function robots(): MetadataRoute.Robots {
       disallow: ['/api/'],
     },
     sitemap: `${SITE_CONFIG.url}/sitemap.xml`,
-  };
+  }
 }

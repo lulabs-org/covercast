@@ -1,38 +1,38 @@
-"use client";
+'use client'
 
-import { TemplateToolbarButtons } from "../panels/TemplatePanel";
-import type { ExportFormat, EXPORT_FORMAT_OPTIONS } from "../../hooks/useExportScene";
-import type { CustomSceneTemplate } from "../../hooks/useTemplateManager";
+import { TemplateToolbarButtons } from '../panels/TemplatePanel'
+import type { ExportFormat, EXPORT_FORMAT_OPTIONS } from '../../hooks/useExportScene'
+import type { CustomSceneTemplate } from '../../hooks/useTemplateManager'
 
 type SceneToolbarProps = {
   // History
-  undo: () => void;
-  redo: () => void;
-  canUndo: boolean;
-  canRedo: boolean;
+  undo: () => void
+  redo: () => void
+  canUndo: boolean
+  canRedo: boolean
 
   // Add elements
-  addTextElement: () => void;
-  addRectElement: () => void;
-  addEllipseElement: () => void;
-  handleAssetInput: (event: React.ChangeEvent<HTMLInputElement>, mode: "add" | "replace") => void;
+  addTextElement: () => void
+  addRectElement: () => void
+  addEllipseElement: () => void
+  handleAssetInput: (event: React.ChangeEvent<HTMLInputElement>, mode: 'add' | 'replace') => void
 
   // Create blank cover
-  onCreateBlankCover: () => void;
+  onCreateBlankCover: () => void
 
   // Template
-  activeCustomTemplate: CustomSceneTemplate | null;
-  hasUnsavedCustomTemplateChanges: boolean;
-  saveActiveCustomTemplate: () => void;
-  onOpenSaveTemplateDialog: () => void;
-  importTemplateFile: (file: File) => Promise<void>;
+  activeCustomTemplate: CustomSceneTemplate | null
+  hasUnsavedCustomTemplateChanges: boolean
+  saveActiveCustomTemplate: () => void
+  onOpenSaveTemplateDialog: () => void
+  importTemplateFile: (file: File) => Promise<void>
 
   // Export
-  exportFormat: ExportFormat;
-  setExportFormat: (format: ExportFormat) => void;
-  exportScene: (format: ExportFormat) => Promise<void>;
-  EXPORT_FORMAT_OPTIONS: typeof EXPORT_FORMAT_OPTIONS;
-};
+  exportFormat: ExportFormat
+  setExportFormat: (format: ExportFormat) => void
+  exportScene: (format: ExportFormat) => Promise<void>
+  EXPORT_FORMAT_OPTIONS: typeof EXPORT_FORMAT_OPTIONS
+}
 
 export function SceneToolbar({
   undo,
@@ -101,7 +101,7 @@ export function SceneToolbar({
           <input
             type="file"
             accept="image/png,image/jpeg,image/webp"
-            onChange={(event) => handleAssetInput(event, "add")}
+            onChange={(event) => handleAssetInput(event, 'add')}
           />
         </label>
         {activeCustomTemplate ? (
@@ -110,7 +110,9 @@ export function SceneToolbar({
             className="primary-button"
             onClick={saveActiveCustomTemplate}
             disabled={!hasUnsavedCustomTemplateChanges}
-            title={hasUnsavedCustomTemplateChanges ? "覆盖保存当前自定义模板" : "当前模板没有未保存修改"}
+            title={
+              hasUnsavedCustomTemplateChanges ? '覆盖保存当前自定义模板' : '当前模板没有未保存修改'
+            }
           >
             保存模板
           </button>
@@ -143,5 +145,5 @@ export function SceneToolbar({
         </div>
       </div>
     </section>
-  );
+  )
 }

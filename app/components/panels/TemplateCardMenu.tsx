@@ -1,16 +1,16 @@
-"use client";
+'use client'
 
-import { createPortal } from "react-dom";
+import { createPortal } from 'react-dom'
 
 type TemplateCardMenuProps = {
-  isOpen: boolean;
-  position: { x: number; y: number };
-  menuRef: React.RefObject<HTMLDivElement | null>;
-  onDuplicate: () => void;
-  onRename: () => void;
-  onDelete: () => void;
-  onClose: () => void;
-};
+  isOpen: boolean
+  position: { x: number; y: number }
+  menuRef: React.RefObject<HTMLDivElement | null>
+  onDuplicate: () => void
+  onRename: () => void
+  onDelete: () => void
+  onClose: () => void
+}
 
 export function TemplateCardMenu({
   isOpen,
@@ -22,21 +22,21 @@ export function TemplateCardMenu({
   onClose,
 }: TemplateCardMenuProps) {
   if (!isOpen) {
-    return null;
+    return null
   }
 
   function handleDuplicateClick() {
-    onDuplicate();
-    onClose();
+    onDuplicate()
+    onClose()
   }
 
   function handleRenameClick() {
-    onRename();
+    onRename()
   }
 
   function handleDeleteClick() {
-    onDelete();
-    onClose();
+    onDelete()
+    onClose()
   }
 
   const menuContent = (
@@ -44,7 +44,7 @@ export function TemplateCardMenu({
       ref={menuRef}
       className="template-card-menu"
       style={{
-        position: "fixed",
+        position: 'fixed',
         left: position.x,
         top: position.y,
         zIndex: 9999,
@@ -77,7 +77,7 @@ export function TemplateCardMenu({
         删除
       </button>
     </div>
-  );
+  )
 
-  return createPortal(menuContent, document.body);
+  return createPortal(menuContent, document.body)
 }

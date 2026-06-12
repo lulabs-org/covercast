@@ -1,70 +1,70 @@
-"use client";
+'use client'
 
-import type { Ref, ReactNode } from "react";
-import { LayerPanel } from "../../panels/LayerPanel";
-import { SourcesPanel } from "../../panels/SourcesPanel";
-import { TemplatePanel } from "../../panels/TemplatePanel";
-import { CanvasSizeSelector } from "../../controls/CanvasSizeSelector";
-import type { Scene } from "../../../lib/scene";
-import type { SelectionState } from "../../../lib/selection";
-import type { CustomSceneTemplate, SceneSlotInfo } from "../../../hooks/useTemplateManager";
-import type { CanvasSize, CanvasSizePreset } from "../../../hooks/useCanvasSize";
+import type { Ref, ReactNode } from 'react'
+import { LayerPanel } from '../../panels/LayerPanel'
+import { SourcesPanel } from '../../panels/SourcesPanel'
+import { TemplatePanel } from '../../panels/TemplatePanel'
+import { CanvasSizeSelector } from '../../controls/CanvasSizeSelector'
+import type { Scene } from '../../../lib/scene'
+import type { SelectionState } from '../../../lib/selection'
+import type { CustomSceneTemplate, SceneSlotInfo } from '../../../hooks/useTemplateManager'
+import type { CanvasSize, CanvasSizePreset } from '../../../hooks/useCanvasSize'
 
-type SidebarSectionId = "scene" | "sources" | "templates" | "layers";
+type SidebarSectionId = 'scene' | 'sources' | 'templates' | 'layers'
 
 type LeftSidebarProps = {
   // Panel
-  leftPanelRef: Ref<HTMLDivElement>;
-  leftPanelWidth: number;
-  
+  leftPanelRef: Ref<HTMLDivElement>
+  leftPanelWidth: number
+
   // Context
-  activeTemplate: CustomSceneTemplate | null;
-  hasUnsavedCustomTemplateChanges: boolean;
-  editingContextCaption: string;
-  
+  activeTemplate: CustomSceneTemplate | null
+  hasUnsavedCustomTemplateChanges: boolean
+  editingContextCaption: string
+
   // Sections
-  collapsedSections: Record<SidebarSectionId, boolean>;
-  toggleSidebarSection: (sectionId: SidebarSectionId) => void;
-  
+  collapsedSections: Record<SidebarSectionId, boolean>
+  toggleSidebarSection: (sectionId: SidebarSectionId) => void
+
   // Scene settings
-  scene: Scene;
-  changeScene: (updater: (currentScene: Scene) => Scene, description?: string) => void;
-  
+  scene: Scene
+  changeScene: (updater: (currentScene: Scene) => Scene, description?: string) => void
+
   // Canvas size
-  canvasSize: CanvasSize;
-  presets: CanvasSizePreset[];
-  currentPreset?: CanvasSizePreset;
-  isCustomSize: boolean;
-  onPresetSizeChange: (preset: CanvasSizePreset) => void;
-  onCustomSizeChange: (width: number, height: number) => void;
-  
+  canvasSize: CanvasSize
+  presets: CanvasSizePreset[]
+  currentPreset?: CanvasSizePreset
+  isCustomSize: boolean
+  onPresetSizeChange: (preset: CanvasSizePreset) => void
+  onCustomSizeChange: (width: number, height: number) => void
+
   // Sources
-  templateSlots: SceneSlotInfo[];
-  customTemplates: CustomSceneTemplate[];
-  activeSlotId: string;
-  addSlot: (templateId: string) => Promise<void>;
-  removeSlot: (templateId: string, slotId: string) => Promise<void>;
-  selectSlotForEditing: (slotId: string) => void;
-  writeSlotNameToStorage: (templateId: string, slotId: string, name: string) => void;
-  setTemplateSlots: React.Dispatch<React.SetStateAction<SceneSlotInfo[]>>;
-  getSlotUrl: (templateId: string, slotId: string) => string;
-  setStatus: (status: string) => void;
-  
+  templateSlots: SceneSlotInfo[]
+  customTemplates: CustomSceneTemplate[]
+  activeSlotId: string
+  addSlot: (templateId: string) => Promise<void>
+  removeSlot: (templateId: string, slotId: string) => Promise<void>
+  selectSlotForEditing: (slotId: string) => void
+  writeSlotNameToStorage: (templateId: string, slotId: string, name: string) => void
+  setTemplateSlots: React.Dispatch<React.SetStateAction<SceneSlotInfo[]>>
+  getSlotUrl: (templateId: string, slotId: string) => string
+  setStatus: (status: string) => void
+
   // Templates
-  activeTemplateId: string;
-  applyBuiltInTemplate: (templateId: string) => void;
-  applyTemplate: (template: { id: string; name: string; scene: Scene }) => void;
-  duplicateCustomTemplate: (templateId: string) => void;
-  renameCustomTemplate: (templateId: string, newName: string) => void;
-  deleteCustomTemplate: (templateId: string) => void;
-  
+  activeTemplateId: string
+  applyBuiltInTemplate: (templateId: string) => void
+  applyTemplate: (template: { id: string; name: string; scene: Scene }) => void
+  duplicateCustomTemplate: (templateId: string) => void
+  renameCustomTemplate: (templateId: string, newName: string) => void
+  deleteCustomTemplate: (templateId: string) => void
+
   // Layers
-  selection: SelectionState;
-  setSelection: React.Dispatch<React.SetStateAction<SelectionState>>;
-  toggleElementHidden: (elementId: string) => void;
-  toggleElementLocked: (elementId: string) => void;
-  moveElementLayer: (elementId: string, direction: "forward" | "backward") => void;
-};
+  selection: SelectionState
+  setSelection: React.Dispatch<React.SetStateAction<SelectionState>>
+  toggleElementHidden: (elementId: string) => void
+  toggleElementLocked: (elementId: string) => void
+  moveElementLayer: (elementId: string, direction: 'forward' | 'backward') => void
+}
 
 export function LeftSidebar({
   leftPanelRef,
@@ -114,10 +114,8 @@ export function LeftSidebar({
       <div className="sidebar-context">
         <span className="context-label">当前编辑</span>
         <strong>
-          {activeTemplate?.name ?? "自定义场景"}
-          {hasUnsavedCustomTemplateChanges ? (
-            <span className="unsaved-pill">未保存</span>
-          ) : null}
+          {activeTemplate?.name ?? '自定义场景'}
+          {hasUnsavedCustomTemplateChanges ? <span className="unsaved-pill">未保存</span> : null}
         </strong>
         <small>{editingContextCaption}</small>
       </div>
@@ -126,7 +124,7 @@ export function LeftSidebar({
         title="场景"
         caption={`${canvasSize.width}×${canvasSize.height}`}
         collapsed={collapsedSections.scene}
-        onToggle={() => toggleSidebarSection("scene")}
+        onToggle={() => toggleSidebarSection('scene')}
       >
         <div className="section-fields">
           <CanvasSizeSelector
@@ -165,19 +163,17 @@ export function LeftSidebar({
         customTemplates={customTemplates}
         activeSlotId={activeSlotId}
         collapsed={collapsedSections.sources}
-        onToggle={() => toggleSidebarSection("sources")}
+        onToggle={() => toggleSidebarSection('sources')}
         onAddSlot={(templateId) => void addSlot(templateId)}
         onRemoveSlot={(templateId, slotId) => void removeSlot(templateId, slotId)}
         onSelectSlot={selectSlotForEditing}
         onRenameSlot={(templateId, slotId, newName) => {
-          writeSlotNameToStorage(templateId, slotId, newName);
+          writeSlotNameToStorage(templateId, slotId, newName)
           setTemplateSlots((prev) =>
             prev.map((s) =>
-              s.templateId === templateId && s.slotId === slotId
-                ? { ...s, name: newName }
-                : s,
+              s.templateId === templateId && s.slotId === slotId ? { ...s, name: newName } : s,
             ),
-          );
+          )
         }}
         getSlotUrl={getSlotUrl}
         setStatus={setStatus}
@@ -188,7 +184,7 @@ export function LeftSidebar({
         activeTemplateId={activeTemplateId}
         hasUnsavedCustomTemplateChanges={hasUnsavedCustomTemplateChanges}
         collapsed={collapsedSections.templates}
-        onToggle={() => toggleSidebarSection("templates")}
+        onToggle={() => toggleSidebarSection('templates')}
         onApplyBuiltInTemplate={applyBuiltInTemplate}
         onApplyCustomTemplate={applyTemplate}
         onDuplicateCustomTemplate={duplicateCustomTemplate}
@@ -200,14 +196,14 @@ export function LeftSidebar({
         elements={scene.elements}
         selection={selection}
         collapsed={collapsedSections.layers}
-        onToggle={() => toggleSidebarSection("layers")}
+        onToggle={() => toggleSidebarSection('layers')}
         onSelect={setSelection}
         onToggleHidden={toggleElementHidden}
         onToggleLocked={toggleElementLocked}
         onMoveLayer={moveElementLayer}
       />
     </aside>
-  );
+  )
 }
 
 function SidebarSection({
@@ -217,11 +213,11 @@ function SidebarSection({
   onToggle,
   children,
 }: {
-  title: string;
-  caption: string;
-  collapsed: boolean;
-  onToggle: () => void;
-  children: ReactNode;
+  title: string
+  caption: string
+  collapsed: boolean
+  onToggle: () => void
+  children: ReactNode
 }) {
   return (
     <section className="sidebar-section">
@@ -233,19 +229,19 @@ function SidebarSection({
       >
         <span>{title}</span>
         <small>{caption}</small>
-        <b>{collapsed ? "＋" : "－"}</b>
+        <b>{collapsed ? '＋' : '－'}</b>
       </button>
       {collapsed ? null : <div className="sidebar-section-body">{children}</div>}
     </section>
-  );
+  )
 }
 
 function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
+  return Math.min(Math.max(value, min), max)
 }
 
 function isHexColor(value: string): boolean {
-  return /^#[0-9A-Fa-f]{6}$/.test(value);
+  return /^#[0-9A-Fa-f]{6}$/.test(value)
 }
 
 function ColorField({
@@ -253,11 +249,11 @@ function ColorField({
   value,
   onChange,
 }: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
+  label: string
+  value: string
+  onChange: (value: string) => void
 }) {
-  const colorValue = isHexColor(value) ? value : "#ffffff";
+  const colorValue = isHexColor(value) ? value : '#ffffff'
 
   return (
     <label className="field color-field">
@@ -276,7 +272,7 @@ function ColorField({
         />
       </div>
     </label>
-  );
+  )
 }
 
 function OpacityField({
@@ -284,11 +280,11 @@ function OpacityField({
   value,
   onChange,
 }: {
-  label: string;
-  value: number;
-  onChange: (value: number) => void;
+  label: string
+  value: number
+  onChange: (value: number) => void
 }) {
-  const opacity = clamp(value, 0, 1);
+  const opacity = clamp(value, 0, 1)
 
   return (
     <label className="field opacity-field">
@@ -312,5 +308,5 @@ function OpacityField({
         />
       </div>
     </label>
-  );
+  )
 }

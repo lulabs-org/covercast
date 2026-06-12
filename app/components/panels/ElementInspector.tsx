@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import { useState, type ChangeEvent } from "react";
+import { useState, type ChangeEvent } from 'react'
 import {
   isImageElement,
   isShapeElement,
@@ -12,40 +12,38 @@ import {
   type ShapeFillMode,
   type TextAlign,
   type TextElement,
-} from "../../lib/scene";
-import { FontFamilyField } from "../FontFamilyField";
-import type { useLocalFonts } from "../../hooks/useLocalFonts";
+} from '../../lib/scene'
+import { FontFamilyField } from '../FontFamilyField'
+import type { useLocalFonts } from '../../hooks/useLocalFonts'
 
-type LocalFontManager = ReturnType<typeof useLocalFonts>;
-
-
+type LocalFontManager = ReturnType<typeof useLocalFonts>
 
 function isHexColor(value: string) {
-  return /^#[0-9a-fA-F]{6}$/.test(value);
+  return /^#[0-9a-fA-F]{6}$/.test(value)
 }
 
 function minimumWidth(element: SceneElement) {
   if (isTextElement(element)) {
-    return 40;
+    return 40
   }
 
-  if (element.type === "ellipse") {
-    return 14;
+  if (element.type === 'ellipse') {
+    return 14
   }
 
-  return 28;
+  return 28
 }
 
 function minimumHeight(element: SceneElement) {
   if (isTextElement(element)) {
-    return Math.max(24, element.fontSize);
+    return Math.max(24, element.fontSize)
   }
 
-  if (element.type === "ellipse") {
-    return 14;
+  if (element.type === 'ellipse') {
+    return 14
   }
 
-  return 28;
+  return 28
 }
 
 function TextField({
@@ -55,14 +53,14 @@ function TextField({
   placeholder,
   error,
 }: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  error?: string;
+  label: string
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+  error?: string
 }) {
   return (
-    <label className={`field${error ? " field-error" : ""}`}>
+    <label className={`field${error ? ' field-error' : ''}`}>
       <span>{label}</span>
       <input
         type="text"
@@ -72,7 +70,7 @@ function TextField({
       />
       {error ? <span className="field-error-message">{error}</span> : null}
     </label>
-  );
+  )
 }
 
 function TextAreaField({
@@ -80,16 +78,16 @@ function TextAreaField({
   value,
   onChange,
 }: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
+  label: string
+  value: string
+  onChange: (value: string) => void
 }) {
   return (
     <label className="field">
       <span>{label}</span>
       <textarea value={value} rows={5} onChange={(event) => onChange(event.currentTarget.value)} />
     </label>
-  );
+  )
 }
 
 function NumberField({
@@ -101,32 +99,32 @@ function NumberField({
   step = 1,
   precision = 0,
 }: {
-  label: string;
-  value: number;
-  onChange: (value: number) => void;
-  min?: number;
-  max?: number;
-  step?: number;
-  precision?: number;
+  label: string
+  value: number
+  onChange: (value: number) => void
+  min?: number
+  max?: number
+  step?: number
+  precision?: number
 }) {
   return (
     <label className="field">
       <span>{label}</span>
       <input
         type="number"
-        value={Number.isFinite(value) ? value.toFixed(precision) : "0"}
+        value={Number.isFinite(value) ? value.toFixed(precision) : '0'}
         min={min}
         max={max}
         step={step}
         onChange={(event) => {
-          const nextValue = Number(event.currentTarget.value);
+          const nextValue = Number(event.currentTarget.value)
           if (Number.isFinite(nextValue)) {
-            onChange(nextValue);
+            onChange(nextValue)
           }
         }}
       />
     </label>
-  );
+  )
 }
 
 function ColorField({
@@ -134,11 +132,11 @@ function ColorField({
   value,
   onChange,
 }: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
+  label: string
+  value: string
+  onChange: (value: string) => void
 }) {
-  const colorValue = isHexColor(value) ? value : "#ffffff";
+  const colorValue = isHexColor(value) ? value : '#ffffff'
 
   return (
     <label className="field color-field">
@@ -157,15 +155,15 @@ function ColorField({
         />
       </div>
     </label>
-  );
+  )
 }
 
 function defaultShapeGradient(element: ShapeElement) {
   return {
-    startColor: isHexColor(element.fill) ? element.fill : "#ffffff",
-    endColor: "#99f19c",
-    direction: "horizontal" as GradientDirection,
-  };
+    startColor: isHexColor(element.fill) ? element.fill : '#ffffff',
+    endColor: '#99f19c',
+    direction: 'horizontal' as GradientDirection,
+  }
 }
 
 function TextInspector({
@@ -173,9 +171,9 @@ function TextInspector({
   onPatch,
   localFontManager,
 }: {
-  element: TextElement;
-  onPatch: (patch: Partial<SceneElement>) => void;
-  localFontManager: LocalFontManager;
+  element: TextElement
+  onPatch: (patch: Partial<SceneElement>) => void
+  localFontManager: LocalFontManager
 }) {
   return (
     <>
@@ -234,18 +232,18 @@ function TextInspector({
         </label>
       </div>
     </>
-  );
+  )
 }
 
 function ShapeInspector({
   element,
   onPatch,
 }: {
-  element: ShapeElement;
-  onPatch: (patch: Partial<SceneElement>) => void;
+  element: ShapeElement
+  onPatch: (patch: Partial<SceneElement>) => void
 }) {
-  const fillMode = element.fillMode ?? "solid";
-  const gradient = element.gradient ?? defaultShapeGradient(element);
+  const fillMode = element.fillMode ?? 'solid'
+  const gradient = element.gradient ?? defaultShapeGradient(element)
 
   return (
     <>
@@ -267,11 +265,11 @@ function ShapeInspector({
           disabled={element.backgroundCutout === true}
           value={fillMode}
           onChange={(event) => {
-            const nextMode = event.currentTarget.value as ShapeFillMode;
+            const nextMode = event.currentTarget.value as ShapeFillMode
             onPatch({
               fillMode: nextMode,
-              gradient: nextMode === "gradient" ? gradient : element.gradient,
-            } as Partial<ShapeElement>);
+              gradient: nextMode === 'gradient' ? gradient : element.gradient,
+            } as Partial<ShapeElement>)
           }}
         >
           <option value="solid">纯色</option>
@@ -281,7 +279,7 @@ function ShapeInspector({
 
       {element.backgroundCutout === true ? (
         <p className="field-help">已挖空封面背景，OBS 中可透出后方画面；可继续保留描边。</p>
-      ) : fillMode === "gradient" ? (
+      ) : fillMode === 'gradient' ? (
         <>
           <ColorField
             label="渐变起点"
@@ -289,7 +287,7 @@ function ShapeInspector({
             onChange={(value) =>
               onPatch({
                 fill: value,
-                fillMode: "gradient",
+                fillMode: 'gradient',
                 gradient: { ...gradient, startColor: value },
               } as Partial<ShapeElement>)
             }
@@ -299,7 +297,7 @@ function ShapeInspector({
             value={gradient.endColor}
             onChange={(value) =>
               onPatch({
-                fillMode: "gradient",
+                fillMode: 'gradient',
                 gradient: { ...gradient, endColor: value },
               } as Partial<ShapeElement>)
             }
@@ -310,7 +308,7 @@ function ShapeInspector({
               value={gradient.direction}
               onChange={(event) =>
                 onPatch({
-                  fillMode: "gradient",
+                  fillMode: 'gradient',
                   gradient: {
                     ...gradient,
                     direction: event.currentTarget.value as GradientDirection,
@@ -329,14 +327,12 @@ function ShapeInspector({
         <ColorField
           label="填充"
           value={element.fill}
-          onChange={(value) =>
-            onPatch({ fill: value, fillMode: "solid" } as Partial<ShapeElement>)
-          }
+          onChange={(value) => onPatch({ fill: value, fillMode: 'solid' } as Partial<ShapeElement>)}
         />
       )}
       <ColorField
         label="描边"
-        value={element.stroke ?? "#ffffff"}
+        value={element.stroke ?? '#ffffff'}
         onChange={(value) => onPatch({ stroke: value } as Partial<ShapeElement>)}
       />
       <div className="field-grid">
@@ -346,7 +342,7 @@ function ShapeInspector({
           min={0}
           onChange={(value) => onPatch({ strokeWidth: value } as Partial<ShapeElement>)}
         />
-        {element.type === "rect" ? (
+        {element.type === 'rect' ? (
           <NumberField
             label="圆角"
             value={element.radius ?? 0}
@@ -356,7 +352,7 @@ function ShapeInspector({
         ) : null}
       </div>
     </>
-  );
+  )
 }
 
 function ImageInspector({
@@ -364,26 +360,24 @@ function ImageInspector({
   onPatch,
   onReplaceImage,
 }: {
-  element: ImageElement;
-  onPatch: (patch: Partial<SceneElement>) => void;
-  onReplaceImage: (event: ChangeEvent<HTMLInputElement>) => void;
+  element: ImageElement
+  onPatch: (patch: Partial<SceneElement>) => void
+  onReplaceImage: (event: ChangeEvent<HTMLInputElement>) => void
 }) {
   return (
     <>
       <label className="field">
         <span>素材替换</span>
-        <input
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          onChange={onReplaceImage}
-        />
+        <input type="file" accept="image/png,image/jpeg,image/webp" onChange={onReplaceImage} />
       </label>
       <label className="field">
         <span>显示方式</span>
         <select
           value={element.fit}
           onChange={(event) =>
-            onPatch({ fit: event.currentTarget.value as ImageElement["fit"] } as Partial<ImageElement>)
+            onPatch({
+              fit: event.currentTarget.value as ImageElement['fit'],
+            } as Partial<ImageElement>)
           }
         >
           <option value="cover">裁切填充</option>
@@ -395,7 +389,9 @@ function ImageInspector({
         <select
           value={element.shape}
           onChange={(event) =>
-            onPatch({ shape: event.currentTarget.value as ImageElement["shape"] } as Partial<ImageElement>)
+            onPatch({
+              shape: event.currentTarget.value as ImageElement['shape'],
+            } as Partial<ImageElement>)
           }
         >
           <option value="rect">矩形</option>
@@ -405,12 +401,12 @@ function ImageInspector({
       {!element.src ? (
         <TextField
           label="占位字"
-          value={element.fallbackText ?? ""}
+          value={element.fallbackText ?? ''}
           onChange={(value) => onPatch({ fallbackText: value } as Partial<ImageElement>)}
         />
       ) : null}
     </>
-  );
+  )
 }
 
 export function ElementInspector({
@@ -424,34 +420,30 @@ export function ElementInspector({
   onReplaceImage,
   localFontManager,
 }: {
-  element: SceneElement;
-  allElements: SceneElement[];
-  onPatch: (patch: Partial<SceneElement>) => void;
-  onCopy: () => void;
-  onPaste: () => void;
-  canPaste: boolean;
-  onDelete: () => void;
-  onReplaceImage: (event: ChangeEvent<HTMLInputElement>) => void;
-  localFontManager: LocalFontManager;
+  element: SceneElement
+  allElements: SceneElement[]
+  onPatch: (patch: Partial<SceneElement>) => void
+  onCopy: () => void
+  onPaste: () => void
+  canPaste: boolean
+  onDelete: () => void
+  onReplaceImage: (event: ChangeEvent<HTMLInputElement>) => void
+  localFontManager: LocalFontManager
 }) {
-  const [pendingName, setPendingName] = useState<string>(element.name);
+  const [pendingName, setPendingName] = useState<string>(element.name)
 
-  const nameError = allElements.some(
-    (el) => el.id !== element.id && el.name === pendingName
-  )
-    ? "图层名称已存在，请使用其他名称"
-    : undefined;
+  const nameError = allElements.some((el) => el.id !== element.id && el.name === pendingName)
+    ? '图层名称已存在，请使用其他名称'
+    : undefined
 
   const handleNameChange = (value: string) => {
-    setPendingName(value);
+    setPendingName(value)
     // 只有当名称不重复时才更新元素
-    const isDuplicate = allElements.some(
-      (el) => el.id !== element.id && el.name === value
-    );
+    const isDuplicate = allElements.some((el) => el.id !== element.id && el.name === value)
     if (!isDuplicate) {
-      onPatch({ name: value } as Partial<SceneElement>);
+      onPatch({ name: value } as Partial<SceneElement>)
     }
-  };
+  }
 
   return (
     <div className="inspector">
@@ -491,28 +483,17 @@ export function ElementInspector({
         <TextInspector element={element} onPatch={onPatch} localFontManager={localFontManager} />
       ) : null}
 
-      {isShapeElement(element) ? (
-        <ShapeInspector element={element} onPatch={onPatch} />
-      ) : null}
+      {isShapeElement(element) ? <ShapeInspector element={element} onPatch={onPatch} /> : null}
 
       {isImageElement(element) ? (
-        <ImageInspector
-          element={element}
-          onPatch={onPatch}
-          onReplaceImage={onReplaceImage}
-        />
+        <ImageInspector element={element} onPatch={onPatch} onReplaceImage={onReplaceImage} />
       ) : null}
 
       <div className="inspector-action-row">
         <button type="button" className="secondary-button" onClick={onCopy}>
           复制元素
         </button>
-        <button
-          type="button"
-          className="secondary-button"
-          onClick={onPaste}
-          disabled={!canPaste}
-        >
+        <button type="button" className="secondary-button" onClick={onPaste} disabled={!canPaste}>
           粘贴副本
         </button>
       </div>
@@ -521,5 +502,5 @@ export function ElementInspector({
         删除当前元素
       </button>
     </div>
-  );
+  )
 }
