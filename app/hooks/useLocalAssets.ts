@@ -8,7 +8,7 @@ import {
   type LocalAssetMeta,
   getLocalAssetMetas,
 } from "../lib/localAssetStorage";
-import { isImageElement, type Scene, type SceneElement } from "../lib/scene";
+import { isImageElement, type Scene } from "../lib/scene";
 
 /**
  * 管理本地素材的 blob URL 生命周期。
@@ -19,7 +19,8 @@ import { isImageElement, type Scene, type SceneElement } from "../lib/scene";
  */
 export function useLocalAssets(scene: Scene) {
   const [blobUrlMap, setBlobUrlMap] = useState<Record<string, string>>({});
-  const [metas, setMetas] = useState<LocalAssetMeta[]>([]);
+  const [metas] = useState<LocalAssetMeta[]>(() => getLocalAssetMetas());
+
   const revokedUrlsRef = useRef<Set<string>>(new Set());
 
   // 收集场景中所有本地素材 id
@@ -34,27 +35,24 @@ export function useLocalAssets(scene: Scene) {
     return ids;
   }, [scene.elements]);
 
-  // 加载元数据列表
-  useEffect(() => {
-    setMetas(getLocalAssetMetas());
-  }, []);
-
   // 当素材 id 集合变化时，重新生成 blob URL
   useEffect(() => {
     let active = true;
     const ids = Array.from(localAssetIds);
 
-    if (ids.length === 0) {
-      setBlobUrlMap({});
-      return;
-    }
+    void (async () => {
+      if (ids.length === 0) {
+        if (active) setBlobUrlMap({});
+        return;
+      }
 
-    Promise.all(
-      ids.map(async (id) => {
-        const blobUrl = await getLocalAssetBlobUrl(id);
-        return [id, blobUrl] as const;
-      }),
-    ).then((entries) => {
+      const entries = await Promise.all(
+        ids.map(async (id) => {
+          const blobUrl = await getLocalAssetBlobUrl(id);
+          return [id, blobUrl] as const;
+        }),
+      );
+
       if (!active) {
         // 组件已卸载，立即回收刚创建的 blob URL
         for (const [, url] of entries) {
@@ -68,7 +66,7 @@ export function useLocalAssets(scene: Scene) {
         if (url) nextMap[id] = url;
       }
       setBlobUrlMap(nextMap);
-    });
+    })();
 
     return () => {
       active = false;

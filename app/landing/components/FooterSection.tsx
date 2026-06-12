@@ -17,7 +17,7 @@ export default function FooterSection() {
           />
           <div>
             <p className="text-[15px] font-extrabold text-[#152033]">Covercast</p>
-            <p className="text-[13px] text-[#65728a]">直播背景编辑器</p>
+            <p className="text-[13px] text-[#65728a]">封面编辑器</p>
           </div>
         </div>
 

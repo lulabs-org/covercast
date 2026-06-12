@@ -53,54 +53,7 @@ async function downloadWithRetry(url, dest, retries = 2) {
   }
 }
 
-// ─── Google Fonts CSS 解析（英文字体） ────────────────────
 
-const GFONTS_MIRRORS = [
-  "https://fonts.googleapis.com",
-  "https://fonts.loli.net",
-];
-
-const UA_WOFF2 = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
-
-async function fetchGoogleFontsCSS(family, weight) {
-  const query = `family=${encodeURIComponent(family)}:wght@${weight}&display=swap`;
-  for (const mirror of GFONTS_MIRRORS) {
-    try {
-      const res = await fetch(`${mirror}/css2?${query}`, {
-        headers: { "User-Agent": UA_WOFF2 },
-      });
-      if (res.ok) {
-        let css = await res.text();
-        if (mirror.includes("loli.net")) {
-          css = css.replace(/fonts\.gstatic\.com/g, "gstatic.loli.net");
-        }
-        return css;
-      }
-    } catch { continue; }
-  }
-  return null;
-}
-
-function parseFontFaces(css) {
-  const faces = [];
-  const faceRegex = /@font-face\s*\{([^}]+)\}/g;
-  let match;
-  while ((match = faceRegex.exec(css)) !== null) {
-    const block = match[1];
-    const family = block.match(/font-family:\s*['"]?([^'";\n]+)['"]?;/)?.[1];
-    const weight = block.match(/font-weight:\s*(\d+);/)?.[1];
-    const style = block.match(/font-style:\s*(\w+);/)?.[1] || "normal";
-    const display = block.match(/font-display:\s*(\w+);/)?.[1] || "swap";
-    const unicodeRange = block.match(/unicode-range:\s*([^;]+);/)?.[1]?.trim();
-    const woff2Url = block.match(/url\((https?:\/\/[^)]+\.woff2)\)/)?.[1];
-    const ttfUrl = block.match(/url\((https?:\/\/[^)]+\.ttf)\)/)?.[1];
-
-    if (family && (woff2Url || ttfUrl)) {
-      faces.push({ family, weight, style, display, unicodeRange, woff2Url, ttfUrl });
-    }
-  }
-  return faces;
-}
 
 // ─── 下载字体（通过 gwfh API 获取完整 woff2） ─────────────
 
@@ -229,7 +182,7 @@ async function main() {
   console.log("");
 
   let success = 0;
-  let skipped = 0;
+
   let failed = 0;
   const allFontFaces = [];
 

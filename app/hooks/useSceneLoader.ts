@@ -50,5 +50,5 @@ export function useSceneLoader({
     return () => {
       active = false;
     };
-  }, []);
+  }, [setScene, setStatus, setActiveTemplateId, setSelection]);
 }

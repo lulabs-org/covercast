@@ -2,17 +2,9 @@ import { useEffect, useState, type PointerEvent, type Ref } from "react";
 import {
   DEFAULT_CANVAS_WIDTH,
   DEFAULT_CANVAS_HEIGHT,
-  type ImageElement,
   type Scene,
   type SceneElement,
-  type ShapeElement,
-  type TextElement,
 } from "../lib/scene";
-import {
-  elementBounds,
-  textAnchorForAlign,
-  textX,
-} from "../lib/scene-svg";
 import type { GuideLine, MeasurementGuide, ResizeLabel } from "../lib/smart-guide";
 import { getMarqueeRect, hasMarqueeSize, hitTestElements, isMarqueeActive, type HitTestStrategy, type MarqueeState } from "../lib/marquee";
 import { MarqueeOverlay } from "./canvas/MarqueeOverlay";
@@ -24,8 +16,6 @@ import { GroupSelectionFrame } from "./canvas/GroupSelectionFrame";
 import { ElementView } from "./canvas/elements/ElementView";
 import { SceneDefs, backgroundMaskId, hasBackgroundCutouts } from "./canvas/SceneDefs";
 import {
-  computeBoundingBox,
-  formatDimension,
   type ResizeHandleType,
 } from "../lib/group-drag";
 

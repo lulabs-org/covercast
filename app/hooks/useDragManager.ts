@@ -26,7 +26,6 @@ import {
   handleElementClick,
   isSelected,
   selectSingle,
-  clearSelection,
   type SelectionState,
 } from "../lib/selection";
 import {
@@ -432,7 +431,7 @@ export function useDragManager({
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     };
-  }, [drag, markSceneEdited, svgRef, setScene]);
+  }, [drag, markSceneEdited, svgRef, setScene, canvasWidth, canvasHeight]);
 
   const handleElementPointerDown = useCallback(
     (elementId: string, event: ReactPointerEvent<SVGGElement>) => {

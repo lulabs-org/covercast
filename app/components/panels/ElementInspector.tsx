@@ -2,7 +2,6 @@
 
 import { useState, type ChangeEvent } from "react";
 import {
-  DEFAULT_FONT_FAMILY,
   isImageElement,
   isShapeElement,
   isTextElement,
@@ -19,9 +18,7 @@ import type { useLocalFonts } from "../../hooks/useLocalFonts";
 
 type LocalFontManager = ReturnType<typeof useLocalFonts>;
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
-}
+
 
 function isHexColor(value: string) {
   return /^#[0-9a-fA-F]{6}$/.test(value);

@@ -5,7 +5,7 @@
 
 export const SITE_CONFIG = {
   name: 'Covercast',
-  description: '专业直播背景编辑器 — 快速创建、实时预览、一键导出，让每一场直播都有完美视觉呈现。',
+  description: '专业封面编辑器 — 快速创建、实时预览、一键导出，让每一场直播都有完美视觉呈现。',
   url: 'https://covercast.app',
   ogImage: '/covercast-logo.png',
   locale: 'zh_CN',
@@ -19,8 +19,8 @@ export const ROUTES = {
 
 export const PAGE_METADATA = {
   home: {
-    title: 'Covercast - 专业直播背景编辑器 | 免费在线背景制作工具',
-    description: 'Covercast是免费的专业直播背景编辑器，支持可视化拖拽编辑、实时预览、一键导出SVG/PNG。快速创建精美的直播间背景图片，适用于抖音、快手、B站、YouTube等平台直播。无需设计经验，轻松制作专业背景。',
+    title: 'Covercast - 专业封面编辑器 | 免费在线背景制作工具',
+    description: 'Covercast是免费的专业封面编辑器，支持可视化拖拽编辑、实时预览、一键导出SVG/PNG。快速创建精美的直播间背景图片，适用于抖音、快手、B站、YouTube等平台直播。无需设计经验，轻松制作专业背景。',
     keywords: [
       '直播背景', '背景编辑器', '直播工具', '可视化编辑', '实时预览',
       'SVG导出', 'PNG导出', '开源工具', '免费直播背景', '在线背景制作',
@@ -98,7 +98,7 @@ export const JSON_LD_CONFIG = {
         name: 'Covercast是什么？',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Covercast是一个免费的专业直播背景编辑器，支持可视化拖拽编辑、实时预览和一键导出功能。用户可以快速创建精美的直播间背景图片，适用于抖音、快手、B站、YouTube等平台。',
+          text: 'Covercast是一个免费的专业封面编辑器，支持可视化拖拽编辑、实时预览和一键导出功能。用户可以快速创建精美的直播间背景图片，适用于抖音、快手、B站、YouTube等平台。',
         },
       },
       {
