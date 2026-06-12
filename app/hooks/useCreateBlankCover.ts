@@ -42,7 +42,6 @@ export function useCreateBlankCover(options: UseCreateBlankCoverOptions) {
     setScene,
     setSelection,
     setCanvasSize,
-    setActiveTemplateId,
     setStatus,
     saveCustomTemplate,
     canvasSizePresets,

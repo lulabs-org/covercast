@@ -64,7 +64,7 @@ export function sceneToSvgMarkup(
 
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${canvasWidth}" height="${canvasHeight}" viewBox="0 0 ${canvasWidth} ${canvasHeight}" role="img" aria-label="Covercast OBS live background">`,
-    renderDefs("covercast", visibleScene, canvasWidth, canvasHeight),
+    renderDefs("covercast", visibleScene),
     renderBackground(scene.backgroundColor, scene.backgroundOpacity, "covercast", visibleScene, canvasWidth, canvasHeight),
     ...visibleElements.map((element) => renderElement(element, "covercast")),
     "</svg>",
@@ -74,8 +74,6 @@ export function sceneToSvgMarkup(
 export function renderDefs(
   prefix: string,
   scene?: Scene,
-  canvasWidth = DEFAULT_CANVAS_WIDTH,
-  canvasHeight = DEFAULT_CANVAS_HEIGHT,
 ): string {
   const customGradients =
     scene?.elements

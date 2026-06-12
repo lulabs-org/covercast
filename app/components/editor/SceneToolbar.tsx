@@ -10,23 +10,23 @@ type SceneToolbarProps = {
   redo: () => void;
   canUndo: boolean;
   canRedo: boolean;
-  
+
   // Add elements
   addTextElement: () => void;
   addRectElement: () => void;
   addEllipseElement: () => void;
   handleAssetInput: (event: React.ChangeEvent<HTMLInputElement>, mode: "add" | "replace") => void;
-  
+
   // Create blank cover
   onCreateBlankCover: () => void;
-  
+
   // Template
   activeCustomTemplate: CustomSceneTemplate | null;
   hasUnsavedCustomTemplateChanges: boolean;
   saveActiveCustomTemplate: () => void;
   onOpenSaveTemplateDialog: () => void;
   importTemplateFile: (file: File) => Promise<void>;
-  
+
   // Export
   exportFormat: ExportFormat;
   setExportFormat: (format: ExportFormat) => void;
@@ -58,11 +58,11 @@ export function SceneToolbar({
     <section className="editor-toolbar" aria-label="Covercast editor controls">
       <div>
         <p className="eyebrow">Covercast</p>
-        <h1>直播背景编辑器</h1>
+        <h1>封面编辑器</h1>
       </div>
       <div className="toolbar-actions">
-        <button 
-          type="button" 
+        <button
+          type="button"
           className="secondary-button"
           onClick={undo}
           disabled={!canUndo}
@@ -70,8 +70,8 @@ export function SceneToolbar({
         >
           ↶
         </button>
-        <button 
-          type="button" 
+        <button
+          type="button"
           className="secondary-button"
           onClick={redo}
           disabled={!canRedo}
@@ -79,8 +79,8 @@ export function SceneToolbar({
         >
           ↷
         </button>
-        <button 
-          type="button" 
+        <button
+          type="button"
           className="primary-button"
           onClick={onCreateBlankCover}
           title="新建封面"

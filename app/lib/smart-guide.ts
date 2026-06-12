@@ -870,10 +870,8 @@ export function computeResizeSnap(
   let snapDw = 0;
   let snapDh = 0;
 
-  const dLeft = rawRect.x;
   const dCenterH = rawRect.x + rawRect.width / 2;
   const dRight = rawRect.x + rawRect.width;
-  const dTop = rawRect.y;
   const dCenterV = rawRect.y + rawRect.height / 2;
   const dBottom = rawRect.y + rawRect.height;
 

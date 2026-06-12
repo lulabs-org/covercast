@@ -3,7 +3,7 @@
 import { useState, useCallback, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
 import type { BlankCoverConfig } from "../../hooks/useCreateBlankCover";
-import type { CanvasSize } from "../../hooks/useCanvasSize";
+
 
 type TemplateOption = {
   id: string;

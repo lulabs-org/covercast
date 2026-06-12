@@ -64,17 +64,19 @@ export default function LiveView({ templateId, slotId }: LiveViewProps) {
     let active = true;
     const ids = Array.from(localAssetIds);
 
-    if (ids.length === 0) {
-      setBlobUrlMap({});
-      return;
-    }
+    void (async () => {
+      if (ids.length === 0) {
+        if (active) setBlobUrlMap({});
+        return;
+      }
 
-    Promise.all(
-      ids.map(async (id) => {
-        const blobUrl = await getLocalAssetBlobUrl(id);
-        return [id, blobUrl] as const;
-      }),
-    ).then((entries) => {
+      const entries = await Promise.all(
+        ids.map(async (id) => {
+          const blobUrl = await getLocalAssetBlobUrl(id);
+          return [id, blobUrl] as const;
+        }),
+      );
+
       if (!active) {
         for (const [, url] of entries) {
           if (url) URL.revokeObjectURL(url);
@@ -86,7 +88,7 @@ export default function LiveView({ templateId, slotId }: LiveViewProps) {
         if (url) nextMap[id] = url;
       }
       setBlobUrlMap(nextMap);
-    });
+    })();
 
     return () => {
       active = false;

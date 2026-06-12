@@ -1,10 +1,6 @@
 "use client";
 
 import {
-  type ChangeEvent,
-  type PointerEvent as ReactPointerEvent,
-  type ReactNode,
-  type WheelEvent as ReactWheelEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -12,30 +8,13 @@ import {
   useState,
 } from "react";
 import {
-  DEFAULT_CANVAS_HEIGHT,
-  DEFAULT_CANVAS_WIDTH,
-  DEFAULT_FONT_FAMILY,
-  DEFAULT_TEMPLATE_ID,
   cloneScene,
   createDefaultScene,
-  isShapeElement,
-  isTextElement,
-  type GradientDirection,
   type Scene,
   type SceneElement,
-  type ShapeElement,
-  type ShapeFillMode,
-  type TextAlign,
-  type TextElement,
 } from "../lib/scene";
+
 import {
-  type GuideLine,
-  type MeasurementGuide,
-  type ResizeLabel,
-  type GuideContext,
-} from "../lib/smart-guide";
-import {
-  clearSelection,
   createSelectionState,
   selectSingle,
   type SelectionState,
@@ -50,7 +29,7 @@ import { useClipboard } from "../hooks/useClipboard";
 import { useEditorShortcuts } from "../hooks/useEditorShortcuts";
 import { useCanvasZoom } from "../hooks/useCanvasZoom";
 import { useCanvasSize } from "../hooks/useCanvasSize";
-import { useTemplateManager, type CustomSceneTemplate, type SceneSlotInfo } from "../hooks/useTemplateManager";
+import { useTemplateManager } from "../hooks/useTemplateManager";
 import { useSlotManager } from "../hooks/useSlotManager";
 import { useDragManager } from "../hooks/useDragManager";
 import { useMarqueeSelection } from "../hooks/useMarqueeSelection";
@@ -75,7 +54,7 @@ type SidebarSectionId = "scene" | "sources" | "templates" | "layers";
 export default function SceneEditor() {
   const [scene, setScene] = useState<Scene>(() => createDefaultScene());
   const [selection, setSelection] = useState<SelectionState>(() => createSelectionState());
-  const [hitTestStrategy, setHitTestStrategy] = useState<HitTestStrategy>("intersection");
+  const [hitTestStrategy] = useState<HitTestStrategy>("intersection");
   const [status, setStatus] = useState("正在读取本地场景...");
   const [appOrigin, setAppOrigin] = useState("");
   const [exportFormat, setExportFormat] = useState<ExportFormat>("png");
@@ -215,7 +194,7 @@ export default function SceneEditor() {
     if (activeBuiltInTemplate) {
       setActiveTemplateId("");
     }
-  }, [activeBuiltInTemplate, activeCustomTemplate]);
+  }, [activeBuiltInTemplate, activeCustomTemplate, setActiveTemplateId]);
 
   useEffect(() => {
     customTemplatesRef.current = customTemplates;
@@ -223,7 +202,6 @@ export default function SceneEditor() {
 
   const {
     marquee,
-    setMarquee,
     handleCanvasPointerDown,
   } = useMarqueeSelection({
     svgRef,

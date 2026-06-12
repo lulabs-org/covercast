@@ -5,9 +5,9 @@ import Link from "next/link";
 
 export default function HeroSection() {
   return (
-    <section 
+    <section
       className="relative flex flex-col items-center justify-center text-center px-6 py-24 md:py-32"
-      aria-label="Covercast直播背景编辑器介绍"
+      aria-label="Covercast封面编辑器介绍"
     >
       {/* Glow backdrop behind logo */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] rounded-full bg-[radial-gradient(circle,rgba(39,100,246,0.12)_0%,transparent_70%)] pointer-events-none" />
@@ -17,7 +17,7 @@ export default function HeroSection() {
         <div className="absolute inset-0 rounded-3xl blur-2xl bg-[rgba(39,100,246,0.22)] scale-110 pointer-events-none" />
         <Image
           src="/covercast-logo.png"
-          alt="Covercast专业直播背景编辑器Logo - 免费在线背景制作工具"
+          alt="Covercast专业封面编辑器Logo - 免费在线背景制作工具"
           width={160}
           height={160}
           className="relative rounded-2xl shadow-[0_8px_40px_rgba(39,100,246,0.18)]"
@@ -27,7 +27,7 @@ export default function HeroSection() {
 
       {/* Title */}
       <h1 className="relative text-4xl md:text-5xl font-extrabold tracking-tight text-[#152033] mb-4">
-        Covercast - 专业直播背景编辑器
+        Covercast - 专业封面编辑器
       </h1>
 
       {/* Subtitle */}

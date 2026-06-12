@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { type Scene, type SceneElement } from "../lib/scene";
 import { computeGuidesOptimized, computeSpacingGuidesOptimized, type GuideLine, type MeasurementGuide, type GuideContext } from "../lib/smart-guide";
 import { SpatialIndex, buildSpatialIndex } from "../lib/spatial-index";
-import { computeBoundingBox, type BoundingBox } from "../lib/group-drag";
+import { computeBoundingBox } from "../lib/group-drag";
 import { type SelectionState } from "../lib/selection";
 
 function isCopyPasteModifier(event: KeyboardEvent) {
@@ -52,7 +52,6 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
     copySelectedElements,
     pasteCopiedElements,
     deleteSelected,
-    selectedElementRef,
     elementClipboardRef,
     elementsClipboardRef,
     spatialIndexRef,
@@ -292,5 +291,5 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
     return () => {
       window.removeEventListener("keydown", handleEditorKeyDown);
     };
-  }, [copySelectedElements, pasteCopiedElements, deleteSelected, undo, redo, selection.selectedIds, editingTextId, scene.elements, markSceneEdited]);
+  }, [copySelectedElements, pasteCopiedElements, deleteSelected, undo, redo, selection.selectedIds, editingTextId, scene.elements, markSceneEdited, elementClipboardRef, elementsClipboardRef, setGuides, setGuidesSelectedIds, setScene, setSpacingGuides, spatialIndexRef]);
 }

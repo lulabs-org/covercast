@@ -5,7 +5,6 @@ import {
   cloneScene,
   type Scene,
   type SceneElement,
-  isImageElement,
 } from "../lib/scene";
 import { selectSingle, type SelectionState } from "../lib/selection";
 

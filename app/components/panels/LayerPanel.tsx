@@ -2,9 +2,6 @@
 
 import { type ReactNode } from "react";
 import {
-  isImageElement,
-  isShapeElement,
-  isTextElement,
   type SceneElement,
 } from "../../lib/scene";
 import {
