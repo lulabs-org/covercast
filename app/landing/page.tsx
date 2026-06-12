@@ -5,7 +5,7 @@ import BackgroundEffects from './components/BackgroundEffects'
 
 export default function LandingPage() {
   return (
-    <main className="relative min-h-screen flex flex-col bg-[#f3f5f9] text-[#152033]">
+    <main className="relative min-h-screen flex flex-col bg-[#faf9f7] text-[#0a0e1a]">
       <BackgroundEffects />
       <div className="flex-1">
         <HeroSection />
