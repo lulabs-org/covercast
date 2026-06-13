@@ -59,8 +59,11 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
     markSceneEdited,
   } = options
 
-  // ── 直接从 store 获取 setter（消除双写） ──
+  // ── Store setters（通过 hook selector 获取，闭包引用避免 getState） ──
   const setScene = useEditorStore((s) => s.setScene)
+  const setGuides = useEditorStore((s) => s.setGuides)
+  const setSpacingGuides = useEditorStore((s) => s.setSpacingGuides)
+  const setGuidesSelectedIds = useEditorStore((s) => s.setGuidesSelectedIds)
 
   useEffect(() => {
     function handleEditorKeyDown(event: KeyboardEvent) {
@@ -175,11 +178,9 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
               keyboardContext,
             )
 
-            // 直接写入 store（消除双写）
-            const s = useEditorStore.getState()
-            s.setGuidesSelectedIds(selection.selectedIds)
-            s.setGuides(guides)
-            s.setSpacingGuides(spacingGuides)
+            setGuidesSelectedIds(selection.selectedIds)
+            setGuides(guides)
+            setSpacingGuides(spacingGuides)
           }
 
           return {
@@ -232,5 +233,8 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
     elementsClipboardRef,
     spatialIndexRef,
     setScene,
+    setGuides,
+    setSpacingGuides,
+    setGuidesSelectedIds,
   ])
 }

@@ -6,22 +6,18 @@ import {
   type SceneElement,
 } from './scene'
 import { clearSelection, selectSingle, type SelectionState } from './selection'
-import { useEditorStore } from '@/stores/useEditorStore'
 
 export function createSceneActions({
   scene,
   selection,
   changeScene,
+  setSelection,
 }: {
   scene: Scene
   selection: SelectionState
   changeScene: (updater: (currentScene: Scene) => Scene, description?: string) => void
+  setSelection: (updater: SelectionState | ((prev: SelectionState) => SelectionState)) => void
 }) {
-  // ── 直接从 store 获取 setter（消除双写） ──
-  const setSelection = (updater: SelectionState | ((prev: SelectionState) => SelectionState)) => {
-    useEditorStore.getState().setSelection(updater)
-  }
-
   function patchElement(elementId: string, patch: Partial<SceneElement>) {
     changeScene(
       (currentScene) => ({

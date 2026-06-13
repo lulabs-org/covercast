@@ -23,6 +23,7 @@ export function useDialogState() {
     (s) => s.saveCustomTemplateWithSceneAction,
   )
   const exportTemplateJsonAction = useEditorStore((s) => s.exportTemplateJsonAction)
+  const getActiveTemplate = useEditorStore((s) => s.getActiveTemplate)
 
   // ── Export ──
   const { exportScene } = useExportScene(
@@ -60,7 +61,7 @@ export function useDialogState() {
 
   // ── Handlers ──
   function handleOpenSaveTemplateDialog() {
-    saveTemplateDialog.openDialog(useEditorStore.getState().getActiveTemplate()?.name)
+    saveTemplateDialog.openDialog(getActiveTemplate()?.name)
   }
 
   return {

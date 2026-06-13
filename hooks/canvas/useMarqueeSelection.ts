@@ -40,11 +40,12 @@ export function useMarqueeSelection({
   hitTestStrategy: HitTestStrategy
   editingTextId: string | null
 }) {
-  // ── 直接从 store 获取 setter（消除双写） ──
+  // ── Store setters（通过 hook selector 获取，闭包引用避免 getState） ──
   const setSelection = useEditorStore((s) => s.setSelection)
   const setEditingTextId = useEditorStore((s) => s.setEditingTextId)
+  const setMarquee = useEditorStore((s) => s.setMarquee)
 
-  // ── 交互状态直接读写 Zustand store（消除双写） ──
+  // ── 交互状态 ──
   const marquee = useEditorStore((s) => s.marquee)
 
   const marqueeRafRef = useRef<number>(0)
@@ -77,15 +78,13 @@ export function useMarqueeSelection({
         return
       }
 
-      const s = useEditorStore.getState()
-      const currentMarquee = s.marquee
-      s.setMarquee(updateMarquee(currentMarquee, latest.x, latest.y))
+      setMarquee((prev) => updateMarquee(prev, latest.x, latest.y))
     }
 
     function handlePointerUp(event: PointerEvent) {
       const svg = svgRef.current
       if (!svg) {
-        useEditorStore.getState().setMarquee(clearMarquee(useEditorStore.getState().marquee))
+        setMarquee((prev) => clearMarquee(prev))
         return
       }
 
@@ -95,8 +94,7 @@ export function useMarqueeSelection({
       // to avoid calling Zustand setSelection during React state update
       let selectionUpdater: ((prev: SelectionState) => SelectionState) | null = null
 
-      const s = useEditorStore.getState()
-      const prevMarquee = s.marquee
+      const prevMarquee = useEditorStore.getState().marquee
 
       if (hasMarqueeSize(prevMarquee, 5)) {
         const rect = getMarqueeRect(prevMarquee)
@@ -110,7 +108,7 @@ export function useMarqueeSelection({
         }
       }
 
-      s.setMarquee(clearMarquee(prevMarquee))
+      setMarquee((prev) => clearMarquee(prev))
 
       // Apply selection update after setMarquee completes
       if (selectionUpdater) {
@@ -129,7 +127,7 @@ export function useMarqueeSelection({
       window.removeEventListener('pointermove', handlePointerMove)
       window.removeEventListener('pointerup', handlePointerUp)
     }
-  }, [marquee, hitTestStrategy, svgRef, sceneElementsRef, setSelection])
+  }, [marquee, hitTestStrategy, svgRef, sceneElementsRef, setSelection, setMarquee])
 
   const handleCanvasPointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {
     const svg = svgRef.current
@@ -148,9 +146,7 @@ export function useMarqueeSelection({
       setEditingTextId(null)
     }
 
-    useEditorStore
-      .getState()
-      .setMarquee(startMarquee(useEditorStore.getState().marquee, point.x, point.y))
+    setMarquee((prev) => startMarquee(prev, point.x, point.y))
   }
 
   return {

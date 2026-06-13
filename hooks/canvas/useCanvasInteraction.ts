@@ -18,6 +18,8 @@ export function useCanvasInteraction() {
   const editingTextId = useEditorStore((s) => s.editingTextId)
   const pushPast = useEditorStore((s) => s.pushPast)
   const markSceneEdited = useEditorStore((s) => s.markSceneEdited)
+  const setSelection = useEditorStore((s) => s.setSelection)
+  const setEditingTextId = useEditorStore((s) => s.setEditingTextId)
   const canvasSize = useEditorStore((s) => s.canvasSize)
 
   // ── Refs ──
@@ -71,8 +73,8 @@ export function useCanvasInteraction() {
   function handleTextElementDoubleClick(elementId: string) {
     const element = scene.elements.find((item) => item.id === elementId)
     if (!element || element.type !== 'text') return
-    useEditorStore.getState().setSelection({ selectedIds: [elementId] })
-    useEditorStore.getState().setEditingTextId(elementId)
+    setSelection({ selectedIds: [elementId] })
+    setEditingTextId(elementId)
   }
 
   return {

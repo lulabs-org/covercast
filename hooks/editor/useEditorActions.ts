@@ -25,6 +25,7 @@ export function useEditorActions(canvasInteraction: {
   const undoAction = useEditorStore((s) => s.undoAction)
   const redoAction = useEditorStore((s) => s.redoAction)
   const setStatus = useEditorStore((s) => s.setStatus)
+  const setSelection = useEditorStore((s) => s.setSelection)
   const canvasSize = useEditorStore((s) => s.canvasSize)
 
   // ── Computed ──
@@ -44,7 +45,7 @@ export function useEditorActions(canvasInteraction: {
     addRectElement,
     addEllipseElement,
     deleteSelected,
-  } = createSceneActions({ scene, selection, changeScene: changeSceneWithHistory })
+  } = createSceneActions({ scene, selection, changeScene: changeSceneWithHistory, setSelection })
 
   // ── Asset manager ──
   const { handleAssetInput } = createAssetManager({
@@ -53,6 +54,7 @@ export function useEditorActions(canvasInteraction: {
     patchElement,
     changeScene: changeSceneWithHistory,
     selection,
+    setSelection,
   })
 
   // ── Clipboard ──

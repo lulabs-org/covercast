@@ -47,12 +47,16 @@ export function useDragManager({
   canvasWidth?: number
   canvasHeight?: number
 }) {
-  // ── 直接从 store 获取 setter（消除双写） ──
+  // ── Store setters（通过 hook selector 获取，闭包引用避免 getState） ──
   const setScene = useEditorStore((s) => s.setScene)
   const setSelection = useEditorStore((s) => s.setSelection)
   const setEditingTextId = useEditorStore((s) => s.setEditingTextId)
+  const setDrag = useEditorStore((s) => s.setDrag)
+  const setGuides = useEditorStore((s) => s.setGuides)
+  const setSpacingGuides = useEditorStore((s) => s.setSpacingGuides)
+  const setResizeLabel = useEditorStore((s) => s.setResizeLabel)
 
-  // ── 交互状态直接读写 Zustand store（消除双写） ──
+  // ── 交互状态 ──
   const drag = useEditorStore((s) => s.drag)
 
   const snapStateRef = useRef<SnapState>(createSnapState())
@@ -101,8 +105,6 @@ export function useDragManager({
         return
       }
 
-      const s = useEditorStore.getState()
-
       switch (activeDrag.mode) {
         case 'move': {
           const result = processElementMove(
@@ -114,9 +116,9 @@ export function useDragManager({
             canvasHeight,
           )
           snapStateRef.current = result.nextSnapState
-          s.setGuides(result.guides)
-          s.setSpacingGuides(result.spacingGuides)
-          s.setResizeLabel(result.resizeLabel)
+          setGuides(result.guides)
+          setSpacingGuides(result.spacingGuides)
+          setResizeLabel(result.resizeLabel)
           setScene(result.sceneUpdater)
           break
         }
@@ -130,9 +132,9 @@ export function useDragManager({
             canvasHeight,
           )
           resizeSnapStateRef.current = result.nextSnapState
-          s.setGuides(result.guides)
-          s.setSpacingGuides(result.spacingGuides)
-          s.setResizeLabel(result.resizeLabel)
+          setGuides(result.guides)
+          setSpacingGuides(result.spacingGuides)
+          setResizeLabel(result.resizeLabel)
           setScene(result.sceneUpdater)
           break
         }
@@ -146,9 +148,9 @@ export function useDragManager({
             canvasHeight,
           )
           snapStateRef.current = result.nextSnapState
-          s.setGuides(result.guides)
-          s.setSpacingGuides(result.spacingGuides)
-          s.setResizeLabel(result.resizeLabel)
+          setGuides(result.guides)
+          setSpacingGuides(result.spacingGuides)
+          setResizeLabel(result.resizeLabel)
           setScene(result.sceneUpdater)
           break
         }
@@ -162,9 +164,9 @@ export function useDragManager({
             canvasHeight,
           )
           resizeSnapStateRef.current = result.nextSnapState
-          s.setGuides(result.guides)
-          s.setSpacingGuides(result.spacingGuides)
-          s.setResizeLabel(result.resizeLabel)
+          setGuides(result.guides)
+          setSpacingGuides(result.spacingGuides)
+          setResizeLabel(result.resizeLabel)
           setScene(result.sceneUpdater)
           break
         }
@@ -179,11 +181,10 @@ export function useDragManager({
         rafHandleRef.current = 0
       }
       latestMoveRef.current = null
-      const s = useEditorStore.getState()
-      s.setDrag(null)
-      s.setGuides([])
-      s.setSpacingGuides([])
-      s.setResizeLabel(null)
+      setDrag(null)
+      setGuides([])
+      setSpacingGuides([])
+      setResizeLabel(null)
     }
 
     window.addEventListener('pointermove', handlePointerMove)
@@ -197,7 +198,18 @@ export function useDragManager({
       window.removeEventListener('pointermove', handlePointerMove)
       window.removeEventListener('pointerup', handlePointerUp)
     }
-  }, [drag, markSceneEdited, svgRef, setScene, canvasWidth, canvasHeight])
+  }, [
+    drag,
+    markSceneEdited,
+    svgRef,
+    setScene,
+    setDrag,
+    setGuides,
+    setSpacingGuides,
+    setResizeLabel,
+    canvasWidth,
+    canvasHeight,
+  ])
 
   // ── 元素 pointerDown：选中 + 开始拖拽 ──
   const handleElementPointerDown = useCallback(
@@ -234,7 +246,7 @@ export function useDragManager({
           )
           spatialIndexRef.current = buildSpatialIndex(otherElements)
 
-          useEditorStore.getState().setDrag({
+          setDrag({
             mode: 'group-move',
             startX: point.x,
             startY: point.y,
@@ -255,7 +267,7 @@ export function useDragManager({
         description: `移动元素「${element.name}」`,
         timestamp: Date.now(),
       })
-      useEditorStore.getState().setDrag({
+      setDrag({
         id: elementId,
         mode: 'move',
         startX: point.x,
@@ -263,7 +275,7 @@ export function useDragManager({
         element: { ...element },
       })
     },
-    [scene, selection, editingTextId, svgRef, setSelection, setEditingTextId, pushPast],
+    [scene, selection, editingTextId, svgRef, setSelection, setEditingTextId, setDrag, pushPast],
   )
 
   // ── 单元素 resize handle pointerDown ──
@@ -292,7 +304,7 @@ export function useDragManager({
         timestamp: Date.now(),
       })
       const point = getSvgPoint(svg, event.clientX, event.clientY)
-      useEditorStore.getState().setDrag({
+      setDrag({
         id: elementId,
         mode: 'resize',
         startX: point.x,
@@ -300,7 +312,7 @@ export function useDragManager({
         element: { ...element },
       })
     },
-    [scene, selection, svgRef, setSelection, pushPast],
+    [scene, selection, svgRef, setSelection, setDrag, pushPast],
   )
 
   // ── 多元素 resize handle pointerDown ──
@@ -325,11 +337,9 @@ export function useDragManager({
       spatialIndexRef.current = buildSpatialIndex(otherElements)
 
       const point = getSvgPoint(svg, event.clientX, event.clientY)
-      useEditorStore
-        .getState()
-        .setDrag(createGroupResizeState(handle, point.x, point.y, selectedElements))
+      setDrag(createGroupResizeState(handle, point.x, point.y, selectedElements))
     },
-    [scene, selection, svgRef],
+    [scene, selection, svgRef, setDrag],
   )
 
   // ── 多元素拖拽 pointerDown ──
@@ -354,14 +364,14 @@ export function useDragManager({
       spatialIndexRef.current = buildSpatialIndex(otherElements)
 
       const point = getSvgPoint(svg, event.clientX, event.clientY)
-      useEditorStore.getState().setDrag({
+      setDrag({
         mode: 'group-move',
         startX: point.x,
         startY: point.y,
         elements: selectedElements.map((el) => ({ ...el })),
       })
     },
-    [scene, selection, svgRef],
+    [scene, selection, svgRef, setDrag],
   )
 
   return {
