@@ -68,14 +68,14 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="zh-CN">
-      <head>
+    <html lang="zh-CN" suppressHydrationWarning>
+      <body>
         <JsonLd type="organization" />
         <JsonLd type="softwareApplication" />
         <JsonLd type="faq" />
         <JsonLd type="howTo" />
-      </head>
-      <body>{children}</body>
+        {children}
+      </body>
     </html>
   )
 }
