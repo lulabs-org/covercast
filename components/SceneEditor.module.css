@@ -99,11 +99,6 @@
   animation: slideDown 0.2s ease;
 }
 
-.templateSavePanel :global(.primary-button),
-.templateSavePanel :global(.secondary-button) {
-  min-width: 96px;
-}
-
 .panelTitle {
   display: flex;
   align-items: baseline;

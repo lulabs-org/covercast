@@ -15,6 +15,7 @@ import {
 } from '@/lib/domain/scene'
 import { FontFamilyField } from '../FontFamilyField'
 import type { useLocalFonts } from '@/hooks/editor/useLocalFonts'
+import ui from '@/styles/ui.module.css'
 
 type LocalFontManager = ReturnType<typeof useLocalFonts>
 
@@ -60,7 +61,7 @@ function TextField({
   error?: string
 }) {
   return (
-    <label className={`field${error ? ' field-error' : ''}`}>
+    <label className={error ? ui.fieldError : ui.field}>
       <span>{label}</span>
       <input
         type="text"
@@ -68,7 +69,7 @@ function TextField({
         placeholder={placeholder}
         onChange={(event) => onChange(event.currentTarget.value)}
       />
-      {error ? <span className="field-error-message">{error}</span> : null}
+      {error ? <span className={ui.fieldErrorMessage}>{error}</span> : null}
     </label>
   )
 }
@@ -83,7 +84,7 @@ function TextAreaField({
   onChange: (value: string) => void
 }) {
   return (
-    <label className="field">
+    <label className={ui.field}>
       <span>{label}</span>
       <textarea value={value} rows={5} onChange={(event) => onChange(event.currentTarget.value)} />
     </label>
@@ -108,7 +109,7 @@ function NumberField({
   precision?: number
 }) {
   return (
-    <label className="field">
+    <label className={ui.field}>
       <span>{label}</span>
       <input
         type="number"
@@ -139,7 +140,7 @@ function ColorField({
   const colorValue = isHexColor(value) ? value : '#ffffff'
 
   return (
-    <label className="field color-field">
+    <label className={ui.colorField}>
       <span>{label}</span>
       <div>
         <input
@@ -193,7 +194,7 @@ function TextInspector({
         onChange={(value) => onPatch({ fontFamily: value } as Partial<TextElement>)}
         localFontManager={localFontManager}
       />
-      <div className="field-grid">
+      <div className={ui.fieldGrid}>
         <NumberField
           label="字号"
           value={element.fontSize}
@@ -217,7 +218,7 @@ function TextInspector({
           precision={2}
           onChange={(value) => onPatch({ lineHeight: value } as Partial<TextElement>)}
         />
-        <label className="field">
+        <label className={ui.field}>
           <span>对齐</span>
           <select
             value={element.align}
@@ -247,7 +248,7 @@ function ShapeInspector({
 
   return (
     <>
-      <label className="field checkbox-field">
+      <label className={ui.checkboxField}>
         <span>背景穿透</span>
         <input
           type="checkbox"
@@ -259,7 +260,7 @@ function ShapeInspector({
           }
         />
       </label>
-      <label className="field">
+      <label className={ui.field}>
         <span>填充类型</span>
         <select
           disabled={element.backgroundCutout === true}
@@ -278,7 +279,7 @@ function ShapeInspector({
       </label>
 
       {element.backgroundCutout === true ? (
-        <p className="field-help">已挖空封面背景，OBS 中可透出后方画面；可继续保留描边。</p>
+        <p className={ui.fieldHelp}>已挖空封面背景，OBS 中可透出后方画面；可继续保留描边。</p>
       ) : fillMode === 'gradient' ? (
         <>
           <ColorField
@@ -302,7 +303,7 @@ function ShapeInspector({
               } as Partial<ShapeElement>)
             }
           />
-          <label className="field">
+          <label className={ui.field}>
             <span>渐变方向</span>
             <select
               value={gradient.direction}
@@ -335,7 +336,7 @@ function ShapeInspector({
         value={element.stroke ?? '#ffffff'}
         onChange={(value) => onPatch({ stroke: value } as Partial<ShapeElement>)}
       />
-      <div className="field-grid">
+      <div className={ui.fieldGrid}>
         <NumberField
           label="描边宽"
           value={element.strokeWidth ?? 0}
@@ -366,11 +367,11 @@ function ImageInspector({
 }) {
   return (
     <>
-      <label className="field">
+      <label className={ui.field}>
         <span>素材替换</span>
         <input type="file" accept="image/png,image/jpeg,image/webp" onChange={onReplaceImage} />
       </label>
-      <label className="field">
+      <label className={ui.field}>
         <span>显示方式</span>
         <select
           value={element.fit}
@@ -384,7 +385,7 @@ function ImageInspector({
           <option value="contain">完整显示</option>
         </select>
       </label>
-      <label className="field">
+      <label className={ui.field}>
         <span>形状</span>
         <select
           value={element.shape}
@@ -446,14 +447,14 @@ export function ElementInspector({
   }
 
   return (
-    <div className="inspector">
+    <div className={ui.inspector}>
       <TextField
         label="图层名称"
         value={pendingName}
         onChange={handleNameChange}
         error={nameError}
       />
-      <div className="field-grid">
+      <div className={ui.fieldGrid}>
         <NumberField label="X" value={element.x} onChange={(value) => onPatch({ x: value })} />
         <NumberField label="Y" value={element.y} onChange={(value) => onPatch({ y: value })} />
         <NumberField
@@ -489,16 +490,16 @@ export function ElementInspector({
         <ImageInspector element={element} onPatch={onPatch} onReplaceImage={onReplaceImage} />
       ) : null}
 
-      <div className="inspector-action-row">
-        <button type="button" className="secondary-button" onClick={onCopy}>
+      <div className={ui.inspectorActionRow}>
+        <button type="button" className={ui.secondaryButton} onClick={onCopy}>
           复制元素
         </button>
-        <button type="button" className="secondary-button" onClick={onPaste} disabled={!canPaste}>
+        <button type="button" className={ui.secondaryButton} onClick={onPaste} disabled={!canPaste}>
           粘贴副本
         </button>
       </div>
 
-      <button type="button" className="danger-button" onClick={onDelete}>
+      <button type="button" className={ui.dangerButton} onClick={onDelete}>
         删除当前元素
       </button>
     </div>

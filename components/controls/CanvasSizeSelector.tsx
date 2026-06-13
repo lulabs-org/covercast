@@ -1,6 +1,7 @@
 import { useState, useCallback, type ChangeEvent } from 'react'
 import type { CanvasSize, CanvasSizePreset } from '@/stores/useCanvasStore'
 import styles from './CanvasSizeSelector.module.css'
+import ui from '@/styles/ui.module.css'
 
 type CanvasSizeSelectorProps = {
   canvasSize: CanvasSize
@@ -71,7 +72,7 @@ export function CanvasSizeSelector({
 
   return (
     <>
-      <label className="field">
+      <label className={ui.field}>
         <span>画布尺寸</span>
         <select value={selectedValue} onChange={handleSelectChange}>
           {presets.map((preset) => (

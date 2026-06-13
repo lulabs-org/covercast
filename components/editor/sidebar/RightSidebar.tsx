@@ -4,6 +4,7 @@ import { useEditor } from '../../EditorContext'
 import { ElementInspector } from '../../panels/ElementInspector'
 import { useEditorStore } from '@/stores/useEditorStore'
 import styles from '../../SceneEditor.module.css'
+import ui from '@/styles/ui.module.css'
 
 interface RightSidebarProps {
   rightPanelRef: React.RefObject<HTMLDivElement | null>
@@ -58,7 +59,9 @@ export function RightSidebar({ rightPanelRef, rightPanelWidth }: RightSidebarPro
           localFontManager={localFontManager}
         />
       ) : (
-        <p className="empty-state">选择文字、视频框或图片素材后，可在这里调整位置、大小和样式。</p>
+        <p className={ui.emptyState}>
+          选择文字、视频框或图片素材后，可在这里调整位置、大小和样式。
+        </p>
       )}
     </aside>
   )

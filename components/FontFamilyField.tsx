@@ -5,6 +5,7 @@ import { FONT_GROUPS, findFontOption, type FontOption } from '@/lib/domain/fonts
 import { useFontLoader } from '@/hooks/editor/useFontLoader'
 import type { useLocalFonts } from '@/hooks/editor/useLocalFonts'
 import styles from './FontFamilyField.module.css'
+import ui from '@/styles/ui.module.css'
 
 // 扩展 FontFaceSet 类型声明
 declare global {
@@ -177,7 +178,7 @@ export function FontFamilyField({
 
   return (
     <div className={styles.fontFamilyField}>
-      <label className="field">
+      <label className={ui.field}>
         <span>字体</span>
         <button
           ref={triggerRef}

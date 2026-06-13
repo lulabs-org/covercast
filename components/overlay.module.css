@@ -38,11 +38,6 @@
   gap: 10px;
 }
 
-.dialogActions :global(.primary-button),
-.dialogActions :global(.secondary-button) {
-  min-width: 96px;
-}
-
 /* ─── Modal ─── */
 .modalOverlay {
   position: fixed;
@@ -122,14 +117,6 @@
   color: var(--muted);
 }
 
-.modalSection :global(.field) {
-  margin-bottom: 10px;
-}
-
-.modalSection :global(.field):last-child {
-  margin-bottom: 0;
-}
-
 .modalFooter {
   display: flex;
   align-items: center;
@@ -137,11 +124,6 @@
   gap: 10px;
   padding: 16px 20px;
   border-top: 1px solid var(--panel-border);
-}
-
-.modalFooter :global(.primary-button),
-.modalFooter :global(.secondary-button) {
-  min-width: 96px;
 }
 
 .customSizeFields {

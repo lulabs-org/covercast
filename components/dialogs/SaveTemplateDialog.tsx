@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import styles from '../overlay.module.css'
+import ui from '@/styles/ui.module.css'
 
 export function SaveTemplateDialog({
   show,
@@ -70,7 +71,7 @@ export function SaveTemplateDialog({
         <h3 id="save-template-dialog-title" className={styles.dialogTitle}>
           {title}
         </h3>
-        <label className={`field${nameError ? ' field-error' : ''}`}>
+        <label className={nameError ? ui.fieldError : ui.field}>
           <span>模板名称</span>
           <input
             ref={inputRef}
@@ -85,15 +86,19 @@ export function SaveTemplateDialog({
               }
             }}
           />
-          {nameError ? <span className="field-error-message">{nameError}</span> : null}
+          {nameError ? <span className={ui.fieldErrorMessage}>{nameError}</span> : null}
         </label>
         <div className={styles.dialogActions}>
-          <button type="button" className="secondary-button" onClick={onCancel}>
+          <button
+            type="button"
+            className={`${ui.secondaryButton} ${ui.dialogButton}`}
+            onClick={onCancel}
+          >
             取消
           </button>
           <button
             type="button"
-            className="primary-button"
+            className={`${ui.primaryButton} ${ui.dialogButton}`}
             onClick={handleSave}
             disabled={!!nameError}
           >

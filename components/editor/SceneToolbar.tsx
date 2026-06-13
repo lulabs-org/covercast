@@ -4,6 +4,7 @@ import { TemplateToolbarButtons } from '../panels/TemplatePanel'
 import { EXPORT_FORMAT_OPTIONS } from '@/hooks/ui/useExportScene'
 import { useEditorStore } from '@/stores/useEditorStore'
 import styles from '../SceneEditor.module.css'
+import ui from '@/styles/ui.module.css'
 
 interface SceneToolbarProps {
   addTextElement: () => void
@@ -42,10 +43,10 @@ export function SceneToolbar({
         <p className={styles.eyebrow}>Covercast</p>
         <h1>封面编辑器</h1>
       </div>
-      <div className="toolbar-actions">
+      <div className={ui.toolbarActions}>
         <button
           type="button"
-          className="secondary-button"
+          className={ui.secondaryButton}
           onClick={undoAction}
           disabled={history.past.length === 0}
           title="撤销 (Ctrl+Z)"
@@ -54,7 +55,7 @@ export function SceneToolbar({
         </button>
         <button
           type="button"
-          className="secondary-button"
+          className={ui.secondaryButton}
           onClick={redoAction}
           disabled={history.future.length === 0}
           title="重做 (Ctrl+Shift+Z 或 Ctrl+Y)"
@@ -63,22 +64,22 @@ export function SceneToolbar({
         </button>
         <button
           type="button"
-          className="primary-button"
+          className={ui.primaryButton}
           onClick={openCreateBlankCoverModal}
           title="新建封面"
         >
           新建封面
         </button>
-        <button type="button" className="secondary-button" onClick={addTextElement}>
+        <button type="button" className={ui.secondaryButton} onClick={addTextElement}>
           添加文字
         </button>
-        <button type="button" className="secondary-button" onClick={addRectElement}>
+        <button type="button" className={ui.secondaryButton} onClick={addRectElement}>
           添加矩形
         </button>
-        <button type="button" className="secondary-button" onClick={addEllipseElement}>
+        <button type="button" className={ui.secondaryButton} onClick={addEllipseElement}>
           添加椭圆
         </button>
-        <label className="secondary-button file-button">
+        <label className={`${ui.secondaryButton} ${ui.fileButton}`}>
           添加图片
           <input
             type="file"
@@ -89,7 +90,7 @@ export function SceneToolbar({
         {activeCustomTemplate ? (
           <button
             type="button"
-            className="primary-button"
+            className={ui.primaryButton}
             onClick={saveActiveCustomTemplateAction}
             disabled={!hasUnsavedCustomTemplateChanges}
             title={
@@ -104,9 +105,9 @@ export function SceneToolbar({
           onOpenSaveTemplateDialog={handleOpenSaveTemplateDialog}
           onImport={(file) => void importTemplateFileAction(file)}
         />
-        <div className="export-control" aria-label="导出场景">
+        <div className={ui.exportControl} aria-label="导出场景">
           <select
-            className="export-format-select"
+            className={ui.exportFormatSelect}
             value={exportFormat}
             onChange={(event) => setExportFormat(event.currentTarget.value as typeof exportFormat)}
             title="选择导出格式"
@@ -119,7 +120,7 @@ export function SceneToolbar({
           </select>
           <button
             type="button"
-            className="primary-button muted"
+            className={ui.primaryButtonMuted}
             onClick={() => void exportScene(exportFormat)}
           >
             导出

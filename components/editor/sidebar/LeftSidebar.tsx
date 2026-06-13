@@ -9,6 +9,7 @@ import { CanvasSizeSelector } from '../../controls/CanvasSizeSelector'
 import { useEditorStore } from '@/stores/useEditorStore'
 import { BUILT_IN_TEMPLATES } from '@/lib/templates'
 import styles from '../../SceneEditor.module.css'
+import ui from '@/styles/ui.module.css'
 
 interface LeftSidebarProps {
   leftPanelRef: React.RefObject<HTMLDivElement | null>
@@ -93,11 +94,11 @@ export function LeftSidebar({ leftPanelRef, leftPanelWidth }: LeftSidebarProps) 
       aria-label="Scene settings"
       style={{ width: `${leftPanelWidth}px` }}
     >
-      <div className="sidebar-context">
-        <span className="context-label">当前编辑</span>
+      <div className={ui.sidebarContext}>
+        <span className={ui.contextLabel}>当前编辑</span>
         <strong>
           {activeTemplate?.name ?? '自定义场景'}
-          {hasUnsavedCustomTemplateChanges ? <span className="unsaved-pill">未保存</span> : null}
+          {hasUnsavedCustomTemplateChanges ? <span className={ui.unsavedPill}>未保存</span> : null}
         </strong>
         <small>{editingContextCaption}</small>
       </div>
@@ -108,7 +109,7 @@ export function LeftSidebar({ leftPanelRef, leftPanelWidth }: LeftSidebarProps) 
         collapsed={collapsedSections.scene}
         onToggle={() => toggleSidebarSection('scene')}
       >
-        <div className="section-fields">
+        <div className={ui.sectionFields}>
           <CanvasSizeSelector
             canvasSize={canvasSize}
             presets={presets}
@@ -133,7 +134,7 @@ export function LeftSidebar({ leftPanelRef, leftPanelWidth }: LeftSidebarProps) 
             onChange={(value) =>
               changeSceneWithHistory((currentScene) => ({
                 ...currentScene,
-                backgroundOpacity: value,
+                backgroundOpacity: typeof value === 'string' ? parseFloat(value) : value,
               }))
             }
           />
@@ -202,10 +203,10 @@ function SidebarSection({
   children: ReactNode
 }) {
   return (
-    <section className="sidebar-section">
+    <section className={ui.sidebarSection}>
       <button
         type="button"
-        className="sidebar-section-header"
+        className={ui.sidebarSectionHeader}
         onClick={onToggle}
         aria-expanded={!collapsed}
       >
@@ -213,7 +214,7 @@ function SidebarSection({
         <small>{caption}</small>
         <b>{collapsed ? '＋' : '－'}</b>
       </button>
-      {collapsed ? null : <div className="sidebar-section-body">{children}</div>}
+      {collapsed ? null : <div className={ui.sidebarSectionBody}>{children}</div>}
     </section>
   )
 }
@@ -238,7 +239,7 @@ function ColorField({
   const colorValue = isHexColor(value) ? value : '#ffffff'
 
   return (
-    <label className="field color-field">
+    <label className={ui.colorField}>
       <span>{label}</span>
       <div>
         <input
@@ -264,12 +265,12 @@ function OpacityField({
 }: {
   label: string
   value: number
-  onChange: (value: number) => void
+  onChange: (value: string | number) => void
 }) {
   const opacity = clamp(value, 0, 1)
 
   return (
-    <label className="field opacity-field">
+    <label className={ui.opacityField}>
       <span>{label}</span>
       <div>
         <input

@@ -1,3 +1,5 @@
+// This file MUST remain a Server Component — do not add 'use client' here,
+// because we export `metadata` which only works in Server Components.
 import type { Metadata } from 'next'
 import LiveView from '@/components/LiveView'
 import { PAGE_METADATA, SITE_CONFIG, OPEN_GRAPH, TWITTER_CARD } from '@/lib/config/seo'

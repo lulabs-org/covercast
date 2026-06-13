@@ -4,6 +4,7 @@ import { useState, useCallback, type ChangeEvent } from 'react'
 import { createPortal } from 'react-dom'
 import type { BlankCoverConfig } from '@/hooks/ui/useCreateBlankCover'
 import styles from '../overlay.module.css'
+import ui from '@/styles/ui.module.css'
 
 type TemplateOption = {
   id: string
@@ -33,7 +34,7 @@ function isHexColor(value: string): boolean {
   return /^#[0-9A-Fa-f]{6}$/.test(value)
 }
 
-function clamp(value: number, min: number, max: number): number {
+function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value))
 }
 
@@ -153,7 +154,7 @@ export function CreateBlankCoverModal({
         <div className={styles.modalBody}>
           <div className={styles.modalSection}>
             <h3>基本信息</h3>
-            <label className="field">
+            <label className={`${ui.field} ${ui.modalField}`}>
               <span>封面名称</span>
               <input
                 type="text"
@@ -166,7 +167,7 @@ export function CreateBlankCoverModal({
 
           <div className={styles.modalSection}>
             <h3>引用模板</h3>
-            <label className="field">
+            <label className={`${ui.field} ${ui.modalField}`}>
               <span>选择模板</span>
               <select value={config.templateId} onChange={handleTemplateChange}>
                 {templateOptions.map((template) => (
@@ -180,7 +181,7 @@ export function CreateBlankCoverModal({
 
           <div className={styles.modalSection}>
             <h3>封面尺寸</h3>
-            <label className="field">
+            <label className={`${ui.field} ${ui.modalField}`}>
               <span>预设尺寸</span>
               <select value={selectedSizeValue} onChange={handlePresetChange}>
                 {presetOptions.map((preset) => (
@@ -194,7 +195,7 @@ export function CreateBlankCoverModal({
 
             {isCustomSize && (
               <div className={styles.customSizeFields}>
-                <label className="field">
+                <label className={`${ui.field} ${ui.modalField}`}>
                   <span>宽度</span>
                   <input
                     type="number"
@@ -203,7 +204,7 @@ export function CreateBlankCoverModal({
                     min={1}
                   />
                 </label>
-                <label className="field">
+                <label className={`${ui.field} ${ui.modalField}`}>
                   <span>高度</span>
                   <input
                     type="number"
@@ -218,9 +219,9 @@ export function CreateBlankCoverModal({
 
           <div className={styles.modalSection}>
             <h3>背景设置</h3>
-            <label className="field">
+            <label className={`${ui.field} ${ui.modalField}`}>
               <span>背景颜色</span>
-              <div className={styles.colorInputWrapper}>
+              <div className={ui.colorInputWrapper}>
                 <input type="color" value={colorValue} onChange={handleColorChange} />
                 <input
                   type="text"
@@ -230,7 +231,7 @@ export function CreateBlankCoverModal({
                 />
               </div>
             </label>
-            <label className="field">
+            <label className={`${ui.field} ${ui.modalField}`}>
               <span>不透明度</span>
               <input
                 type="range"
@@ -240,16 +241,24 @@ export function CreateBlankCoverModal({
                 value={opacity}
                 onChange={handleOpacityChange}
               />
-              <span className={styles.opacityValue}>{Math.round(opacity * 100)}%</span>
+              <span className={ui.opacityValue}>{Math.round(opacity * 100)}%</span>
             </label>
           </div>
         </div>
 
         <footer className={styles.modalFooter}>
-          <button type="button" className="secondary-button" onClick={onCancel}>
+          <button
+            type="button"
+            className={`${ui.secondaryButton} ${ui.dialogButton}`}
+            onClick={onCancel}
+          >
             取消
           </button>
-          <button type="button" className="primary-button" onClick={onConfirm}>
+          <button
+            type="button"
+            className={`${ui.primaryButton} ${ui.dialogButton}`}
+            onClick={onConfirm}
+          >
             创建
           </button>
         </footer>

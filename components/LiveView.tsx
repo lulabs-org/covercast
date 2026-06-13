@@ -119,16 +119,13 @@ export default function LiveView({ templateId, slotId }: LiveViewProps) {
   }
 
   return (
-    <>
-      <style>{`html, body { background: transparent !important; }`}</style>
-      <main className={styles.liveShell}>
-        <SceneCanvas
-          scene={scene}
-          className={styles.liveCanvas}
-          idPrefix="live"
-          resolveSrc={resolveSrc}
-        />
-      </main>
-    </>
+    <main className={styles.liveShell}>
+      <SceneCanvas
+        scene={scene}
+        className={styles.liveCanvas}
+        idPrefix="live"
+        resolveSrc={resolveSrc}
+      />
+    </main>
   )
 }
