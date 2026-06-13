@@ -1,10 +1,6 @@
 export const DEFAULT_CANVAS_WIDTH = 941
 export const DEFAULT_CANVAS_HEIGHT = 1672
 
-// Legacy constants for backward compatibility
-export const CANVAS_WIDTH = DEFAULT_CANVAS_WIDTH
-export const CANVAS_HEIGHT = DEFAULT_CANVAS_HEIGHT
-
 import { DEFAULT_FONT_FAMILY } from './fonts'
 export { DEFAULT_FONT_FAMILY }
 

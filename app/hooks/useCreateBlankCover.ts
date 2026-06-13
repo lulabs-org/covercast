@@ -7,8 +7,8 @@ import {
   type Scene,
 } from '../lib/scene'
 import { selectSingle, createSelectionState, type SelectionState } from '../lib/selection'
-import type { CanvasSizePreset, CanvasSize } from './useCanvasSize'
-import type { CustomSceneTemplate } from './useTemplateManager'
+import type { CanvasSizePreset, CanvasSize } from '../stores/useCanvasStore'
+import type { CustomSceneTemplate } from '../stores/useTemplateStore'
 
 export type BlankCoverConfig = {
   coverName: string

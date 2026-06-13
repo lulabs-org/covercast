@@ -2,7 +2,7 @@
 
 import { type ReactNode } from 'react'
 import { BUILT_IN_TEMPLATES } from '../../lib/scene'
-import { type CustomSceneTemplate } from '../../hooks/useTemplateManager'
+import { type CustomSceneTemplate } from '../../stores/useTemplateStore'
 import { CustomTemplateCard } from './CustomTemplateCard'
 
 function SidebarSection({

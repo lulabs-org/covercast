@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { type CustomSceneTemplate } from '../../hooks/useTemplateManager'
+import { type CustomSceneTemplate } from '../../stores/useTemplateStore'
 import { useTemplateCardMenu } from '../../hooks/useTemplateCardMenu'
 import { TemplateCardMenu } from './TemplateCardMenu'
 
