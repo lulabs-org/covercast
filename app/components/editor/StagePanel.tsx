@@ -1,35 +1,24 @@
 'use client'
 
-import type { Ref, PointerEvent } from 'react'
 import SceneCanvas from '../SceneCanvas'
+import { useEditor } from '../EditorContext'
 import { useSceneStore } from '../../stores/useSceneStore'
 import { useCanvasStore } from '../../stores/useCanvasStore'
 import { useInteractionStore } from '../../stores/useInteractionStore'
-import type { ResizeHandleType } from '../../lib/group-drag'
 
-type StagePanelBridgeProps = {
-  svgRef: Ref<SVGSVGElement>
-  stageViewportRef: Ref<HTMLDivElement>
-  resolveSrc: (src: string) => string
-  onCanvasPointerDown: (event: PointerEvent<SVGSVGElement>) => void
-  onElementPointerDown: (elementId: string, event: PointerEvent<SVGGElement>) => void
-  onResizePointerDown: (elementId: string, event: PointerEvent<SVGRectElement>) => void
-  onGroupDragPointerDown: (event: PointerEvent<SVGRectElement>) => void
-  onGroupResizePointerDown: (handle: ResizeHandleType, event: PointerEvent<SVGRectElement>) => void
-  onTextElementDoubleClick: (elementId: string) => void
-}
+export function StagePanel() {
+  const {
+    svgRef,
+    stageViewportRef,
+    resolveSrc,
+    handleCanvasPointerDown,
+    handleElementPointerDown,
+    handleResizePointerDown,
+    handleGroupDragPointerDown,
+    handleGroupResizePointerDown,
+    handleTextElementDoubleClick,
+  } = useEditor()
 
-export function StagePanel({
-  svgRef,
-  stageViewportRef,
-  resolveSrc,
-  onCanvasPointerDown,
-  onElementPointerDown,
-  onResizePointerDown,
-  onGroupDragPointerDown,
-  onGroupResizePointerDown,
-  onTextElementDoubleClick,
-}: StagePanelBridgeProps) {
   // ── Scene Store ──
   const scene = useSceneStore((s) => s.scene)
   const selectedIds = useSceneStore((s) => s.selection.selectedIds)
@@ -138,12 +127,12 @@ export function StagePanel({
               canvasWidth={canvasSize.width}
               canvasHeight={canvasSize.height}
               resolveSrc={resolveSrc}
-              onCanvasPointerDown={onCanvasPointerDown}
-              onElementPointerDown={onElementPointerDown}
-              onResizePointerDown={onResizePointerDown}
-              onGroupDragPointerDown={onGroupDragPointerDown}
-              onGroupResizePointerDown={onGroupResizePointerDown}
-              onTextElementDoubleClick={onTextElementDoubleClick}
+              onCanvasPointerDown={handleCanvasPointerDown}
+              onElementPointerDown={handleElementPointerDown}
+              onResizePointerDown={handleResizePointerDown}
+              onGroupDragPointerDown={handleGroupDragPointerDown}
+              onGroupResizePointerDown={handleGroupResizePointerDown}
+              onTextElementDoubleClick={handleTextElementDoubleClick}
             />
           </div>
         </div>

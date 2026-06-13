@@ -1,31 +1,23 @@
 'use client'
 
-import type { ChangeEvent } from 'react'
+import { useEditor } from '../EditorContext'
 import { TemplateToolbarButtons } from '../panels/TemplatePanel'
-import { EXPORT_FORMAT_OPTIONS, type ExportFormat } from '../../hooks/useExportScene'
+import { EXPORT_FORMAT_OPTIONS } from '../../hooks/useExportScene'
 import { useHistoryStore } from '../../stores/useHistoryStore'
 import { useCanvasStore } from '../../stores/useCanvasStore'
 import { useTemplateStore } from '../../stores/useTemplateStore'
 
-type SceneToolbarBridgeProps = {
-  addTextElement: () => void
-  addRectElement: () => void
-  addEllipseElement: () => void
-  handleAssetInput: (event: ChangeEvent<HTMLInputElement>, mode: 'add' | 'replace') => void
-  onCreateBlankCover: () => void
-  exportScene: (format: ExportFormat) => void | Promise<void>
-  onOpenSaveTemplateDialog: () => void
-}
+export function SceneToolbar() {
+  const {
+    addTextElement,
+    addRectElement,
+    addEllipseElement,
+    handleAssetInput,
+    openCreateBlankCoverModal,
+    exportScene,
+    handleOpenSaveTemplateDialog,
+  } = useEditor()
 
-export function SceneToolbar({
-  addTextElement,
-  addRectElement,
-  addEllipseElement,
-  handleAssetInput,
-  onCreateBlankCover,
-  exportScene,
-  onOpenSaveTemplateDialog,
-}: SceneToolbarBridgeProps) {
   // ── History Store ──
   const history = useHistoryStore((s) => s.history)
   const undo = useHistoryStore((s) => s.undo)
@@ -69,7 +61,7 @@ export function SceneToolbar({
         <button
           type="button"
           className="primary-button"
-          onClick={onCreateBlankCover}
+          onClick={openCreateBlankCoverModal}
           title="新建封面"
         >
           新建封面
@@ -106,7 +98,7 @@ export function SceneToolbar({
         ) : null}
         <TemplateToolbarButtons
           activeCustomTemplate={activeCustomTemplate}
-          onOpenSaveTemplateDialog={onOpenSaveTemplateDialog}
+          onOpenSaveTemplateDialog={handleOpenSaveTemplateDialog}
           onImport={(file) => void importTemplateFile(file)}
         />
         <div className="export-control" aria-label="导出场景">

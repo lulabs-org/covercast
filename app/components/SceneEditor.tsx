@@ -1,8 +1,6 @@
 'use client'
 
-import { useEditorBridge } from '../hooks/useEditorBridge'
-
-// UI components
+import { EditorProvider, useEditor } from './EditorContext'
 import { SaveTemplateDialog } from './dialogs/SaveTemplateDialog'
 import { SceneToolbar } from './editor/SceneToolbar'
 import { StagePanel } from './editor/StagePanel'
@@ -11,35 +9,15 @@ import { RightSidebar } from './editor/sidebar/RightSidebar'
 import { CreateBlankCoverModal } from './panels/CreateBlankCoverModal'
 
 export default function SceneEditor() {
+  return (
+    <EditorProvider>
+      <SceneEditorInner />
+    </EditorProvider>
+  )
+}
+
+function SceneEditorInner() {
   const {
-    // Layout
-    leftPanelRef,
-    rightPanelRef,
-    stageViewportRef,
-    panelWidths,
-    resizerLeftRef,
-    resizerRightRef,
-    handleMouseDown,
-    // Refs & assets
-    svgRef,
-    resolveSrc,
-    localFontManager,
-    // Scene actions
-    toggleElementHidden,
-    toggleElementLocked,
-    moveElementLayer,
-    addTextElement,
-    addRectElement,
-    addEllipseElement,
-    deleteSelected,
-    patchSelected,
-    // Asset
-    handleAssetInput,
-    // Clipboard
-    canPasteElement,
-    copySelectedElements,
-    pasteCopiedElements,
-    // Blank cover
     isCreateBlankCoverModalOpen,
     createBlankCoverConfig,
     openCreateBlankCoverModal,
@@ -48,19 +26,11 @@ export default function SceneEditor() {
     createBlankCover,
     createBlankCoverPresetOptions,
     createBlankCoverTemplateOptions,
-    // Save template dialog
     saveTemplateDialog,
-    // Export & template
-    exportScene,
-    handleOpenSaveTemplateDialog,
-    // Stage handlers
-    handleCanvasPointerDown,
-    handleElementPointerDown,
-    handleResizePointerDown,
-    handleGroupDragPointerDown,
-    handleGroupResizePointerDown,
-    handleTextElementDoubleClick,
-  } = useEditorBridge()
+    resizerLeftRef,
+    resizerRightRef,
+    handleMouseDown,
+  } = useEditor()
 
   return (
     <>
@@ -75,15 +45,7 @@ export default function SceneEditor() {
       />
 
       <main className="editor-shell">
-        <SceneToolbar
-          addTextElement={addTextElement}
-          addRectElement={addRectElement}
-          addEllipseElement={addEllipseElement}
-          handleAssetInput={handleAssetInput}
-          onCreateBlankCover={openCreateBlankCoverModal}
-          exportScene={exportScene}
-          onOpenSaveTemplateDialog={handleOpenSaveTemplateDialog}
-        />
+        <SceneToolbar />
 
         <SaveTemplateDialog
           show={saveTemplateDialog.showDialog}
@@ -96,13 +58,7 @@ export default function SceneEditor() {
         />
 
         <section className="editor-grid">
-          <LeftSidebar
-            leftPanelRef={leftPanelRef}
-            leftPanelWidth={panelWidths.leftPanel}
-            toggleElementHidden={toggleElementHidden}
-            toggleElementLocked={toggleElementLocked}
-            moveElementLayer={moveElementLayer}
-          />
+          <LeftSidebar />
 
           <div
             ref={resizerLeftRef}
@@ -110,17 +66,7 @@ export default function SceneEditor() {
             onMouseDown={(e) => handleMouseDown('left', e)}
           />
 
-          <StagePanel
-            svgRef={svgRef}
-            stageViewportRef={stageViewportRef}
-            resolveSrc={resolveSrc}
-            onCanvasPointerDown={handleCanvasPointerDown}
-            onElementPointerDown={handleElementPointerDown}
-            onResizePointerDown={handleResizePointerDown}
-            onGroupDragPointerDown={handleGroupDragPointerDown}
-            onGroupResizePointerDown={handleGroupResizePointerDown}
-            onTextElementDoubleClick={handleTextElementDoubleClick}
-          />
+          <StagePanel />
 
           <div
             ref={resizerRightRef}
@@ -128,17 +74,7 @@ export default function SceneEditor() {
             onMouseDown={(e) => handleMouseDown('right', e)}
           />
 
-          <RightSidebar
-            rightPanelRef={rightPanelRef}
-            rightPanelWidth={panelWidths.rightPanel}
-            patchSelected={patchSelected}
-            copySelectedElements={copySelectedElements}
-            pasteCopiedElements={pasteCopiedElements}
-            canPasteElement={canPasteElement}
-            deleteSelected={deleteSelected}
-            handleAssetInput={handleAssetInput}
-            localFontManager={localFontManager}
-          />
+          <RightSidebar />
         </section>
       </main>
     </>

@@ -1,6 +1,7 @@
 'use client'
 
-import type { Ref, ReactNode } from 'react'
+import type { ReactNode } from 'react'
+import { useEditor } from '../../EditorContext'
 import { LayerPanel } from '../../panels/LayerPanel'
 import { SourcesPanel } from '../../panels/SourcesPanel'
 import { TemplatePanel } from '../../panels/TemplatePanel'
@@ -9,21 +10,11 @@ import { useSceneStore } from '../../../stores/useSceneStore'
 import { useCanvasStore } from '../../../stores/useCanvasStore'
 import { useTemplateStore } from '../../../stores/useTemplateStore'
 
-type LeftSidebarBridgeProps = {
-  leftPanelRef: Ref<HTMLDivElement>
-  leftPanelWidth: number
-  toggleElementHidden: (elementId: string) => void
-  toggleElementLocked: (elementId: string) => void
-  moveElementLayer: (elementId: string, direction: 'forward' | 'backward') => void
-}
+export function LeftSidebar() {
+  const { leftPanelRef, panelWidths, toggleElementHidden, toggleElementLocked, moveElementLayer } =
+    useEditor()
+  const leftPanelWidth = panelWidths.leftPanel
 
-export function LeftSidebar({
-  leftPanelRef,
-  leftPanelWidth,
-  toggleElementHidden,
-  toggleElementLocked,
-  moveElementLayer,
-}: LeftSidebarBridgeProps) {
   // ── Scene Store ──
   const scene = useSceneStore((s) => s.scene)
   const changeScene = useSceneStore((s) => s.changeScene)

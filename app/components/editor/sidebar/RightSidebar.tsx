@@ -1,36 +1,23 @@
 'use client'
 
-import type { Ref, ChangeEvent } from 'react'
+import { useEditor } from '../../EditorContext'
 import { ElementInspector } from '../../panels/ElementInspector'
-import type { SceneElement } from '../../../lib/scene'
 import { useSceneStore } from '../../../stores/useSceneStore'
-import { useLocalFonts } from '../../../hooks/useLocalFonts'
 
-type LocalFontManager = ReturnType<typeof useLocalFonts>
+export function RightSidebar() {
+  const {
+    rightPanelRef,
+    panelWidths,
+    patchSelected,
+    copySelectedElements,
+    pasteCopiedElements,
+    canPasteElement,
+    deleteSelected,
+    handleAssetInput,
+    localFontManager,
+  } = useEditor()
+  const rightPanelWidth = panelWidths.rightPanel
 
-type RightSidebarBridgeProps = {
-  rightPanelRef: Ref<HTMLDivElement>
-  rightPanelWidth: number
-  patchSelected: (patch: Partial<SceneElement>) => void
-  copySelectedElements: () => void
-  pasteCopiedElements: () => void
-  canPasteElement: boolean
-  deleteSelected: () => void
-  handleAssetInput: (event: ChangeEvent<HTMLInputElement>, mode: 'add' | 'replace') => void
-  localFontManager: LocalFontManager
-}
-
-export function RightSidebar({
-  rightPanelRef,
-  rightPanelWidth,
-  patchSelected,
-  copySelectedElements,
-  pasteCopiedElements,
-  canPasteElement,
-  deleteSelected,
-  handleAssetInput,
-  localFontManager,
-}: RightSidebarBridgeProps) {
   // ── Scene Store ──
   const scene = useSceneStore((s) => s.scene)
   const selection = useSceneStore((s) => s.selection)
