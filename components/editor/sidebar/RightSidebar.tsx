@@ -3,6 +3,7 @@
 import { useEditor } from '../../EditorContext'
 import { ElementInspector } from '../../panels/ElementInspector'
 import { useEditorStore } from '@/stores/useEditorStore'
+import styles from '../../SceneEditor.module.css'
 
 interface RightSidebarProps {
   rightPanelRef: React.RefObject<HTMLDivElement | null>
@@ -33,7 +34,8 @@ export function RightSidebar({ rightPanelRef, rightPanelWidth }: RightSidebarPro
   return (
     <aside
       ref={rightPanelRef}
-      className="right-panel"
+      className={styles.rightPanel}
+      data-scrollable
       aria-label="Selected element settings"
       style={{ width: `${rightPanelWidth}px` }}
     >
@@ -64,7 +66,7 @@ export function RightSidebar({ rightPanelRef, rightPanelWidth }: RightSidebarPro
 
 function PanelTitle({ title, caption }: { title: string; caption: string }) {
   return (
-    <div className="panel-title">
+    <div className={styles.panelTitle}>
       <h2>{title}</h2>
       <span>{caption}</span>
     </div>

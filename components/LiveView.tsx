@@ -9,6 +9,7 @@ import {
   getLocalAssetBlobUrl,
 } from '@/lib/storage/local-asset-storage'
 import SceneCanvas from './SceneCanvas'
+import styles from './LiveView.module.css'
 
 type LiveViewProps = {
   templateId?: string
@@ -120,10 +121,10 @@ export default function LiveView({ templateId, slotId }: LiveViewProps) {
   return (
     <>
       <style>{`html, body { background: transparent !important; }`}</style>
-      <main className="live-shell">
+      <main className={styles.liveShell}>
         <SceneCanvas
           scene={scene}
-          className="live-canvas"
+          className={styles.liveCanvas}
           idPrefix="live"
           resolveSrc={resolveSrc}
         />

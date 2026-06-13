@@ -3,6 +3,7 @@ import { type SceneElement } from '@/lib/domain/scene'
 import { ShapeElementView } from './ShapeElementView'
 import { TextElementView } from './TextElementView'
 import { ImageElementView } from './ImageElementView'
+import styles from '../../editor/stage.module.css'
 
 export function ElementView({
   element,
@@ -23,7 +24,11 @@ export function ElementView({
 }) {
   return (
     <g
-      className={interactive ? `scene-element${element.locked ? ' locked' : ''}` : undefined}
+      className={
+        interactive
+          ? `${styles.sceneElement}${element.locked ? ` ${styles.locked}` : ''}`
+          : undefined
+      }
       data-element-id={element.id}
       onPointerDown={(event) => {
         if (!interactive) {

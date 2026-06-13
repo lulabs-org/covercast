@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import styles from '../overlay.module.css'
 
 export function SaveTemplateDialog({
   show,
@@ -59,14 +60,14 @@ export function SaveTemplateDialog({
 
   return (
     <div
-      className="dialog-backdrop"
+      className={styles.dialogBackdrop}
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
       aria-labelledby="save-template-dialog-title"
     >
-      <div className="dialog-content">
-        <h3 id="save-template-dialog-title" className="dialog-title">
+      <div className={styles.dialogContent}>
+        <h3 id="save-template-dialog-title" className={styles.dialogTitle}>
           {title}
         </h3>
         <label className={`field${nameError ? ' field-error' : ''}`}>
@@ -86,7 +87,7 @@ export function SaveTemplateDialog({
           />
           {nameError ? <span className="field-error-message">{nameError}</span> : null}
         </label>
-        <div className="dialog-actions">
+        <div className={styles.dialogActions}>
           <button type="button" className="secondary-button" onClick={onCancel}>
             取消
           </button>

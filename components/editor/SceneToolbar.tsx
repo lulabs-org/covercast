@@ -3,6 +3,7 @@
 import { TemplateToolbarButtons } from '../panels/TemplatePanel'
 import { EXPORT_FORMAT_OPTIONS } from '@/hooks/ui/useExportScene'
 import { useEditorStore } from '@/stores/useEditorStore'
+import styles from '../SceneEditor.module.css'
 
 interface SceneToolbarProps {
   addTextElement: () => void
@@ -36,9 +37,9 @@ export function SceneToolbar({
   const importTemplateFileAction = useEditorStore((s) => s.importTemplateFileAction)
 
   return (
-    <section className="editor-toolbar" aria-label="Covercast editor controls">
+    <section className={styles.editorToolbar} aria-label="Covercast editor controls">
       <div>
-        <p className="eyebrow">Covercast</p>
+        <p className={styles.eyebrow}>Covercast</p>
         <h1>封面编辑器</h1>
       </div>
       <div className="toolbar-actions">

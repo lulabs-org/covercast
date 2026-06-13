@@ -3,6 +3,7 @@
 import { type ReactNode, useState } from 'react'
 import { BUILT_IN_TEMPLATES } from '@/lib/templates'
 import { type CustomSceneTemplate, type SceneSlotInfo } from '@/stores/useTemplateStore'
+import styles from './SourcesPanel.module.css'
 
 function SidebarSection({
   title,
@@ -41,7 +42,7 @@ function EditableSlotName({ name, onSave }: { name: string; onSave: (value: stri
   if (editing) {
     return (
       <input
-        className="slot-name-input"
+        className={styles.slotNameInput}
         type="text"
         value={draft}
         onChange={(e) => setDraft(e.currentTarget.value)}
@@ -75,7 +76,7 @@ function EditableSlotName({ name, onSave }: { name: string; onSave: (value: stri
 
   return (
     <span
-      className="slot-name"
+      className={styles.slotName}
       onClick={(e) => {
         e.stopPropagation()
         setDraft(name)
@@ -120,10 +121,10 @@ export function SourcesPanel({
       collapsed={collapsed}
       onToggle={onToggle}
     >
-      <div className="source-create-row">
+      <div className={styles.sourceCreateRow}>
         <span>新建浏览器源</span>
         <select
-          className="template-select-dropdown"
+          className={styles.templateSelectDropdown}
           value=""
           onChange={(e) => {
             if (e.currentTarget.value) {
@@ -156,11 +157,11 @@ export function SourcesPanel({
       </div>
 
       {templateSlots.length === 0 ? (
-        <div className="live-url-empty">
+        <div className={styles.liveUrlEmpty}>
           <p>暂无浏览器源，请从上方选择模板创建</p>
         </div>
       ) : (
-        <div className="slot-list">
+        <div className={styles.slotList}>
           {templateSlots.map((slot) => {
             const url = getSlotUrl(slot.templateId, slot.slotId)
             const isActive = slot.slotId === activeSlotId
@@ -172,12 +173,12 @@ export function SourcesPanel({
             return (
               <div
                 key={`${slot.templateId}/${slot.slotId}`}
-                className={`slot-item${isActive ? ' active' : ''}`}
+                className={`${styles.slotItem}${isActive ? ` ${styles.active}` : ''}`}
                 onClick={() => onSelectSlot(slot.slotId)}
               >
-                <div className="slot-item-header">
-                  <div className="slot-title-group">
-                    <span className="slot-template-badge">{templateName}</span>
+                <div className={styles.slotItemHeader}>
+                  <div className={styles.slotTitleGroup}>
+                    <span className={styles.slotTemplateBadge}>{templateName}</span>
                     <EditableSlotName
                       name={slot.name}
                       onSave={(newName) => onRenameSlot(slot.templateId, slot.slotId, newName)}
@@ -185,7 +186,7 @@ export function SourcesPanel({
                   </div>
                   <button
                     type="button"
-                    className="slot-delete-button"
+                    className={styles.slotDeleteButton}
                     onClick={(e) => {
                       e.stopPropagation()
                       onRemoveSlot(slot.templateId, slot.slotId)
@@ -195,11 +196,11 @@ export function SourcesPanel({
                     ×
                   </button>
                 </div>
-                <div className="slot-item-url">
+                <div className={styles.slotItemUrl}>
                   <code>{url}</code>
                   <button
                     type="button"
-                    className="slot-copy-button"
+                    className={styles.slotCopyButton}
                     onClick={(e) => {
                       e.stopPropagation()
                       navigator.clipboard.writeText(url).then(() => {

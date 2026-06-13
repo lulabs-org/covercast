@@ -1,6 +1,7 @@
 import { type PointerEvent } from 'react'
 import { type SceneElement } from '@/lib/domain/scene'
 import { elementBounds } from '@/lib/rendering/scene-helpers'
+import styles from '../editor/stage.module.css'
 
 export function SelectionFrame({
   element,
@@ -26,7 +27,7 @@ export function SelectionFrame({
         pointerEvents="none"
       />
       <rect
-        className="selection-handle"
+        className={styles.selectionHandle}
         x={bounds.x + bounds.width - handleSize / 2}
         y={bounds.y + bounds.height - handleSize / 2}
         width={handleSize}

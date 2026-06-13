@@ -1,5 +1,5 @@
 /* ─── Dialog ─── */
-.dialog-backdrop {
+.dialogBackdrop {
   position: fixed;
   inset: 0;
   display: flex;
@@ -10,7 +10,7 @@
   animation: fadeInBackdrop 0.15s ease;
 }
 
-.dialog-content {
+.dialogContent {
   min-width: 320px;
   max-width: 420px;
   display: flex;
@@ -24,27 +24,27 @@
   animation: slideInDialog 0.2s ease;
 }
 
-.dialog-title {
+.dialogTitle {
   margin: 0;
   font-size: 18px;
   font-weight: 900;
   color: var(--foreground);
 }
 
-.dialog-actions {
+.dialogActions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
 }
 
-.dialog-actions .primary-button,
-.dialog-actions .secondary-button {
+.dialogActions :global(.primary-button),
+.dialogActions :global(.secondary-button) {
   min-width: 96px;
 }
 
 /* ─── Modal ─── */
-.modal-overlay {
+.modalOverlay {
   position: fixed;
   inset: 0;
   display: flex;
@@ -54,7 +54,7 @@
   z-index: 9999;
 }
 
-.modal-content {
+.modalContent {
   min-width: 480px;
   max-width: 560px;
   max-height: 90vh;
@@ -68,7 +68,7 @@
   overflow: hidden;
 }
 
-.modal-header {
+.modalHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -76,14 +76,14 @@
   border-bottom: 1px solid var(--panel-border);
 }
 
-.modal-header h2 {
+.modalHeader h2 {
   margin: 0;
   font-size: 18px;
   font-weight: 900;
   color: var(--foreground);
 }
 
-.modal-close-button {
+.modalCloseButton {
   width: 32px;
   height: 32px;
   display: flex;
@@ -97,40 +97,40 @@
   cursor: pointer;
 }
 
-.modal-close-button:hover {
+.modalCloseButton:hover {
   background: rgba(0, 0, 0, 0.05);
   color: var(--foreground);
 }
 
-.modal-body {
+.modalBody {
   padding: 20px;
   overflow-y: auto;
 }
 
-.modal-section {
+.modalSection {
   margin-bottom: 20px;
 }
 
-.modal-section:last-child {
+.modalSection:last-child {
   margin-bottom: 0;
 }
 
-.modal-section h3 {
+.modalSection h3 {
   margin: 0 0 12px 0;
   font-size: 14px;
   font-weight: 700;
   color: var(--muted);
 }
 
-.modal-section .field {
+.modalSection :global(.field) {
   margin-bottom: 10px;
 }
 
-.modal-section .field:last-child {
+.modalSection :global(.field):last-child {
   margin-bottom: 0;
 }
 
-.modal-footer {
+.modalFooter {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -139,14 +139,35 @@
   border-top: 1px solid var(--panel-border);
 }
 
-.modal-footer .primary-button,
-.modal-footer .secondary-button {
+.modalFooter :global(.primary-button),
+.modalFooter :global(.secondary-button) {
   min-width: 96px;
 }
 
-.custom-size-fields {
+.customSizeFields {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin-top: 10px;
+}
+
+.colorInputWrapper {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.colorInputWrapper input[type='color'] {
+  padding: 3px;
+}
+
+.colorInputWrapper input[type='text'] {
+  font-family: monospace;
+}
+
+.opacityValue {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
 }

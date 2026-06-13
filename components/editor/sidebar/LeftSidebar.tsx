@@ -8,6 +8,7 @@ import { TemplatePanel } from '../../panels/TemplatePanel'
 import { CanvasSizeSelector } from '../../controls/CanvasSizeSelector'
 import { useEditorStore } from '@/stores/useEditorStore'
 import { BUILT_IN_TEMPLATES } from '@/lib/templates'
+import styles from '../../SceneEditor.module.css'
 
 interface LeftSidebarProps {
   leftPanelRef: React.RefObject<HTMLDivElement | null>
@@ -87,7 +88,8 @@ export function LeftSidebar({ leftPanelRef, leftPanelWidth }: LeftSidebarProps) 
   return (
     <aside
       ref={leftPanelRef}
-      className="left-panel"
+      className={styles.leftPanel}
+      data-scrollable
       aria-label="Scene settings"
       style={{ width: `${leftPanelWidth}px` }}
     >

@@ -3,6 +3,7 @@
 import { useState, useCallback, type ChangeEvent } from 'react'
 import { createPortal } from 'react-dom'
 import type { BlankCoverConfig } from '@/hooks/ui/useCreateBlankCover'
+import styles from '../overlay.module.css'
 
 type TemplateOption = {
   id: string
@@ -131,17 +132,26 @@ export function CreateBlankCoverModal({
   const opacity = clamp(config.backgroundOpacity, 0, 1)
 
   const modalContent = (
-    <div className="modal-overlay" onClick={onCancel}>
-      <section className="modal-content" onClick={(e) => e.stopPropagation()} aria-label="新建封面">
-        <header className="modal-header">
+    <div className={styles.modalOverlay} onClick={onCancel}>
+      <section
+        className={styles.modalContent}
+        onClick={(e) => e.stopPropagation()}
+        aria-label="新建封面"
+      >
+        <header className={styles.modalHeader}>
           <h2>新建封面</h2>
-          <button type="button" className="modal-close-button" onClick={onCancel} aria-label="关闭">
+          <button
+            type="button"
+            className={styles.modalCloseButton}
+            onClick={onCancel}
+            aria-label="关闭"
+          >
             ×
           </button>
         </header>
 
-        <div className="modal-body">
-          <div className="modal-section">
+        <div className={styles.modalBody}>
+          <div className={styles.modalSection}>
             <h3>基本信息</h3>
             <label className="field">
               <span>封面名称</span>
@@ -154,7 +164,7 @@ export function CreateBlankCoverModal({
             </label>
           </div>
 
-          <div className="modal-section">
+          <div className={styles.modalSection}>
             <h3>引用模板</h3>
             <label className="field">
               <span>选择模板</span>
@@ -168,7 +178,7 @@ export function CreateBlankCoverModal({
             </label>
           </div>
 
-          <div className="modal-section">
+          <div className={styles.modalSection}>
             <h3>封面尺寸</h3>
             <label className="field">
               <span>预设尺寸</span>
@@ -183,7 +193,7 @@ export function CreateBlankCoverModal({
             </label>
 
             {isCustomSize && (
-              <div className="custom-size-fields">
+              <div className={styles.customSizeFields}>
                 <label className="field">
                   <span>宽度</span>
                   <input
@@ -206,11 +216,11 @@ export function CreateBlankCoverModal({
             )}
           </div>
 
-          <div className="modal-section">
+          <div className={styles.modalSection}>
             <h3>背景设置</h3>
             <label className="field">
               <span>背景颜色</span>
-              <div className="color-input-wrapper">
+              <div className={styles.colorInputWrapper}>
                 <input type="color" value={colorValue} onChange={handleColorChange} />
                 <input
                   type="text"
@@ -230,12 +240,12 @@ export function CreateBlankCoverModal({
                 value={opacity}
                 onChange={handleOpacityChange}
               />
-              <span className="opacity-value">{Math.round(opacity * 100)}%</span>
+              <span className={styles.opacityValue}>{Math.round(opacity * 100)}%</span>
             </label>
           </div>
         </div>
 
-        <footer className="modal-footer">
+        <footer className={styles.modalFooter}>
           <button type="button" className="secondary-button" onClick={onCancel}>
             取消
           </button>

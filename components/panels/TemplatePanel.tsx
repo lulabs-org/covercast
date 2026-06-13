@@ -4,6 +4,7 @@ import { type ReactNode } from 'react'
 import { BUILT_IN_TEMPLATES } from '@/lib/templates'
 import { type CustomSceneTemplate } from '@/stores/useTemplateStore'
 import { CustomTemplateCard } from './CustomTemplateCard'
+import styles from './template.module.css'
 
 function SidebarSection({
   title,
@@ -52,16 +53,16 @@ function TemplateCard({
 }) {
   return (
     <div
-      className={['template-card', active ? 'active' : '', dirty ? 'dirty' : '']
+      className={[styles.templateCard, active ? styles.active : '', dirty ? styles.dirty : '']
         .filter(Boolean)
         .join(' ')}
     >
-      <button type="button" className="template-card-button" onClick={onApply}>
-        <div className="template-card-content">
-          <span className="template-card-name">{name}</span>
-          <small className="template-card-desc">{description}</small>
+      <button type="button" className={styles.templateCardButton} onClick={onApply}>
+        <div className={styles.templateCardContent}>
+          <span className={styles.templateCardName}>{name}</span>
+          <small className={styles.templateCardDesc}>{description}</small>
         </div>
-        <span className="template-card-badge">{badge}</span>
+        <span className={styles.templateCardBadge}>{badge}</span>
       </button>
     </div>
   )
@@ -97,13 +98,13 @@ export function TemplatePanel({
       collapsed={collapsed}
       onToggle={onToggle}
     >
-      <div className="template-library">
-        <div className="template-section">
-          <div className="template-section-header">
-            <span className="template-section-title">内置模板</span>
-            <span className="template-section-count">{BUILT_IN_TEMPLATES.length} 个</span>
+      <div className={styles.templateLibrary}>
+        <div className={styles.templateSection}>
+          <div className={styles.templateSectionHeader}>
+            <span className={styles.templateSectionTitle}>内置模板</span>
+            <span className={styles.templateSectionCount}>{BUILT_IN_TEMPLATES.length} 个</span>
           </div>
-          <div className="template-list">
+          <div className={styles.templateList}>
             {BUILT_IN_TEMPLATES.map((template) => (
               <TemplateCard
                 key={template.id}
@@ -118,12 +119,12 @@ export function TemplatePanel({
         </div>
 
         {customTemplates.length > 0 && (
-          <div className="template-section">
-            <div className="template-section-header">
-              <span className="template-section-title">自定义模板</span>
-              <span className="template-section-count">{customTemplates.length} 个</span>
+          <div className={styles.templateSection}>
+            <div className={styles.templateSectionHeader}>
+              <span className={styles.templateSectionTitle}>自定义模板</span>
+              <span className={styles.templateSectionCount}>{customTemplates.length} 个</span>
             </div>
-            <div className="template-list">
+            <div className={styles.templateList}>
               {customTemplates.map((template) => (
                 <CustomTemplateCard
                   key={template.id}
@@ -158,7 +159,7 @@ export function TemplateToolbarButtons({
     <>
       <button
         type="button"
-        className="secondary-button toolbar-template-button"
+        className={`secondary-button toolbar-template-button ${styles.toolbarTemplateButton}`}
         onClick={onOpenSaveTemplateDialog}
       >
         {activeCustomTemplate ? '另存为模板' : '保存为模板'}

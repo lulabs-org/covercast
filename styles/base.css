@@ -53,44 +53,32 @@ body {
   background: transparent;
 }
 
-.left-panel:hover::-webkit-scrollbar-thumb,
-.right-panel:hover::-webkit-scrollbar-thumb,
-.stage-viewport:hover::-webkit-scrollbar-thumb,
+[data-scrollable]:hover::-webkit-scrollbar-thumb,
 .sidebar-scrollable:hover::-webkit-scrollbar-thumb,
 .modal-scrollable:hover::-webkit-scrollbar-thumb,
-.left-panel.scrolling::-webkit-scrollbar-thumb,
-.right-panel.scrolling::-webkit-scrollbar-thumb,
-.stage-viewport.scrolling::-webkit-scrollbar-thumb,
+[data-scrollable].scrolling::-webkit-scrollbar-thumb,
 .sidebar-scrollable.scrolling::-webkit-scrollbar-thumb,
 .modal-scrollable.scrolling::-webkit-scrollbar-thumb {
   background: rgba(100, 116, 139, 0.25);
 }
 
-.left-panel::-webkit-scrollbar-thumb:hover,
-.right-panel::-webkit-scrollbar-thumb:hover,
-.stage-viewport::-webkit-scrollbar-thumb:hover,
+[data-scrollable]::-webkit-scrollbar-thumb:hover,
 .sidebar-scrollable::-webkit-scrollbar-thumb:hover,
 .modal-scrollable::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 0.45);
 }
 
-.left-panel,
-.right-panel,
-.stage-viewport,
+[data-scrollable],
 .sidebar-scrollable,
 .modal-scrollable {
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
 }
 
-.left-panel:hover,
-.right-panel:hover,
-.stage-viewport:hover,
+[data-scrollable]:hover,
 .sidebar-scrollable:hover,
 .modal-scrollable:hover,
-.left-panel.scrolling,
-.right-panel.scrolling,
-.stage-viewport.scrolling,
+[data-scrollable].scrolling,
 .sidebar-scrollable.scrolling,
 .modal-scrollable.scrolling {
   scrollbar-color: rgba(100, 116, 139, 0.25) transparent;

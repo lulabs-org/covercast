@@ -1,0 +1,6 @@
+/* editor-bundle.css - 编辑器路由专属样式，按需加载 */
+/* 组件私有样式已迁移至 CSS Modules，此处仅保留全局共享样式 */
+
+@import './buttons.css';
+@import './fields.css';
+@import './sidebar.css';

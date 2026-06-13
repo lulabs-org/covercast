@@ -3,6 +3,7 @@
 import { type ReactNode } from 'react'
 import { type SceneElement } from '@/lib/domain/scene'
 import { isSelected, selectSingle, type SelectionState } from '@/lib/domain/selection'
+import styles from './LayerPanel.module.css'
 
 function elementTypeLabel(element: SceneElement) {
   if (element.type === 'text') {
@@ -94,7 +95,7 @@ export function LayerPanel({
       collapsed={collapsed}
       onToggle={onToggle}
     >
-      <div className="layer-list">
+      <div className={styles.layerList}>
         {visualLayers.map(({ element, index }) => {
           const isActive = isSelected(selection, element.id)
           const isTop = index === elements.length - 1
@@ -104,27 +105,27 @@ export function LayerPanel({
             <div
               key={element.id}
               className={[
-                'layer-row',
-                isActive ? 'active' : '',
-                element.hidden ? 'muted' : '',
-                element.locked ? 'locked' : '',
+                styles.layerRow,
+                isActive ? styles.active : '',
+                element.hidden ? styles.muted : '',
+                element.locked ? styles.locked : '',
               ]
                 .filter(Boolean)
                 .join(' ')}
             >
               <button
                 type="button"
-                className="layer-main"
+                className={styles.layerMain}
                 onClick={() => onSelect(selectSingle(selection, element.id))}
               >
-                <span className="layer-type">{elementTypeGlyph(element)}</span>
-                <span className="layer-name">{element.name}</span>
+                <span className={styles.layerType}>{elementTypeGlyph(element)}</span>
+                <span className={styles.layerName}>{element.name}</span>
                 <small>{elementTypeLabel(element)}</small>
               </button>
-              <div className="layer-actions">
+              <div className={styles.layerActions}>
                 <button
                   type="button"
-                  className={element.hidden ? 'layer-action active' : 'layer-action'}
+                  className={element.hidden ? styles.layerActionActive : styles.layerAction}
                   onClick={() => onToggleHidden(element.id)}
                   title={element.hidden ? '显示图层' : '隐藏图层'}
                 >
@@ -132,7 +133,7 @@ export function LayerPanel({
                 </button>
                 <button
                   type="button"
-                  className={element.locked ? 'layer-action active' : 'layer-action'}
+                  className={element.locked ? styles.layerActionActive : styles.layerAction}
                   onClick={() => onToggleLocked(element.id)}
                   title={element.locked ? '解锁图层' : '锁定图层'}
                 >
@@ -140,7 +141,7 @@ export function LayerPanel({
                 </button>
                 <button
                   type="button"
-                  className="layer-action"
+                  className={styles.layerAction}
                   disabled={isTop}
                   onClick={() => onMoveLayer(element.id, 'forward')}
                   title="上移一层"
@@ -149,7 +150,7 @@ export function LayerPanel({
                 </button>
                 <button
                   type="button"
-                  className="layer-action"
+                  className={styles.layerAction}
                   disabled={isBottom}
                   onClick={() => onMoveLayer(element.id, 'backward')}
                   title="下移一层"

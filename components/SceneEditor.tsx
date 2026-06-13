@@ -11,6 +11,7 @@ import { useScrollVisibility } from '@/hooks/ui/useScrollVisibility'
 import { usePanelResize } from '@/hooks/ui/usePanelResize'
 import { useCanvasInteraction } from '@/hooks/canvas/useCanvasInteraction'
 import { useDialogState } from '@/hooks/ui/useDialogState'
+import styles from './SceneEditor.module.css'
 
 export default function SceneEditor() {
   const { leftPanelRef, rightPanelRef, stageViewportRef } = useScrollVisibility()
@@ -64,7 +65,7 @@ function SceneEditorInner({
         onUpdateConfig={dialogState.updateCreateBlankCoverConfig}
       />
 
-      <main className="editor-shell">
+      <main className={styles.editorShell}>
         <SceneToolbar
           addTextElement={addTextElement}
           addRectElement={addRectElement}
@@ -85,12 +86,12 @@ function SceneEditorInner({
           onCancel={dialogState.saveTemplateDialog.closeDialog}
         />
 
-        <section className="editor-grid">
+        <section className={styles.editorGrid}>
           <LeftSidebar leftPanelRef={leftPanelRef} leftPanelWidth={panelWidths.leftPanel} />
 
           <div
             ref={resizerLeftRef}
-            className="panel-resizer"
+            className={styles.panelResizer}
             onMouseDown={(e) => handleMouseDown('left', e)}
           />
 
@@ -98,7 +99,7 @@ function SceneEditorInner({
 
           <div
             ref={resizerRightRef}
-            className="panel-resizer"
+            className={styles.panelResizer}
             onMouseDown={(e) => handleMouseDown('right', e)}
           />
 

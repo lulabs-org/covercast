@@ -1,6 +1,7 @@
 'use client'
 
 import { createPortal } from 'react-dom'
+import styles from './template.module.css'
 
 type TemplateCardMenuProps = {
   isOpen: boolean
@@ -42,7 +43,7 @@ export function TemplateCardMenu({
   const menuContent = (
     <div
       ref={menuRef}
-      className="template-card-menu"
+      className={styles.templateCardMenu}
       style={{
         position: 'fixed',
         left: position.x,
@@ -54,7 +55,7 @@ export function TemplateCardMenu({
     >
       <button
         type="button"
-        className="template-card-menu-item"
+        className={styles.templateCardMenuItem}
         onClick={handleDuplicateClick}
         role="menuitem"
       >
@@ -62,7 +63,7 @@ export function TemplateCardMenu({
       </button>
       <button
         type="button"
-        className="template-card-menu-item"
+        className={styles.templateCardMenuItem}
         onClick={handleRenameClick}
         role="menuitem"
       >
@@ -70,7 +71,7 @@ export function TemplateCardMenu({
       </button>
       <button
         type="button"
-        className="template-card-menu-item template-card-menu-item-danger"
+        className={`${styles.templateCardMenuItem} ${styles.templateCardMenuItemDanger}`}
         onClick={handleDeleteClick}
         role="menuitem"
       >

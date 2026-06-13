@@ -1,16 +1,4 @@
-/* globals.css - 样式拆分入口，按职责边界组织 */
+/* globals.css - 全局基础样式，所有路由共享 */
 
 @import '../styles/base.css';
 @import '../styles/animations.css';
-@import '../styles/buttons.css';
-@import '../styles/fields.css';
-@import '../styles/editor-layout.css';
-@import '../styles/sidebar.css';
-@import '../styles/stage.css';
-@import '../styles/layer.css';
-@import '../styles/source.css';
-@import '../styles/template.css';
-@import '../styles/font-family.css';
-@import '../styles/overlay.css';
-@import '../styles/live.css';
-@import '../styles/responsive.css';
