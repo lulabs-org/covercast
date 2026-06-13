@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, type ReactNode } from 'react'
-import { useEditorBridge } from '../../hooks/useEditorBridge'
+import { useEditorBridge } from '@/hooks/useEditorBridge'
 
 export type EditorContextValue = ReturnType<typeof useEditorBridge>
 

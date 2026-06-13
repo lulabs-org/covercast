@@ -1,4 +1,4 @@
-import { getMarqueeRect, type MarqueeState } from '../../../lib/marquee'
+import { getMarqueeRect, type MarqueeState } from '@/lib/marquee'
 
 export function MarqueeOverlay({ marquee }: { marquee: MarqueeState }) {
   const rect = getMarqueeRect(marquee)

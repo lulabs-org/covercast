@@ -1,8 +1,8 @@
 'use client'
 
 import { type ReactNode } from 'react'
-import { BUILT_IN_TEMPLATES } from '../../../lib/scene'
-import { type CustomSceneTemplate } from '../../../stores/useTemplateStore'
+import { BUILT_IN_TEMPLATES } from '@/lib/scene'
+import { type CustomSceneTemplate } from '@/stores/useTemplateStore'
 import { CustomTemplateCard } from './CustomTemplateCard'
 
 function SidebarSection({

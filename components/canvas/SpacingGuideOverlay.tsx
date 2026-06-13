@@ -1,4 +1,4 @@
-import type { MeasurementGuide } from '../../../lib/smart-guide'
+import type { MeasurementGuide } from '@/lib/smart-guide'
 
 type ArrowCapLine = {
   x1: number

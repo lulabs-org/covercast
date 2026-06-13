@@ -2,7 +2,7 @@
 
 import { useState, useCallback, type ChangeEvent } from 'react'
 import { createPortal } from 'react-dom'
-import type { BlankCoverConfig } from '../../../hooks/useCreateBlankCover'
+import type { BlankCoverConfig } from '@/hooks/useCreateBlankCover'
 
 type TemplateOption = {
   id: string

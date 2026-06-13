@@ -2,7 +2,7 @@
 
 import { useEditor } from '../../EditorContext'
 import { ElementInspector } from '../../panels/ElementInspector'
-import { useSceneStore } from '../../../../stores/useSceneStore'
+import { useSceneStore } from '@/stores/useSceneStore'
 
 export function RightSidebar() {
   const {

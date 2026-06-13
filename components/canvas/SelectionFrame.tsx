@@ -1,6 +1,6 @@
 import { type PointerEvent } from 'react'
-import { type SceneElement } from '../../../lib/scene'
-import { elementBounds } from '../../../lib/scene-svg'
+import { type SceneElement } from '@/lib/scene'
+import { elementBounds } from '@/lib/scene-svg'
 
 export function SelectionFrame({
   element,

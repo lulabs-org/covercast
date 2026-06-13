@@ -2,10 +2,10 @@
 
 import { useEditor } from '../EditorContext'
 import { TemplateToolbarButtons } from '../panels/TemplatePanel'
-import { EXPORT_FORMAT_OPTIONS } from '../../../hooks/useExportScene'
-import { useHistoryStore } from '../../../stores/useHistoryStore'
-import { useCanvasStore } from '../../../stores/useCanvasStore'
-import { useTemplateStore } from '../../../stores/useTemplateStore'
+import { EXPORT_FORMAT_OPTIONS } from '@/hooks/useExportScene'
+import { useHistoryStore } from '@/stores/useHistoryStore'
+import { useCanvasStore } from '@/stores/useCanvasStore'
+import { useTemplateStore } from '@/stores/useTemplateStore'
 
 export function SceneToolbar() {
   const {

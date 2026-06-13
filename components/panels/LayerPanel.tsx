@@ -1,8 +1,8 @@
 'use client'
 
 import { type ReactNode } from 'react'
-import { type SceneElement } from '../../../lib/scene'
-import { isSelected, selectSingle, type SelectionState } from '../../../lib/selection'
+import { type SceneElement } from '@/lib/scene'
+import { isSelected, selectSingle, type SelectionState } from '@/lib/selection'
 
 function elementTypeLabel(element: SceneElement) {
   if (element.type === 'text') {
