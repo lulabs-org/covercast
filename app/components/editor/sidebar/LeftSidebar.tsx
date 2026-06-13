@@ -5,62 +5,13 @@ import { LayerPanel } from '../../panels/LayerPanel'
 import { SourcesPanel } from '../../panels/SourcesPanel'
 import { TemplatePanel } from '../../panels/TemplatePanel'
 import { CanvasSizeSelector } from '../../controls/CanvasSizeSelector'
-import type { Scene } from '../../../lib/scene'
-import type { SelectionState } from '../../../lib/selection'
-import type { CustomSceneTemplate, SceneSlotInfo } from '../../../hooks/useTemplateManager'
-import type { CanvasSize, CanvasSizePreset } from '../../../hooks/useCanvasSize'
+import { useSceneStore } from '../../../stores/useSceneStore'
+import { useCanvasStore } from '../../../stores/useCanvasStore'
+import { useTemplateStore } from '../../../stores/useTemplateStore'
 
-type SidebarSectionId = 'scene' | 'sources' | 'templates' | 'layers'
-
-type LeftSidebarProps = {
-  // Panel
+type LeftSidebarBridgeProps = {
   leftPanelRef: Ref<HTMLDivElement>
   leftPanelWidth: number
-
-  // Context
-  activeTemplate: CustomSceneTemplate | null
-  hasUnsavedCustomTemplateChanges: boolean
-  editingContextCaption: string
-
-  // Sections
-  collapsedSections: Record<SidebarSectionId, boolean>
-  toggleSidebarSection: (sectionId: SidebarSectionId) => void
-
-  // Scene settings
-  scene: Scene
-  changeScene: (updater: (currentScene: Scene) => Scene, description?: string) => void
-
-  // Canvas size
-  canvasSize: CanvasSize
-  presets: CanvasSizePreset[]
-  currentPreset?: CanvasSizePreset
-  isCustomSize: boolean
-  onPresetSizeChange: (preset: CanvasSizePreset) => void
-  onCustomSizeChange: (width: number, height: number) => void
-
-  // Sources
-  templateSlots: SceneSlotInfo[]
-  customTemplates: CustomSceneTemplate[]
-  activeSlotId: string
-  addSlot: (templateId: string) => Promise<void>
-  removeSlot: (templateId: string, slotId: string) => Promise<void>
-  selectSlotForEditing: (slotId: string) => void
-  writeSlotNameToStorage: (templateId: string, slotId: string, name: string) => void
-  setTemplateSlots: React.Dispatch<React.SetStateAction<SceneSlotInfo[]>>
-  getSlotUrl: (templateId: string, slotId: string) => string
-  setStatus: (status: string) => void
-
-  // Templates
-  activeTemplateId: string
-  applyBuiltInTemplate: (templateId: string) => void
-  applyTemplate: (template: { id: string; name: string; scene: Scene }) => void
-  duplicateCustomTemplate: (templateId: string) => void
-  renameCustomTemplate: (templateId: string, newName: string) => void
-  deleteCustomTemplate: (templateId: string) => void
-
-  // Layers
-  selection: SelectionState
-  setSelection: React.Dispatch<React.SetStateAction<SelectionState>>
   toggleElementHidden: (elementId: string) => void
   toggleElementLocked: (elementId: string) => void
   moveElementLayer: (elementId: string, direction: 'forward' | 'backward') => void
@@ -69,41 +20,53 @@ type LeftSidebarProps = {
 export function LeftSidebar({
   leftPanelRef,
   leftPanelWidth,
-  activeTemplate,
-  hasUnsavedCustomTemplateChanges,
-  editingContextCaption,
-  collapsedSections,
-  toggleSidebarSection,
-  scene,
-  changeScene,
-  canvasSize,
-  presets,
-  currentPreset,
-  isCustomSize,
-  onPresetSizeChange,
-  onCustomSizeChange,
-  templateSlots,
-  customTemplates,
-  activeSlotId,
-  addSlot,
-  removeSlot,
-  selectSlotForEditing,
-  writeSlotNameToStorage,
-  setTemplateSlots,
-  getSlotUrl,
-  setStatus,
-  activeTemplateId,
-  applyBuiltInTemplate,
-  applyTemplate,
-  duplicateCustomTemplate,
-  renameCustomTemplate,
-  deleteCustomTemplate,
-  selection,
-  setSelection,
   toggleElementHidden,
   toggleElementLocked,
   moveElementLayer,
-}: LeftSidebarProps) {
+}: LeftSidebarBridgeProps) {
+  // ── Scene Store ──
+  const scene = useSceneStore((s) => s.scene)
+  const changeScene = useSceneStore((s) => s.changeScene)
+  const selection = useSceneStore((s) => s.selection)
+  const setSelection = useSceneStore((s) => s.setSelection)
+
+  // ── Canvas Store ──
+  const canvasSize = useCanvasStore((s) => s.canvasSize)
+  const presets = useCanvasStore((s) => s.presets)
+  const currentPreset = useCanvasStore((s) => s.currentPreset)
+  const isCustomSize = useCanvasStore((s) => s.isCustomSize)
+  const setPresetSize = useCanvasStore((s) => s.setPresetSize)
+  const setCustomSize = useCanvasStore((s) => s.setCustomSize)
+  const collapsedSections = useCanvasStore((s) => s.collapsedSections)
+  const toggleSidebarSection = useCanvasStore((s) => s.toggleSidebarSection)
+  const setStatus = useCanvasStore((s) => s.setStatus)
+
+  // ── Template Store ──
+  const customTemplates = useTemplateStore((s) => s.customTemplates)
+  const activeTemplateId = useTemplateStore((s) => s.activeTemplateId)
+  const templateSlots = useTemplateStore((s) => s.templateSlots)
+  const activeSlotId = useTemplateStore((s) => s.activeSlotId)
+  const setTemplateSlots = useTemplateStore((s) => s.setTemplateSlots)
+  const addSlot = useTemplateStore((s) => s.addSlot)
+  const removeSlot = useTemplateStore((s) => s.removeSlot)
+  const selectSlotForEditing = useTemplateStore((s) => s.selectSlotForEditing)
+  const getSlotUrl = useTemplateStore((s) => s.getSlotUrl)
+  const writeSlotNameToStorage = useTemplateStore((s) => s.writeSlotNameToStorage)
+  const applyTemplate = useTemplateStore((s) => s.applyTemplate)
+  const applyBuiltInTemplate = useTemplateStore((s) => s.applyBuiltInTemplate)
+  const duplicateCustomTemplate = useTemplateStore((s) => s.duplicateCustomTemplate)
+  const renameCustomTemplate = useTemplateStore((s) => s.renameCustomTemplate)
+  const deleteCustomTemplate = useTemplateStore((s) => s.deleteCustomTemplate)
+  const activeTemplate = useTemplateStore((s) => s.getActiveCustomTemplate())
+  const hasUnsavedCustomTemplateChanges = useTemplateStore((s) => s.getHasUnsavedChanges())
+
+  // ── Computed ──
+  const activeSlot = templateSlots.find((slot) => slot.slotId === activeSlotId) ?? null
+  const editingContextCaption = activeTemplate
+    ? hasUnsavedCustomTemplateChanges
+      ? '自定义模板有未保存修改'
+      : '自定义模板已保存'
+    : (activeSlot?.name ?? '未选择 OBS 源')
   return (
     <aside
       ref={leftPanelRef}
@@ -132,8 +95,8 @@ export function LeftSidebar({
             presets={presets}
             currentPreset={currentPreset}
             isCustomSize={isCustomSize}
-            onPresetChange={onPresetSizeChange}
-            onCustomSizeChange={onCustomSizeChange}
+            onPresetChange={setPresetSize}
+            onCustomSizeChange={setCustomSize}
           />
           <ColorField
             label="背景颜色"

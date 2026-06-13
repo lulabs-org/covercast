@@ -88,20 +88,30 @@ export function useMarqueeSelection({
 
       const isShiftPressed = event.shiftKey
 
+      // Compute selection changes OUTSIDE of setMarquee updater
+      // to avoid calling Zustand setSelection during React state update
+      let selectionUpdater: ((prev: SelectionState) => SelectionState) | null = null
+
       setMarquee((prevMarquee) => {
         if (hasMarqueeSize(prevMarquee, 5)) {
           const rect = getMarqueeRect(prevMarquee)
           const hitIds = hitTestElements(rect, sceneElementsRef.current, hitTestStrategy)
 
           if (hitIds.length > 0) {
-            setSelection((prevSelection) => selectMultiple(prevSelection, hitIds, isShiftPressed))
+            selectionUpdater = (prevSelection) =>
+              selectMultiple(prevSelection, hitIds, isShiftPressed)
           } else if (!isShiftPressed) {
-            setSelection((prevSelection) => clearSelection(prevSelection))
+            selectionUpdater = (prevSelection) => clearSelection(prevSelection)
           }
         }
 
         return clearMarquee(prevMarquee)
       })
+
+      // Apply selection update after setMarquee completes
+      if (selectionUpdater) {
+        setSelection(selectionUpdater)
+      }
     }
 
     window.addEventListener('pointermove', handlePointerMove)

@@ -1,80 +1,27 @@
 'use client'
 
-import type { Ref, WheelEvent as ReactWheelEvent, PointerEvent } from 'react'
+import type { Ref, PointerEvent } from 'react'
 import SceneCanvas from '../SceneCanvas'
-import type { Scene } from '../../lib/scene'
-import type { GuideLine, MeasurementGuide, ResizeLabel } from '../../lib/smart-guide'
-import type { HitTestStrategy, MarqueeState } from '../../lib/marquee'
+import { useSceneStore } from '../../stores/useSceneStore'
+import { useCanvasStore } from '../../stores/useCanvasStore'
+import { useInteractionStore } from '../../stores/useInteractionStore'
 import type { ResizeHandleType } from '../../lib/group-drag'
 
-type StagePanelProps = {
-  // Status
-  status: string
-
-  // Zoom controls
-  canvasZoom: number
-  canvasZoomPercent: number
-  canvasPreviewWidth: number
-  CANVAS_ZOOM_MIN: number
-  CANVAS_ZOOM_MAX: number
-  CANVAS_ZOOM_STEP: number
-  setCanvasZoomLevel: (value: number) => void
-  zoomCanvasIn: () => void
-  zoomCanvasOut: () => void
-  resetCanvasZoom: () => void
-  handleZoomSliderWheel: (event: ReactWheelEvent<HTMLDivElement>) => void
-  handleStageWheel: (event: ReactWheelEvent<HTMLDivElement>) => void
+type StagePanelBridgeProps = {
+  svgRef: Ref<SVGSVGElement>
   stageViewportRef: Ref<HTMLDivElement>
-
-  // SceneCanvas props
-  scene: Scene
-  selectedIds: string[]
-  guides?: GuideLine[]
-  spacingGuides?: MeasurementGuide[]
-  resizeLabel?: ResizeLabel | null
-  svgRef?: Ref<SVGSVGElement>
-  marquee?: MarqueeState
-  hitTestStrategy?: HitTestStrategy
-  editingTextId?: string | null
-  isGroupDragging?: boolean
-  canvasWidth?: number
-  canvasHeight?: number
-  resolveSrc?: (src: string) => string
-  onCanvasPointerDown?: (event: PointerEvent<SVGSVGElement>) => void
-  onElementPointerDown?: (elementId: string, event: PointerEvent<SVGGElement>) => void
-  onResizePointerDown?: (elementId: string, event: PointerEvent<SVGRectElement>) => void
-  onGroupDragPointerDown?: (event: PointerEvent<SVGRectElement>) => void
-  onGroupResizePointerDown?: (handle: ResizeHandleType, event: PointerEvent<SVGRectElement>) => void
-  onTextElementDoubleClick?: (elementId: string) => void
+  resolveSrc: (src: string) => string
+  onCanvasPointerDown: (event: PointerEvent<SVGSVGElement>) => void
+  onElementPointerDown: (elementId: string, event: PointerEvent<SVGGElement>) => void
+  onResizePointerDown: (elementId: string, event: PointerEvent<SVGRectElement>) => void
+  onGroupDragPointerDown: (event: PointerEvent<SVGRectElement>) => void
+  onGroupResizePointerDown: (handle: ResizeHandleType, event: PointerEvent<SVGRectElement>) => void
+  onTextElementDoubleClick: (elementId: string) => void
 }
 
 export function StagePanel({
-  status,
-  canvasZoom,
-  canvasZoomPercent,
-  canvasPreviewWidth,
-  CANVAS_ZOOM_MIN,
-  CANVAS_ZOOM_MAX,
-  CANVAS_ZOOM_STEP,
-  setCanvasZoomLevel,
-  zoomCanvasIn,
-  zoomCanvasOut,
-  resetCanvasZoom,
-  handleZoomSliderWheel,
-  handleStageWheel,
-  stageViewportRef,
-  scene,
-  selectedIds,
-  guides,
-  spacingGuides,
-  resizeLabel,
   svgRef,
-  marquee,
-  hitTestStrategy,
-  editingTextId,
-  isGroupDragging,
-  canvasWidth,
-  canvasHeight,
+  stageViewportRef,
   resolveSrc,
   onCanvasPointerDown,
   onElementPointerDown,
@@ -82,7 +29,35 @@ export function StagePanel({
   onGroupDragPointerDown,
   onGroupResizePointerDown,
   onTextElementDoubleClick,
-}: StagePanelProps) {
+}: StagePanelBridgeProps) {
+  // ── Scene Store ──
+  const scene = useSceneStore((s) => s.scene)
+  const selectedIds = useSceneStore((s) => s.selection.selectedIds)
+  const editingTextId = useSceneStore((s) => s.editingTextId)
+
+  // ── Canvas Store ──
+  const status = useCanvasStore((s) => s.status)
+  const canvasSize = useCanvasStore((s) => s.canvasSize)
+  const canvasZoom = useCanvasStore((s) => s.canvasZoom)
+  const canvasZoomPercent = useCanvasStore((s) => s.canvasZoomPercent)
+  const canvasPreviewWidth = useCanvasStore((s) => s.canvasPreviewWidth)
+  const CANVAS_ZOOM_MIN = useCanvasStore((s) => s.CANVAS_ZOOM_MIN)
+  const CANVAS_ZOOM_MAX = useCanvasStore((s) => s.CANVAS_ZOOM_MAX)
+  const CANVAS_ZOOM_STEP = useCanvasStore((s) => s.CANVAS_ZOOM_STEP)
+  const setCanvasZoomLevel = useCanvasStore((s) => s.setCanvasZoomLevel)
+  const zoomCanvasIn = useCanvasStore((s) => s.zoomCanvasIn)
+  const zoomCanvasOut = useCanvasStore((s) => s.zoomCanvasOut)
+  const resetCanvasZoom = useCanvasStore((s) => s.resetCanvasZoom)
+  const handleZoomSliderWheel = useCanvasStore((s) => s.handleZoomSliderWheel)
+  const handleStageWheel = useCanvasStore((s) => s.handleStageWheel)
+
+  // ── Interaction Store ──
+  const visibleGuides = useInteractionStore((s) => s.visibleGuides)
+  const visibleSpacingGuides = useInteractionStore((s) => s.visibleSpacingGuides)
+  const resizeLabel = useInteractionStore((s) => s.resizeLabel)
+  const drag = useInteractionStore((s) => s.drag)
+  const marquee = useInteractionStore((s) => s.marquee)
+
   return (
     <section className="stage-panel" aria-label="Canvas preview">
       <div className="stage-header">
@@ -142,26 +117,26 @@ export function StagePanel({
             className="scene-preview-frame"
             style={{
               width: canvasPreviewWidth,
-              aspectRatio: `${canvasWidth} / ${canvasHeight}`,
+              aspectRatio: `${canvasSize.width} / ${canvasSize.height}`,
             }}
           >
             <SceneCanvas
               scene={scene}
               className="scene-preview"
-              style={{ aspectRatio: `${canvasWidth} / ${canvasHeight}` }}
+              style={{ aspectRatio: `${canvasSize.width} / ${canvasSize.height}` }}
               idPrefix="editor"
               interactive
               selectedIds={selectedIds}
-              guides={guides}
-              spacingGuides={spacingGuides}
+              guides={visibleGuides}
+              spacingGuides={visibleSpacingGuides}
               resizeLabel={resizeLabel}
               svgRef={svgRef}
               marquee={marquee}
-              hitTestStrategy={hitTestStrategy}
+              hitTestStrategy="intersection"
               editingTextId={editingTextId}
-              isGroupDragging={isGroupDragging}
-              canvasWidth={canvasWidth}
-              canvasHeight={canvasHeight}
+              isGroupDragging={drag?.mode === 'group-move'}
+              canvasWidth={canvasSize.width}
+              canvasHeight={canvasSize.height}
               resolveSrc={resolveSrc}
               onCanvasPointerDown={onCanvasPointerDown}
               onElementPointerDown={onElementPointerDown}

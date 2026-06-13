@@ -1,59 +1,46 @@
 'use client'
 
+import type { ChangeEvent } from 'react'
 import { TemplateToolbarButtons } from '../panels/TemplatePanel'
-import type { ExportFormat, EXPORT_FORMAT_OPTIONS } from '../../hooks/useExportScene'
-import type { CustomSceneTemplate } from '../../hooks/useTemplateManager'
+import { EXPORT_FORMAT_OPTIONS, type ExportFormat } from '../../hooks/useExportScene'
+import { useHistoryStore } from '../../stores/useHistoryStore'
+import { useCanvasStore } from '../../stores/useCanvasStore'
+import { useTemplateStore } from '../../stores/useTemplateStore'
 
-type SceneToolbarProps = {
-  // History
-  undo: () => void
-  redo: () => void
-  canUndo: boolean
-  canRedo: boolean
-
-  // Add elements
+type SceneToolbarBridgeProps = {
   addTextElement: () => void
   addRectElement: () => void
   addEllipseElement: () => void
-  handleAssetInput: (event: React.ChangeEvent<HTMLInputElement>, mode: 'add' | 'replace') => void
-
-  // Create blank cover
+  handleAssetInput: (event: ChangeEvent<HTMLInputElement>, mode: 'add' | 'replace') => void
   onCreateBlankCover: () => void
-
-  // Template
-  activeCustomTemplate: CustomSceneTemplate | null
-  hasUnsavedCustomTemplateChanges: boolean
-  saveActiveCustomTemplate: () => void
+  exportScene: (format: ExportFormat) => void | Promise<void>
   onOpenSaveTemplateDialog: () => void
-  importTemplateFile: (file: File) => Promise<void>
-
-  // Export
-  exportFormat: ExportFormat
-  setExportFormat: (format: ExportFormat) => void
-  exportScene: (format: ExportFormat) => Promise<void>
-  EXPORT_FORMAT_OPTIONS: typeof EXPORT_FORMAT_OPTIONS
 }
 
 export function SceneToolbar({
-  undo,
-  redo,
-  canUndo,
-  canRedo,
   addTextElement,
   addRectElement,
   addEllipseElement,
   handleAssetInput,
   onCreateBlankCover,
-  activeCustomTemplate,
-  hasUnsavedCustomTemplateChanges,
-  saveActiveCustomTemplate,
-  onOpenSaveTemplateDialog,
-  importTemplateFile,
-  exportFormat,
-  setExportFormat,
   exportScene,
-  EXPORT_FORMAT_OPTIONS,
-}: SceneToolbarProps) {
+  onOpenSaveTemplateDialog,
+}: SceneToolbarBridgeProps) {
+  // ── History Store ──
+  const history = useHistoryStore((s) => s.history)
+  const undo = useHistoryStore((s) => s.undo)
+  const redo = useHistoryStore((s) => s.redo)
+
+  // ── Canvas Store ──
+  const exportFormat = useCanvasStore((s) => s.exportFormat)
+  const setExportFormat = useCanvasStore((s) => s.setExportFormat)
+
+  // ── Template Store ──
+  const activeCustomTemplate = useTemplateStore((s) => s.getActiveCustomTemplate())
+  const hasUnsavedCustomTemplateChanges = useTemplateStore((s) => s.getHasUnsavedChanges())
+  const saveActiveCustomTemplate = useTemplateStore((s) => s.saveActiveCustomTemplate)
+  const importTemplateFile = useTemplateStore((s) => s.importTemplateFile)
+
   return (
     <section className="editor-toolbar" aria-label="Covercast editor controls">
       <div>
@@ -65,7 +52,7 @@ export function SceneToolbar({
           type="button"
           className="secondary-button"
           onClick={undo}
-          disabled={!canUndo}
+          disabled={history.past.length === 0}
           title="撤销 (Ctrl+Z)"
         >
           ↶
@@ -74,7 +61,7 @@ export function SceneToolbar({
           type="button"
           className="secondary-button"
           onClick={redo}
-          disabled={!canRedo}
+          disabled={history.future.length === 0}
           title="重做 (Ctrl+Shift+Z 或 Ctrl+Y)"
         >
           ↷
@@ -126,7 +113,7 @@ export function SceneToolbar({
           <select
             className="export-format-select"
             value={exportFormat}
-            onChange={(event) => setExportFormat(event.currentTarget.value as ExportFormat)}
+            onChange={(event) => setExportFormat(event.currentTarget.value as typeof exportFormat)}
             title="选择导出格式"
           >
             {EXPORT_FORMAT_OPTIONS.map((option) => (

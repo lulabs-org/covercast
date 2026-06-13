@@ -1,38 +1,28 @@
 'use client'
 
-import type { Ref } from 'react'
+import type { Ref, ChangeEvent } from 'react'
 import { ElementInspector } from '../../panels/ElementInspector'
 import type { SceneElement } from '../../../lib/scene'
-import type { useLocalFonts } from '../../../hooks/useLocalFonts'
+import { useSceneStore } from '../../../stores/useSceneStore'
+import { useLocalFonts } from '../../../hooks/useLocalFonts'
 
 type LocalFontManager = ReturnType<typeof useLocalFonts>
 
-type RightSidebarProps = {
-  // Panel
+type RightSidebarBridgeProps = {
   rightPanelRef: Ref<HTMLDivElement>
   rightPanelWidth: number
-
-  // Selected element
-  selectedElement: SceneElement | null
-  allElements: SceneElement[]
-
-  // ElementInspector actions
   patchSelected: (patch: Partial<SceneElement>) => void
   copySelectedElements: () => void
   pasteCopiedElements: () => void
   canPasteElement: boolean
   deleteSelected: () => void
-  handleAssetInput: (event: React.ChangeEvent<HTMLInputElement>, mode: 'add' | 'replace') => void
-
-  // Local font manager
+  handleAssetInput: (event: ChangeEvent<HTMLInputElement>, mode: 'add' | 'replace') => void
   localFontManager: LocalFontManager
 }
 
 export function RightSidebar({
   rightPanelRef,
   rightPanelWidth,
-  selectedElement,
-  allElements,
   patchSelected,
   copySelectedElements,
   pasteCopiedElements,
@@ -40,7 +30,17 @@ export function RightSidebar({
   deleteSelected,
   handleAssetInput,
   localFontManager,
-}: RightSidebarProps) {
+}: RightSidebarBridgeProps) {
+  // ── Scene Store ──
+  const scene = useSceneStore((s) => s.scene)
+  const selection = useSceneStore((s) => s.selection)
+
+  // ── Computed ──
+  const selectedElement =
+    selection.selectedIds.length === 1
+      ? (scene.elements.find((el) => el.id === selection.selectedIds[0]) ?? null)
+      : null
+
   return (
     <aside
       ref={rightPanelRef}
@@ -57,7 +57,7 @@ export function RightSidebar({
         <ElementInspector
           key={selectedElement.id}
           element={selectedElement}
-          allElements={allElements}
+          allElements={scene.elements}
           onPatch={patchSelected}
           onCopy={copySelectedElements}
           onPaste={pasteCopiedElements}
