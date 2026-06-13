@@ -10,10 +10,13 @@ import { useSceneStore } from '@/stores/useSceneStore'
 import { useCanvasStore } from '@/stores/useCanvasStore'
 import { useTemplateStore } from '@/stores/useTemplateStore'
 
-export function LeftSidebar() {
-  const { leftPanelRef, panelWidths, toggleElementHidden, toggleElementLocked, moveElementLayer } =
-    useEditor()
-  const leftPanelWidth = panelWidths.leftPanel
+interface LeftSidebarProps {
+  leftPanelRef: React.RefObject<HTMLDivElement | null>
+  leftPanelWidth: number
+}
+
+export function LeftSidebar({ leftPanelRef, leftPanelWidth }: LeftSidebarProps) {
+  const { toggleElementHidden, toggleElementLocked, moveElementLayer } = useEditor()
 
   // ── Scene Store ──
   const scene = useSceneStore((s) => s.scene)

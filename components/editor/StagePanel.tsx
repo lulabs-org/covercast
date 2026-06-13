@@ -7,17 +7,17 @@ import { useCanvasStore } from '@/stores/useCanvasStore'
 import { useInteractionStore } from '@/stores/useInteractionStore'
 
 export function StagePanel() {
+  const { resolveSrc, canvasInteraction } = useEditor()
+
   const {
     svgRef,
-    stageViewportRef,
-    resolveSrc,
     handleCanvasPointerDown,
     handleElementPointerDown,
     handleResizePointerDown,
     handleGroupDragPointerDown,
     handleGroupResizePointerDown,
     handleTextElementDoubleClick,
-  } = useEditor()
+  } = canvasInteraction
 
   // ── Scene Store ──
   const scene = useSceneStore((s) => s.scene)
@@ -100,7 +100,7 @@ export function StagePanel() {
           </div>
         </div>
       </div>
-      <div className="stage-viewport" ref={stageViewportRef} onWheel={handleStageWheel}>
+      <div className="stage-viewport" onWheel={handleStageWheel}>
         <div className="stage-viewport-inner">
           <div
             className="scene-preview-frame"

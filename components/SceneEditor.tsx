@@ -7,74 +7,91 @@ import { StagePanel } from './editor/StagePanel'
 import { LeftSidebar } from './editor/sidebar/LeftSidebar'
 import { RightSidebar } from './editor/sidebar/RightSidebar'
 import { CreateBlankCoverModal } from './panels/CreateBlankCoverModal'
+import { useLayoutContext } from '@/hooks/useLayoutContext'
+import { useCanvasInteraction } from '@/hooks/useCanvasInteraction'
+import { useDialogState } from '@/hooks/useDialogState'
 
 export default function SceneEditor() {
+  const layout = useLayoutContext()
+  const canvasInteraction = useCanvasInteraction()
+  const dialogState = useDialogState()
+
   return (
-    <EditorProvider>
-      <SceneEditorInner />
+    <EditorProvider
+      canvasInteraction={canvasInteraction}
+      stageViewportRef={layout.stageViewportRef}
+    >
+      <SceneEditorInner layout={layout} dialogState={dialogState} />
     </EditorProvider>
   )
 }
 
-function SceneEditorInner() {
-  const {
-    isCreateBlankCoverModalOpen,
-    createBlankCoverConfig,
-    openCreateBlankCoverModal,
-    closeCreateBlankCoverModal,
-    updateCreateBlankCoverConfig,
-    createBlankCover,
-    createBlankCoverPresetOptions,
-    createBlankCoverTemplateOptions,
-    saveTemplateDialog,
-    resizerLeftRef,
-    resizerRightRef,
-    handleMouseDown,
-  } = useEditor()
+function SceneEditorInner({
+  layout,
+  dialogState,
+}: {
+  layout: ReturnType<typeof useLayoutContext>
+  dialogState: ReturnType<typeof useDialogState>
+}) {
+  const { addTextElement, addRectElement, addEllipseElement, handleAssetInput } = useEditor()
 
   return (
     <>
       <CreateBlankCoverModal
-        isOpen={isCreateBlankCoverModalOpen}
-        config={createBlankCoverConfig}
-        presetOptions={createBlankCoverPresetOptions}
-        templateOptions={createBlankCoverTemplateOptions}
-        onCancel={closeCreateBlankCoverModal}
-        onConfirm={createBlankCover}
-        onUpdateConfig={updateCreateBlankCoverConfig}
+        isOpen={dialogState.isCreateBlankCoverModalOpen}
+        config={dialogState.createBlankCoverConfig}
+        presetOptions={dialogState.createBlankCoverPresetOptions}
+        templateOptions={dialogState.createBlankCoverTemplateOptions}
+        onCancel={dialogState.closeCreateBlankCoverModal}
+        onConfirm={dialogState.createBlankCover}
+        onUpdateConfig={dialogState.updateCreateBlankCoverConfig}
       />
 
       <main className="editor-shell">
-        <SceneToolbar />
+        <SceneToolbar
+          addTextElement={addTextElement}
+          addRectElement={addRectElement}
+          addEllipseElement={addEllipseElement}
+          handleAssetInput={handleAssetInput}
+          openCreateBlankCoverModal={dialogState.openCreateBlankCoverModal}
+          exportScene={dialogState.exportScene}
+          handleOpenSaveTemplateDialog={dialogState.handleOpenSaveTemplateDialog}
+        />
 
         <SaveTemplateDialog
-          show={saveTemplateDialog.showDialog}
+          show={dialogState.saveTemplateDialog.showDialog}
           title="另存为模板"
-          templateName={saveTemplateDialog.templateName}
-          nameError={saveTemplateDialog.nameError}
-          onSetName={saveTemplateDialog.setTemplateName}
-          onSave={saveTemplateDialog.handleSave}
-          onCancel={saveTemplateDialog.closeDialog}
+          templateName={dialogState.saveTemplateDialog.templateName}
+          nameError={dialogState.saveTemplateDialog.nameError}
+          onSetName={dialogState.saveTemplateDialog.setTemplateName}
+          onSave={dialogState.saveTemplateDialog.handleSave}
+          onCancel={dialogState.saveTemplateDialog.closeDialog}
         />
 
         <section className="editor-grid">
-          <LeftSidebar />
+          <LeftSidebar
+            leftPanelRef={layout.leftPanelRef}
+            leftPanelWidth={layout.panelWidths.leftPanel}
+          />
 
           <div
-            ref={resizerLeftRef}
+            ref={layout.resizerLeftRef}
             className="panel-resizer"
-            onMouseDown={(e) => handleMouseDown('left', e)}
+            onMouseDown={(e) => layout.handleMouseDown('left', e)}
           />
 
           <StagePanel />
 
           <div
-            ref={resizerRightRef}
+            ref={layout.resizerRightRef}
             className="panel-resizer"
-            onMouseDown={(e) => handleMouseDown('right', e)}
+            onMouseDown={(e) => layout.handleMouseDown('right', e)}
           />
 
-          <RightSidebar />
+          <RightSidebar
+            rightPanelRef={layout.rightPanelRef}
+            rightPanelWidth={layout.panelWidths.rightPanel}
+          />
         </section>
       </main>
     </>

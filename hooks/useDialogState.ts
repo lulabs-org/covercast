@@ -1,0 +1,92 @@
+'use client'
+
+import { useCreateBlankCover } from './useCreateBlankCover'
+import { useSaveTemplateDialog } from './useSaveTemplateDialog'
+import { useExportScene } from './useExportScene'
+import { useSceneStore } from '@/stores/useSceneStore'
+import { useCanvasStore } from '@/stores/useCanvasStore'
+import { useTemplateStore } from '@/stores/useTemplateStore'
+
+/**
+ * 对话框/模态框状态：新建封面 + 保存模板 + 导出。
+ * 仅由 SceneEditor 使用，不需要 Context 共享。
+ */
+export function useDialogState() {
+  // ── Scene Store ──
+  const scene = useSceneStore((s) => s.scene)
+  const setScene = useSceneStore((s) => s.setScene)
+  const setSelection = useSceneStore((s) => s.setSelection)
+
+  // ── Canvas Store ──
+  const setStatus = useCanvasStore((s) => s.setStatus)
+  const canvasSize = useCanvasStore((s) => s.canvasSize)
+  const presets = useCanvasStore((s) => s.presets)
+
+  // ── Template Store ──
+  const customTemplates = useTemplateStore((s) => s.customTemplates)
+  const setActiveTemplateId = useTemplateStore((s) => s.setActiveTemplateId)
+  const saveCustomTemplateWithName = useTemplateStore((s) => s.saveCustomTemplateWithName)
+  const saveCustomTemplateWithScene = useTemplateStore((s) => s.saveCustomTemplateWithScene)
+  const exportTemplateJson = useTemplateStore((s) => s.exportTemplateJson)
+  const setCanvasSize = useCanvasStore((s) => s.setCanvasSize)
+
+  // ── Export ──
+  const { exportScene } = useExportScene(
+    scene,
+    setStatus,
+    exportTemplateJson,
+    canvasSize.width,
+    canvasSize.height,
+  )
+
+  // ── Create blank cover ──
+  const {
+    isModalOpen: isCreateBlankCoverModalOpen,
+    config: createBlankCoverConfig,
+    openModal: openCreateBlankCoverModal,
+    closeModal: closeCreateBlankCoverModal,
+    updateConfig: updateCreateBlankCoverConfig,
+    createBlankCover,
+    presetOptions: createBlankCoverPresetOptions,
+    templateOptions: createBlankCoverTemplateOptions,
+  } = useCreateBlankCover({
+    setScene,
+    setSelection,
+    setCanvasSize,
+    setActiveTemplateId,
+    setStatus,
+    saveCustomTemplate: saveCustomTemplateWithScene,
+    canvasSizePresets: presets,
+    customTemplates,
+  })
+
+  // ── Save template dialog ──
+  const saveTemplateDialog = useSaveTemplateDialog({
+    customTemplates,
+    onSave: saveCustomTemplateWithName,
+  })
+
+  // ── Handlers ──
+  function handleOpenSaveTemplateDialog() {
+    saveTemplateDialog.openDialog(useTemplateStore.getState().getActiveTemplate()?.name)
+  }
+
+  return {
+    // Export
+    exportScene,
+    handleOpenSaveTemplateDialog,
+
+    // Blank cover
+    isCreateBlankCoverModalOpen,
+    createBlankCoverConfig,
+    openCreateBlankCoverModal,
+    closeCreateBlankCoverModal,
+    updateCreateBlankCoverConfig,
+    createBlankCover,
+    createBlankCoverPresetOptions,
+    createBlankCoverTemplateOptions,
+
+    // Save template dialog
+    saveTemplateDialog,
+  }
+}

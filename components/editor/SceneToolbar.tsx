@@ -1,23 +1,30 @@
 'use client'
 
-import { useEditor } from '../EditorContext'
 import { TemplateToolbarButtons } from '../panels/TemplatePanel'
 import { EXPORT_FORMAT_OPTIONS } from '@/hooks/useExportScene'
 import { useHistoryStore } from '@/stores/useHistoryStore'
 import { useCanvasStore } from '@/stores/useCanvasStore'
 import { useTemplateStore } from '@/stores/useTemplateStore'
 
-export function SceneToolbar() {
-  const {
-    addTextElement,
-    addRectElement,
-    addEllipseElement,
-    handleAssetInput,
-    openCreateBlankCoverModal,
-    exportScene,
-    handleOpenSaveTemplateDialog,
-  } = useEditor()
+interface SceneToolbarProps {
+  addTextElement: () => void
+  addRectElement: () => void
+  addEllipseElement: () => void
+  handleAssetInput: (event: React.ChangeEvent<HTMLInputElement>, mode: 'add' | 'replace') => void
+  openCreateBlankCoverModal: () => void
+  exportScene: (format: 'png' | 'jpeg' | 'svg' | 'json') => Promise<void>
+  handleOpenSaveTemplateDialog: () => void
+}
 
+export function SceneToolbar({
+  addTextElement,
+  addRectElement,
+  addEllipseElement,
+  handleAssetInput,
+  openCreateBlankCoverModal,
+  exportScene,
+  handleOpenSaveTemplateDialog,
+}: SceneToolbarProps) {
   // ── History Store ──
   const history = useHistoryStore((s) => s.history)
   const undo = useHistoryStore((s) => s.undo)

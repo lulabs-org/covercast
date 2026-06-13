@@ -4,10 +4,13 @@ import { useEditor } from '../../EditorContext'
 import { ElementInspector } from '../../panels/ElementInspector'
 import { useSceneStore } from '@/stores/useSceneStore'
 
-export function RightSidebar() {
+interface RightSidebarProps {
+  rightPanelRef: React.RefObject<HTMLDivElement | null>
+  rightPanelWidth: number
+}
+
+export function RightSidebar({ rightPanelRef, rightPanelWidth }: RightSidebarProps) {
   const {
-    rightPanelRef,
-    panelWidths,
     patchSelected,
     copySelectedElements,
     pasteCopiedElements,
@@ -16,7 +19,6 @@ export function RightSidebar() {
     handleAssetInput,
     localFontManager,
   } = useEditor()
-  const rightPanelWidth = panelWidths.rightPanel
 
   // ── Scene Store ──
   const scene = useSceneStore((s) => s.scene)
