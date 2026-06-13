@@ -1,0 +1,121 @@
+@import 'tailwindcss';
+
+:root {
+  --background: #f3f5f9;
+  --foreground: #152033;
+  --panel: #ffffff;
+  --panel-border: #d9e0ee;
+  --muted: #65728a;
+  --accent: #2764f6;
+  --accent-strong: #174ac6;
+  --danger: #d92d20;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: transparent;
+  color: var(--foreground);
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', Arial, Helvetica, sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+  border: 0;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.left-panel:hover::-webkit-scrollbar-thumb,
+.right-panel:hover::-webkit-scrollbar-thumb,
+.stage-viewport:hover::-webkit-scrollbar-thumb,
+.sidebar-scrollable:hover::-webkit-scrollbar-thumb,
+.modal-scrollable:hover::-webkit-scrollbar-thumb,
+.left-panel.scrolling::-webkit-scrollbar-thumb,
+.right-panel.scrolling::-webkit-scrollbar-thumb,
+.stage-viewport.scrolling::-webkit-scrollbar-thumb,
+.sidebar-scrollable.scrolling::-webkit-scrollbar-thumb,
+.modal-scrollable.scrolling::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.25);
+}
+
+.left-panel::-webkit-scrollbar-thumb:hover,
+.right-panel::-webkit-scrollbar-thumb:hover,
+.stage-viewport::-webkit-scrollbar-thumb:hover,
+.sidebar-scrollable::-webkit-scrollbar-thumb:hover,
+.modal-scrollable::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.45);
+}
+
+.left-panel,
+.right-panel,
+.stage-viewport,
+.sidebar-scrollable,
+.modal-scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.left-panel:hover,
+.right-panel:hover,
+.stage-viewport:hover,
+.sidebar-scrollable:hover,
+.modal-scrollable:hover,
+.left-panel.scrolling,
+.right-panel.scrolling,
+.stage-viewport.scrolling,
+.sidebar-scrollable.scrolling,
+.modal-scrollable.scrolling {
+  scrollbar-color: rgba(100, 116, 139, 0.25) transparent;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+label.file-button {
+  user-select: none;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 16px;
+  line-height: 1.2;
+  font-weight: 700;
+}

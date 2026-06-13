@@ -229,6 +229,7 @@ export function CreateBlankCoverModal({
                 step={0.01}
                 value={opacity}
                 onChange={handleOpacityChange}
+                style={{ '--range-progress': `${opacity * 100}%` } as React.CSSProperties}
               />
               <span className="opacity-value">{Math.round(opacity * 100)}%</span>
             </label>

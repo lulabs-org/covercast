@@ -1,0 +1,227 @@
+.field,
+.color-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  min-height: 28px;
+  border: 1px solid var(--panel-border);
+  border-radius: 3px;
+  padding: 4px 6px;
+  color: var(--foreground);
+  background: #ffffff;
+  outline: none;
+  font-size: 12px;
+}
+
+.field textarea {
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(39, 100, 246, 0.1);
+}
+
+.field.field-error input {
+  border-color: var(--danger);
+}
+
+.field.field-error input:focus {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 2px rgba(217, 45, 32, 0.1);
+}
+
+.field.field-error .field-error-message {
+  color: var(--danger);
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.checkbox-field {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-field input {
+  width: 16px;
+  min-height: 16px;
+}
+
+.field-help {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.color-field > div {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 6px;
+}
+
+.color-field input[type='color'] {
+  padding: 2px;
+}
+
+.opacity-field > div {
+  display: grid;
+  grid-template-columns: 1fr 60px;
+  align-items: center;
+  gap: 6px;
+}
+
+.opacity-field input[type='range'] {
+  padding: 0;
+}
+
+/* ── Premium Range Slider ── */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 18px;
+  background: transparent;
+  cursor: pointer;
+  --range-progress: 50%;
+}
+
+/* Track */
+input[type='range']::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--foreground) var(--range-progress),
+    rgba(21, 32, 51, 0.1) var(--range-progress)
+  );
+}
+
+input[type='range']::-moz-range-track {
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(21, 32, 51, 0.1);
+  border: none;
+}
+
+input[type='range']::-moz-range-progress {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--foreground);
+}
+
+/* Thumb */
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: none;
+  box-shadow:
+    0 0.5px 2px rgba(21, 32, 51, 0.2),
+    0 0 0 1px rgba(21, 32, 51, 0.06);
+  margin-top: -5px;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: none;
+  box-shadow:
+    0 0.5px 2px rgba(21, 32, 51, 0.2),
+    0 0 0 1px rgba(21, 32, 51, 0.06);
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+/* Hover */
+input[type='range']:hover::-webkit-slider-thumb {
+  box-shadow:
+    0 1px 4px rgba(21, 32, 51, 0.24),
+    0 0 0 3px rgba(21, 32, 51, 0.06);
+  transform: scale(1.12);
+}
+
+input[type='range']:hover::-moz-range-thumb {
+  box-shadow:
+    0 1px 4px rgba(21, 32, 51, 0.24),
+    0 0 0 3px rgba(21, 32, 51, 0.06);
+  transform: scale(1.12);
+}
+
+/* Active / Focus */
+input[type='range']:active::-webkit-slider-thumb {
+  box-shadow:
+    0 1px 4px rgba(21, 32, 51, 0.28),
+    0 0 0 4px rgba(21, 32, 51, 0.08);
+  transform: scale(1.18);
+}
+
+input[type='range']:active::-moz-range-thumb {
+  box-shadow:
+    0 1px 4px rgba(21, 32, 51, 0.28),
+    0 0 0 4px rgba(21, 32, 51, 0.08);
+  transform: scale(1.18);
+}
+
+input[type='range']:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 1px 4px rgba(21, 32, 51, 0.24),
+    0 0 0 3px rgba(39, 100, 246, 0.2);
+}
+
+input[type='range']:focus-visible::-moz-range-thumb {
+  box-shadow:
+    0 1px 4px rgba(21, 32, 51, 0.24),
+    0 0 0 3px rgba(39, 100, 246, 0.2);
+}
+
+.color-input-wrapper {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 6px;
+  align-items: center;
+}
+
+.color-input-wrapper input[type='color'] {
+  padding: 2px;
+}
+
+.color-input-wrapper input[type='text'] {
+  font-family: monospace;
+}
+
+.opacity-value {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}

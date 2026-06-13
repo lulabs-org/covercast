@@ -1,0 +1,117 @@
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.primary-button,
+.secondary-button,
+.danger-button {
+  min-height: 30px;
+  border: 0;
+  border-radius: 3px;
+  padding: 0 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.primary-button {
+  color: #ffffff;
+  background: var(--accent);
+}
+
+.primary-button:hover {
+  background: var(--accent-strong);
+}
+
+.primary-button:disabled {
+  background: #9aa9c0;
+  cursor: not-allowed;
+}
+
+.primary-button.muted {
+  background: #1f2937;
+}
+
+.secondary-button {
+  color: var(--foreground);
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--panel-border);
+}
+
+.secondary-button:hover {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+.secondary-button:disabled {
+  color: var(--muted);
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--panel-border);
+  cursor: not-allowed;
+}
+
+.toolbar-template-button.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(39, 100, 246, 0.06);
+}
+
+.danger-button {
+  width: 100%;
+  color: #ffffff;
+  background: var(--danger);
+}
+
+.file-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.file-button input,
+.toolbar-actions input[type='file'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.export-control {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.export-control .primary-button {
+  border-radius: 0 3px 3px 0;
+}
+
+.export-format-select {
+  width: 72px;
+  min-height: 30px;
+  border: 1px solid #111827;
+  border-right: 0;
+  border-radius: 3px 0 0 3px;
+  padding: 0 22px 0 8px;
+  color: #ffffff;
+  background:
+    linear-gradient(45deg, transparent 50%, #ffffff 50%) calc(100% - 10px) 12px / 4px 4px no-repeat,
+    linear-gradient(135deg, #ffffff 50%, transparent 50%) calc(100% - 6px) 12px / 4px 4px no-repeat,
+    #1f2937;
+  cursor: pointer;
+  appearance: none;
+  font-size: 12px;
+  font-weight: 600;
+  outline: none;
+}
+
+.export-format-select:focus {
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.18);
+}
