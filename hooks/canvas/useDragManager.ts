@@ -1,18 +1,8 @@
 'use client'
 
 import { type PointerEvent as ReactPointerEvent, useRef, useEffect, useCallback } from 'react'
+import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH, type Scene } from '../../lib/scene'
 import {
-  DEFAULT_CANVAS_HEIGHT,
-  DEFAULT_CANVAS_WIDTH,
-  isTextElement,
-  type Scene,
-  type SceneElement,
-} from '../../lib/scene'
-import {
-  computeGuidesOptimized,
-  computeSnapOptimized,
-  computeSpacingGuidesOptimized,
-  computeResizeSnapOptimized,
   createResizeSnapState,
   createSnapState,
   type ResizeSnapState,
@@ -25,56 +15,13 @@ import {
   selectSingle,
   type SelectionState,
 } from '../../lib/selection'
-import {
-  computeBoundingBox,
-  computeNewBoundsFromHandle,
-  createGroupResizeState,
-  type BoundingBox,
-  type ResizeHandleType,
-} from '../../lib/group-drag'
+import { createGroupResizeState, type ResizeHandleType } from '../../lib/group-drag'
 import { useEditorStore } from '@/stores/useEditorStore'
-
-function getSvgPoint(svg: SVGSVGElement, clientX: number, clientY: number) {
-  const point = svg.createSVGPoint()
-  point.x = clientX
-  point.y = clientY
-  const matrix = svg.getScreenCTM()
-
-  if (!matrix) {
-    return { x: 0, y: 0 }
-  }
-
-  const nextPoint = point.matrixTransform(matrix.inverse())
-  return { x: nextPoint.x, y: nextPoint.y }
-}
-
-function minimumWidth(element: SceneElement) {
-  if (isTextElement(element)) {
-    return 40
-  }
-
-  if (element.type === 'ellipse') {
-    return 14
-  }
-
-  return 28
-}
-
-function minimumHeight(element: SceneElement) {
-  if (isTextElement(element)) {
-    return Math.max(24, element.fontSize)
-  }
-
-  if (element.type === 'ellipse') {
-    return 14
-  }
-
-  return 28
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max)
-}
+import { getSvgPoint } from './drag/utils'
+import { processElementMove, type SingleMoveDragState } from './drag/processElementMove'
+import { processElementResize, type SingleResizeDragState } from './drag/processElementResize'
+import { processGroupMove } from './drag/processGroupMove'
+import { processGroupResize } from './drag/processGroupResize'
 
 export function useDragManager({
   scene,
@@ -114,6 +61,7 @@ export function useDragManager({
   const rafHandleRef = useRef<number>(0)
   const latestMoveRef = useRef<{ dx: number; dy: number; shiftKey: boolean } | null>(null)
 
+  // ── 拖拽过程：pointermove + pointerup ──
   useEffect(() => {
     if (!drag) {
       return
@@ -155,236 +103,73 @@ export function useDragManager({
 
       const s = useEditorStore.getState()
 
-      if (activeDrag.mode === 'group-move') {
-        const groupBox = computeBoundingBox(activeDrag.elements)
-        const rawX = clamp(groupBox.x + latest.dx, -groupBox.width + 24, canvasWidth - 24)
-        const rawY = clamp(groupBox.y + latest.dy, -groupBox.height + 24, canvasHeight - 24)
-
-        const groupRect = {
-          x: rawX,
-          y: rawY,
-          width: groupBox.width,
-          height: groupBox.height,
+      switch (activeDrag.mode) {
+        case 'move': {
+          const result = processElementMove(
+            activeDrag as SingleMoveDragState,
+            latest,
+            spatialIndexRef.current,
+            snapStateRef.current,
+            canvasWidth,
+            canvasHeight,
+          )
+          snapStateRef.current = result.nextSnapState
+          s.setGuides(result.guides)
+          s.setSpacingGuides(result.spacingGuides)
+          s.setResizeLabel(result.resizeLabel)
+          setScene(result.sceneUpdater)
+          break
         }
-
-        const result = computeSnapOptimized(
-          groupRect,
-          spatialIndexRef.current,
-          snapStateRef.current,
-        )
-
-        snapStateRef.current = result.snapState
-        s.setGuides(result.guides)
-
-        const spacing = computeSpacingGuidesOptimized(result.snappedRect, spatialIndexRef.current)
-        s.setSpacingGuides(spacing)
-
-        s.setResizeLabel(null)
-
-        const groupDeltaX = result.snappedRect.x - groupBox.x
-        const groupDeltaY = result.snappedRect.y - groupBox.y
-
-        setScene((currentScene) => ({
-          ...currentScene,
-          elements: currentScene.elements.map((element) => {
-            const dragElement = activeDrag.elements.find((el) => el.id === element.id)
-            if (!dragElement) {
-              return element
-            }
-
-            return {
-              ...element,
-              x: dragElement.x + groupDeltaX,
-              y: dragElement.y + groupDeltaY,
-            } as SceneElement
-          }),
-        }))
-        markSceneEdited()
-        return
+        case 'resize': {
+          const result = processElementResize(
+            activeDrag as SingleResizeDragState,
+            latest,
+            spatialIndexRef.current,
+            resizeSnapStateRef.current,
+            canvasWidth,
+            canvasHeight,
+          )
+          resizeSnapStateRef.current = result.nextSnapState
+          s.setGuides(result.guides)
+          s.setSpacingGuides(result.spacingGuides)
+          s.setResizeLabel(result.resizeLabel)
+          setScene(result.sceneUpdater)
+          break
+        }
+        case 'group-move': {
+          const result = processGroupMove(
+            activeDrag,
+            latest,
+            spatialIndexRef.current,
+            snapStateRef.current,
+            canvasWidth,
+            canvasHeight,
+          )
+          snapStateRef.current = result.nextSnapState
+          s.setGuides(result.guides)
+          s.setSpacingGuides(result.spacingGuides)
+          s.setResizeLabel(result.resizeLabel)
+          setScene(result.sceneUpdater)
+          break
+        }
+        case 'group-resize': {
+          const result = processGroupResize(
+            activeDrag,
+            latest,
+            spatialIndexRef.current,
+            resizeSnapStateRef.current,
+            canvasWidth,
+            canvasHeight,
+          )
+          resizeSnapStateRef.current = result.nextSnapState
+          s.setGuides(result.guides)
+          s.setSpacingGuides(result.spacingGuides)
+          s.setResizeLabel(result.resizeLabel)
+          setScene(result.sceneUpdater)
+          break
+        }
       }
 
-      if (activeDrag.mode === 'group-resize') {
-        const newBounds = computeNewBoundsFromHandle(
-          activeDrag.originalBounds,
-          activeDrag.handle,
-          latest,
-          latest.shiftKey,
-        )
-
-        const clampedBounds: BoundingBox = {
-          x: clamp(newBounds.x, 0, canvasWidth - 10),
-          y: clamp(newBounds.y, 0, canvasHeight - 10),
-          width: clamp(newBounds.width, 10, canvasWidth - newBounds.x),
-          height: clamp(newBounds.height, 10, canvasHeight - newBounds.y),
-        }
-
-        const resizeSnap = computeResizeSnapOptimized(
-          clampedBounds,
-          spatialIndexRef.current,
-          resizeSnapStateRef.current,
-        )
-
-        resizeSnapStateRef.current = resizeSnap.snapState
-
-        const snappedBounds: BoundingBox = {
-          x: clampedBounds.x,
-          y: clampedBounds.y,
-          width: clamp(resizeSnap.snappedWidth, 10, canvasWidth - clampedBounds.x),
-          height: clamp(resizeSnap.snappedHeight, 10, canvasHeight - clampedBounds.y),
-        }
-
-        const resizeGuides = computeGuidesOptimized(snappedBounds, spatialIndexRef.current)
-        s.setGuides(resizeGuides)
-
-        const resizeSpacing = computeSpacingGuidesOptimized(snappedBounds, spatialIndexRef.current)
-        s.setSpacingGuides(resizeSpacing)
-
-        s.setResizeLabel({
-          x: snappedBounds.x + snappedBounds.width / 2,
-          y: snappedBounds.y + snappedBounds.height,
-          w: Math.round(snappedBounds.width),
-          h: Math.round(snappedBounds.height),
-        })
-
-        const scaleMatrix = {
-          scaleX: snappedBounds.width / activeDrag.originalBounds.width,
-          scaleY: snappedBounds.height / activeDrag.originalBounds.height,
-          offsetX:
-            snappedBounds.x -
-            activeDrag.originalBounds.x * (snappedBounds.width / activeDrag.originalBounds.width),
-          offsetY:
-            snappedBounds.y -
-            activeDrag.originalBounds.y * (snappedBounds.height / activeDrag.originalBounds.height),
-        }
-
-        setScene((currentScene) => ({
-          ...currentScene,
-          elements: currentScene.elements.map((element) => {
-            const dragElement = activeDrag.elements.find((el) => el.id === element.id)
-            if (!dragElement) {
-              return element
-            }
-
-            return {
-              ...element,
-              x: dragElement.x * scaleMatrix.scaleX + scaleMatrix.offsetX,
-              y: dragElement.y * scaleMatrix.scaleY + scaleMatrix.offsetY,
-              width: dragElement.width * scaleMatrix.scaleX,
-              height: dragElement.height * scaleMatrix.scaleY,
-            } as SceneElement
-          }),
-        }))
-        markSceneEdited()
-        return
-      }
-
-      if (activeDrag.mode === 'move') {
-        s.setResizeLabel(null)
-        const rawX = clamp(
-          activeDrag.element.x + latest.dx,
-          -activeDrag.element.width + 24,
-          canvasWidth - 24,
-        )
-        const rawY = clamp(
-          activeDrag.element.y + latest.dy,
-          -activeDrag.element.height + 24,
-          canvasHeight - 24,
-        )
-
-        const result = computeSnapOptimized(
-          { x: rawX, y: rawY, width: activeDrag.element.width, height: activeDrag.element.height },
-          spatialIndexRef.current,
-          snapStateRef.current,
-        )
-
-        snapStateRef.current = result.snapState
-        s.setGuides(result.guides)
-
-        const spacing = computeSpacingGuidesOptimized(result.snappedRect, spatialIndexRef.current)
-        s.setSpacingGuides(spacing)
-
-        setScene((currentScene) => ({
-          ...currentScene,
-          elements: currentScene.elements.map((element) => {
-            if (element.id !== activeDrag.id) {
-              return element
-            }
-
-            return {
-              ...element,
-              x: result.snappedRect.x,
-              y: result.snappedRect.y,
-            } as SceneElement
-          }),
-        }))
-        markSceneEdited()
-        return
-      }
-
-      const rawWidth = clamp(
-        activeDrag.element.width + latest.dx,
-        minimumWidth(activeDrag.element),
-        canvasWidth - activeDrag.element.x,
-      )
-      const rawHeight = clamp(
-        activeDrag.element.height + latest.dy,
-        minimumHeight(activeDrag.element),
-        canvasHeight - activeDrag.element.y,
-      )
-
-      const resizeSnap = computeResizeSnapOptimized(
-        { x: activeDrag.element.x, y: activeDrag.element.y, width: rawWidth, height: rawHeight },
-        spatialIndexRef.current,
-        resizeSnapStateRef.current,
-      )
-
-      resizeSnapStateRef.current = resizeSnap.snapState
-
-      const snappedWidth = clamp(
-        resizeSnap.snappedWidth,
-        minimumWidth(activeDrag.element),
-        canvasWidth - activeDrag.element.x,
-      )
-      const snappedHeight = clamp(
-        resizeSnap.snappedHeight,
-        minimumHeight(activeDrag.element),
-        canvasHeight - activeDrag.element.y,
-      )
-
-      const snappedRect = {
-        x: activeDrag.element.x,
-        y: activeDrag.element.y,
-        width: snappedWidth,
-        height: snappedHeight,
-      }
-
-      const resizeGuides = computeGuidesOptimized(snappedRect, spatialIndexRef.current)
-      s.setGuides(resizeGuides)
-
-      const resizeSpacing = computeSpacingGuidesOptimized(snappedRect, spatialIndexRef.current)
-      s.setSpacingGuides(resizeSpacing)
-
-      s.setResizeLabel({
-        x: activeDrag.element.x + snappedWidth / 2,
-        y: activeDrag.element.y + snappedHeight,
-        w: Math.round(snappedWidth),
-        h: Math.round(snappedHeight),
-      })
-
-      setScene((currentScene) => ({
-        ...currentScene,
-        elements: currentScene.elements.map((element) => {
-          if (element.id !== activeDrag.id) {
-            return element
-          }
-
-          return {
-            ...element,
-            width: snappedWidth,
-            height: snappedHeight,
-          } as SceneElement
-        }),
-      }))
       markSceneEdited()
     }
 
@@ -414,6 +199,7 @@ export function useDragManager({
     }
   }, [drag, markSceneEdited, svgRef, setScene, canvasWidth, canvasHeight])
 
+  // ── 元素 pointerDown：选中 + 开始拖拽 ──
   const handleElementPointerDown = useCallback(
     (elementId: string, event: ReactPointerEvent<SVGGElement>) => {
       const svg = svgRef.current
@@ -480,6 +266,7 @@ export function useDragManager({
     [scene, selection, editingTextId, svgRef, setSelection, setEditingTextId, pushPast],
   )
 
+  // ── 单元素 resize handle pointerDown ──
   const handleResizePointerDown = useCallback(
     (elementId: string, event: ReactPointerEvent<SVGRectElement>) => {
       const svg = svgRef.current
@@ -516,6 +303,7 @@ export function useDragManager({
     [scene, selection, svgRef, setSelection, pushPast],
   )
 
+  // ── 多元素 resize handle pointerDown ──
   const handleGroupResizePointerDown = useCallback(
     (handle: ResizeHandleType, event: ReactPointerEvent<SVGRectElement>) => {
       const svg = svgRef.current
@@ -544,6 +332,7 @@ export function useDragManager({
     [scene, selection, svgRef],
   )
 
+  // ── 多元素拖拽 pointerDown ──
   const handleGroupDragPointerDown = useCallback(
     (event: ReactPointerEvent<SVGRectElement>) => {
       const svg = svgRef.current
