@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useRef } from 'react'
 import { type SceneElement } from '@/lib/scene'
-import { useSceneActions } from './useSceneActions'
+import { createSceneActions } from '@/lib/scene-actions'
+import { createAssetManager } from '@/lib/asset-manager'
 import { useClipboard } from './useClipboard'
-import { useAssetManager } from './useAssetManager'
 import { useEditorShortcuts } from './useEditorShortcuts'
 import { useEditorStore } from '@/stores/useEditorStore'
+import type { SpatialIndex } from '@/lib/spatial-index'
 
 /**
  * 编辑器操作：scene actions + clipboard + asset + shortcuts。
@@ -14,10 +15,7 @@ import { useEditorStore } from '@/stores/useEditorStore'
  */
 export function useEditorActions(canvasInteraction: {
   selectedElementRef: React.MutableRefObject<SceneElement | null>
-  spatialIndexRef: React.MutableRefObject<import('@/lib/spatial-index').SpatialIndex>
-  setGuidesSelectedIds: (ids: string[]) => void
-  setGuides: (guides: import('@/lib/smart-guide').GuideLine[]) => void
-  setSpacingGuides: (guides: import('@/lib/smart-guide').MeasurementGuide[]) => void
+  spatialIndexRef: React.MutableRefObject<SpatialIndex>
 }) {
   // ── Editor Store ──
   const scene = useEditorStore((s) => s.scene)
@@ -48,10 +46,10 @@ export function useEditorActions(canvasInteraction: {
     addRectElement,
     addEllipseElement,
     deleteSelected,
-  } = useSceneActions({ scene, selection, changeScene: changeSceneWithHistory, setSelection })
+  } = createSceneActions({ scene, selection, changeScene: changeSceneWithHistory, setSelection })
 
   // ── Asset manager ──
-  const { handleAssetInput } = useAssetManager({
+  const { handleAssetInput } = createAssetManager({
     setStatus,
     selectedElement,
     patchElement,
@@ -81,7 +79,7 @@ export function useEditorActions(canvasInteraction: {
     canvasHeight: canvasSize.height,
   })
 
-  // ── Editor shortcuts ──
+  // ── Editor shortcuts（直接使用 store 操作 guides） ──
   useEditorShortcuts({
     scene,
     selection,
@@ -95,9 +93,6 @@ export function useEditorActions(canvasInteraction: {
     elementClipboardRef,
     elementsClipboardRef,
     spatialIndexRef: canvasInteraction.spatialIndexRef,
-    setGuidesSelectedIds: canvasInteraction.setGuidesSelectedIds,
-    setGuides: canvasInteraction.setGuides,
-    setSpacingGuides: canvasInteraction.setSpacingGuides,
     setScene: setSceneFromStore,
     markSceneEdited: () => {}, // handled inside changeSceneWithHistory
   })

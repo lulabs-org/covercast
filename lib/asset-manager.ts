@@ -5,8 +5,8 @@ import {
   type ImageElement,
   type Scene,
   type SceneElement,
-} from '../lib/scene'
-import { selectSingle, type SelectionState } from '../lib/selection'
+} from './scene'
+import { selectSingle, type SelectionState } from './selection'
 import {
   buildLocalAssetSrc,
   isSupportedImageType,
@@ -14,9 +14,9 @@ import {
   readFileAsArrayBuffer,
   saveLocalAsset,
   type LocalAssetMeta,
-} from '../lib/localAssetStorage'
+} from './localAssetStorage'
 
-export function useAssetManager({
+export function createAssetManager({
   setStatus,
   selectedElement,
   patchElement,

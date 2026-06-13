@@ -14,7 +14,7 @@ import {
   type TextElement,
 } from '@/lib/scene'
 import { FontFamilyField } from '../FontFamilyField'
-import type { useLocalFonts } from '@/hooks/useLocalFonts'
+import type { useLocalFonts } from '@/hooks/editor/useLocalFonts'
 
 type LocalFontManager = ReturnType<typeof useLocalFonts>
 

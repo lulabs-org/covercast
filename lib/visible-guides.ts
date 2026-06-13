@@ -1,5 +1,4 @@
-import { useMemo } from 'react'
-import type { GuideLine, MeasurementGuide } from '../lib/smart-guide'
+import type { GuideLine, MeasurementGuide } from './smart-guide'
 
 type GuideWithMode = {
   mode?: 'keyboard' | 'drag'
@@ -26,24 +25,14 @@ function filterGuidesByMode<T extends GuideWithMode>(
   })
 }
 
-export function useVisibleGuides(
+export function computeVisibleGuides(
   guides: GuideLine[],
   spacingGuides: MeasurementGuide[],
   selectedIds: string[],
   guidesSelectedIds: string[],
 ) {
-  const visibleGuides = useMemo(
-    () => filterGuidesByMode(guides, selectedIds, guidesSelectedIds),
-    [guides, selectedIds, guidesSelectedIds],
-  )
-
-  const visibleSpacingGuides = useMemo(
-    () => filterGuidesByMode(spacingGuides, selectedIds, guidesSelectedIds),
-    [spacingGuides, selectedIds, guidesSelectedIds],
-  )
-
   return {
-    visibleGuides,
-    visibleSpacingGuides,
+    visibleGuides: filterGuidesByMode(guides, selectedIds, guidesSelectedIds),
+    visibleSpacingGuides: filterGuidesByMode(spacingGuides, selectedIds, guidesSelectedIds),
   }
 }

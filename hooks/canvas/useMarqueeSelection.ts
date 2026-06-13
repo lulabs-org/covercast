@@ -1,9 +1,8 @@
 'use client'
 
-import { type PointerEvent as ReactPointerEvent, useRef, useState, useEffect } from 'react'
+import { type PointerEvent as ReactPointerEvent, useRef, useEffect } from 'react'
 import {
   clearMarquee,
-  createMarqueeState,
   getMarqueeRect,
   hasMarqueeSize,
   hitTestElements,
@@ -11,10 +10,10 @@ import {
   startMarquee,
   updateMarquee,
   type HitTestStrategy,
-  type MarqueeState,
-} from '../lib/marquee'
-import { clearSelection, selectMultiple, type SelectionState } from '../lib/selection'
-import { type SceneElement } from '../lib/scene'
+} from '../../lib/marquee'
+import { clearSelection, selectMultiple, type SelectionState } from '../../lib/selection'
+import { type SceneElement } from '../../lib/scene'
+import { useEditorStore } from '@/stores/useEditorStore'
 
 function getSvgPoint(svg: SVGSVGElement, clientX: number, clientY: number) {
   const point = svg.createSVGPoint()
@@ -45,7 +44,9 @@ export function useMarqueeSelection({
   setSelection: React.Dispatch<React.SetStateAction<SelectionState>>
   setEditingTextId: React.Dispatch<React.SetStateAction<string | null>>
 }) {
-  const [marquee, setMarquee] = useState<MarqueeState>(() => createMarqueeState())
+  // ── 交互状态直接读写 Zustand store（消除双写） ──
+  const marquee = useEditorStore((s) => s.marquee)
+
   const marqueeRafRef = useRef<number>(0)
   const latestMarqueeRef = useRef<{ x: number; y: number } | null>(null)
 
@@ -76,13 +77,15 @@ export function useMarqueeSelection({
         return
       }
 
-      setMarquee((prev) => updateMarquee(prev, latest.x, latest.y))
+      const s = useEditorStore.getState()
+      const currentMarquee = s.marquee
+      s.setMarquee(updateMarquee(currentMarquee, latest.x, latest.y))
     }
 
     function handlePointerUp(event: PointerEvent) {
       const svg = svgRef.current
       if (!svg) {
-        setMarquee((prev) => clearMarquee(prev))
+        useEditorStore.getState().setMarquee(clearMarquee(useEditorStore.getState().marquee))
         return
       }
 
@@ -92,21 +95,22 @@ export function useMarqueeSelection({
       // to avoid calling Zustand setSelection during React state update
       let selectionUpdater: ((prev: SelectionState) => SelectionState) | null = null
 
-      setMarquee((prevMarquee) => {
-        if (hasMarqueeSize(prevMarquee, 5)) {
-          const rect = getMarqueeRect(prevMarquee)
-          const hitIds = hitTestElements(rect, sceneElementsRef.current, hitTestStrategy)
+      const s = useEditorStore.getState()
+      const prevMarquee = s.marquee
 
-          if (hitIds.length > 0) {
-            selectionUpdater = (prevSelection) =>
-              selectMultiple(prevSelection, hitIds, isShiftPressed)
-          } else if (!isShiftPressed) {
-            selectionUpdater = (prevSelection) => clearSelection(prevSelection)
-          }
+      if (hasMarqueeSize(prevMarquee, 5)) {
+        const rect = getMarqueeRect(prevMarquee)
+        const hitIds = hitTestElements(rect, sceneElementsRef.current, hitTestStrategy)
+
+        if (hitIds.length > 0) {
+          selectionUpdater = (prevSelection) =>
+            selectMultiple(prevSelection, hitIds, isShiftPressed)
+        } else if (!isShiftPressed) {
+          selectionUpdater = (prevSelection) => clearSelection(prevSelection)
         }
+      }
 
-        return clearMarquee(prevMarquee)
-      })
+      s.setMarquee(clearMarquee(prevMarquee))
 
       // Apply selection update after setMarquee completes
       if (selectionUpdater) {
@@ -144,12 +148,12 @@ export function useMarqueeSelection({
       setEditingTextId(null)
     }
 
-    setMarquee((prev) => startMarquee(prev, point.x, point.y))
+    useEditorStore
+      .getState()
+      .setMarquee(startMarquee(useEditorStore.getState().marquee, point.x, point.y))
   }
 
   return {
-    marquee,
-    setMarquee,
     handleCanvasPointerDown,
   }
 }

@@ -6,9 +6,13 @@ import {
   isImageElement,
   type ImageElement,
   type Scene,
-} from '../lib/scene'
-import { sceneToSvgMarkup } from '../lib/scene-svg'
-import { isLocalAssetSrc, parseLocalAssetId, getLocalAssetDataUrl } from '../lib/localAssetStorage'
+} from '../../lib/scene'
+import { sceneToSvgMarkup } from '../../lib/scene-svg'
+import {
+  isLocalAssetSrc,
+  parseLocalAssetId,
+  getLocalAssetDataUrl,
+} from '../../lib/localAssetStorage'
 
 export type ExportFormat = 'png' | 'jpeg' | 'svg' | 'json'
 

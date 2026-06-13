@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { type CustomSceneTemplate } from '@/stores/useTemplateStore'
-import { useTemplateCardMenu } from '@/hooks/useTemplateCardMenu'
+import { useTemplateCardMenu } from '@/hooks/ui/useTemplateCardMenu'
 import { TemplateCardMenu } from './TemplateCardMenu'
 
 function formatTemplateDate(value: string, prefix = '保存于') {

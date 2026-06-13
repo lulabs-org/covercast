@@ -1,19 +1,13 @@
 'use client'
 
-import {
-  type PointerEvent as ReactPointerEvent,
-  useRef,
-  useState,
-  useEffect,
-  useCallback,
-} from 'react'
+import { type PointerEvent as ReactPointerEvent, useRef, useEffect, useCallback } from 'react'
 import {
   DEFAULT_CANVAS_HEIGHT,
   DEFAULT_CANVAS_WIDTH,
   isTextElement,
   type Scene,
   type SceneElement,
-} from '../lib/scene'
+} from '../../lib/scene'
 import {
   computeGuidesOptimized,
   computeSnapOptimized,
@@ -21,33 +15,24 @@ import {
   computeResizeSnapOptimized,
   createResizeSnapState,
   createSnapState,
-  type GuideLine,
-  type MeasurementGuide,
-  type ResizeLabel,
   type ResizeSnapState,
   type SnapState,
-} from '../lib/smart-guide'
-import { SpatialIndex, buildSpatialIndex } from '../lib/spatial-index'
-import { handleElementClick, isSelected, selectSingle, type SelectionState } from '../lib/selection'
+} from '../../lib/smart-guide'
+import { SpatialIndex, buildSpatialIndex } from '../../lib/spatial-index'
+import {
+  handleElementClick,
+  isSelected,
+  selectSingle,
+  type SelectionState,
+} from '../../lib/selection'
 import {
   computeBoundingBox,
   computeNewBoundsFromHandle,
   createGroupResizeState,
   type BoundingBox,
-  type GroupDragState,
-  type GroupResizeState,
   type ResizeHandleType,
-} from '../lib/group-drag'
-
-type SingleDragState = {
-  id: string
-  mode: 'move' | 'resize'
-  startX: number
-  startY: number
-  element: SceneElement
-}
-
-type DragState = SingleDragState | GroupDragState | GroupResizeState
+} from '../../lib/group-drag'
+import { useEditorStore } from '@/stores/useEditorStore'
 
 function getSvgPoint(svg: SVGSVGElement, clientX: number, clientY: number) {
   const point = svg.createSVGPoint()
@@ -121,10 +106,8 @@ export function useDragManager({
   canvasWidth?: number
   canvasHeight?: number
 }) {
-  const [drag, setDrag] = useState<DragState | null>(null)
-  const [guides, setGuides] = useState<GuideLine[]>([])
-  const [spacingGuides, setSpacingGuides] = useState<MeasurementGuide[]>([])
-  const [resizeLabel, setResizeLabel] = useState<ResizeLabel | null>(null)
+  // ── 交互状态直接读写 Zustand store（消除双写） ──
+  const drag = useEditorStore((s) => s.drag)
 
   const snapStateRef = useRef<SnapState>(createSnapState())
   const resizeSnapStateRef = useRef<ResizeSnapState>(createResizeSnapState())
@@ -171,6 +154,8 @@ export function useDragManager({
         return
       }
 
+      const s = useEditorStore.getState()
+
       if (activeDrag.mode === 'group-move') {
         const groupBox = computeBoundingBox(activeDrag.elements)
         const rawX = clamp(groupBox.x + latest.dx, -groupBox.width + 24, canvasWidth - 24)
@@ -190,12 +175,12 @@ export function useDragManager({
         )
 
         snapStateRef.current = result.snapState
-        setGuides(result.guides)
+        s.setGuides(result.guides)
 
         const spacing = computeSpacingGuidesOptimized(result.snappedRect, spatialIndexRef.current)
-        setSpacingGuides(spacing)
+        s.setSpacingGuides(spacing)
 
-        setResizeLabel(null)
+        s.setResizeLabel(null)
 
         const groupDeltaX = result.snappedRect.x - groupBox.x
         const groupDeltaY = result.snappedRect.y - groupBox.y
@@ -250,12 +235,12 @@ export function useDragManager({
         }
 
         const resizeGuides = computeGuidesOptimized(snappedBounds, spatialIndexRef.current)
-        setGuides(resizeGuides)
+        s.setGuides(resizeGuides)
 
         const resizeSpacing = computeSpacingGuidesOptimized(snappedBounds, spatialIndexRef.current)
-        setSpacingGuides(resizeSpacing)
+        s.setSpacingGuides(resizeSpacing)
 
-        setResizeLabel({
+        s.setResizeLabel({
           x: snappedBounds.x + snappedBounds.width / 2,
           y: snappedBounds.y + snappedBounds.height,
           w: Math.round(snappedBounds.width),
@@ -295,7 +280,7 @@ export function useDragManager({
       }
 
       if (activeDrag.mode === 'move') {
-        setResizeLabel(null)
+        s.setResizeLabel(null)
         const rawX = clamp(
           activeDrag.element.x + latest.dx,
           -activeDrag.element.width + 24,
@@ -314,10 +299,10 @@ export function useDragManager({
         )
 
         snapStateRef.current = result.snapState
-        setGuides(result.guides)
+        s.setGuides(result.guides)
 
         const spacing = computeSpacingGuidesOptimized(result.snappedRect, spatialIndexRef.current)
-        setSpacingGuides(spacing)
+        s.setSpacingGuides(spacing)
 
         setScene((currentScene) => ({
           ...currentScene,
@@ -375,12 +360,12 @@ export function useDragManager({
       }
 
       const resizeGuides = computeGuidesOptimized(snappedRect, spatialIndexRef.current)
-      setGuides(resizeGuides)
+      s.setGuides(resizeGuides)
 
       const resizeSpacing = computeSpacingGuidesOptimized(snappedRect, spatialIndexRef.current)
-      setSpacingGuides(resizeSpacing)
+      s.setSpacingGuides(resizeSpacing)
 
-      setResizeLabel({
+      s.setResizeLabel({
         x: activeDrag.element.x + snappedWidth / 2,
         y: activeDrag.element.y + snappedHeight,
         w: Math.round(snappedWidth),
@@ -410,10 +395,11 @@ export function useDragManager({
         rafHandleRef.current = 0
       }
       latestMoveRef.current = null
-      setDrag(null)
-      setGuides([])
-      setSpacingGuides([])
-      setResizeLabel(null)
+      const s = useEditorStore.getState()
+      s.setDrag(null)
+      s.setGuides([])
+      s.setSpacingGuides([])
+      s.setResizeLabel(null)
     }
 
     window.addEventListener('pointermove', handlePointerMove)
@@ -463,7 +449,7 @@ export function useDragManager({
           )
           spatialIndexRef.current = buildSpatialIndex(otherElements)
 
-          setDrag({
+          useEditorStore.getState().setDrag({
             mode: 'group-move',
             startX: point.x,
             startY: point.y,
@@ -484,7 +470,7 @@ export function useDragManager({
         description: `移动元素「${element.name}」`,
         timestamp: Date.now(),
       })
-      setDrag({
+      useEditorStore.getState().setDrag({
         id: elementId,
         mode: 'move',
         startX: point.x,
@@ -520,7 +506,7 @@ export function useDragManager({
         timestamp: Date.now(),
       })
       const point = getSvgPoint(svg, event.clientX, event.clientY)
-      setDrag({
+      useEditorStore.getState().setDrag({
         id: elementId,
         mode: 'resize',
         startX: point.x,
@@ -552,7 +538,9 @@ export function useDragManager({
       spatialIndexRef.current = buildSpatialIndex(otherElements)
 
       const point = getSvgPoint(svg, event.clientX, event.clientY)
-      setDrag(createGroupResizeState(handle, point.x, point.y, selectedElements))
+      useEditorStore
+        .getState()
+        .setDrag(createGroupResizeState(handle, point.x, point.y, selectedElements))
     },
     [scene, selection, svgRef],
   )
@@ -578,7 +566,7 @@ export function useDragManager({
       spatialIndexRef.current = buildSpatialIndex(otherElements)
 
       const point = getSvgPoint(svg, event.clientX, event.clientY)
-      setDrag({
+      useEditorStore.getState().setDrag({
         mode: 'group-move',
         startX: point.x,
         startY: point.y,
@@ -589,13 +577,7 @@ export function useDragManager({
   )
 
   return {
-    drag,
-    guides,
-    spacingGuides,
-    resizeLabel,
     spatialIndexRef,
-    setGuides,
-    setSpacingGuides,
     handleElementPointerDown,
     handleResizePointerDown,
     handleGroupResizePointerDown,

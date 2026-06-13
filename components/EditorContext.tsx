@@ -1,11 +1,11 @@
 'use client'
 
 import { createContext, useContext, useEffect, type ReactNode } from 'react'
-import { useEditorActions } from '@/hooks/useEditorActions'
-import { useCanvasInteraction } from '@/hooks/useCanvasInteraction'
-import { useLocalFonts } from '@/hooks/useLocalFonts'
-import { useLocalAssets } from '@/hooks/useLocalAssets'
-import { useSceneLoader } from '@/hooks/useSceneLoader'
+import { useEditorActions } from '@/hooks/editor/useEditorActions'
+import { useCanvasInteraction } from '@/hooks/canvas/useCanvasInteraction'
+import { useLocalFonts } from '@/hooks/editor/useLocalFonts'
+import { useLocalAssets } from '@/hooks/editor/useLocalAssets'
+import { useSceneLoader } from '@/hooks/editor/useSceneLoader'
 import { useEditorStore } from '@/stores/useEditorStore'
 
 const CANVAS_PREVIEW_MAX_WIDTH = 560

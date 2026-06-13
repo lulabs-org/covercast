@@ -7,8 +7,8 @@ import {
   parseLocalAssetId,
   type LocalAssetMeta,
   getLocalAssetMetas,
-} from '../lib/localAssetStorage'
-import { isImageElement, type Scene } from '../lib/scene'
+} from '../../lib/localAssetStorage'
+import { isImageElement, type Scene } from '../../lib/scene'
 
 /**
  * 管理本地素材的 blob URL 生命周期。

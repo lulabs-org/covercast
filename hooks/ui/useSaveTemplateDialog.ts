@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { type CustomSceneTemplate } from '../stores/useTemplateStore'
+import { type CustomSceneTemplate } from '../../stores/useTemplateStore'
 
 type UseSaveTemplateDialogOptions = {
   customTemplates: CustomSceneTemplate[]

@@ -7,10 +7,10 @@ import { StagePanel } from './editor/StagePanel'
 import { LeftSidebar } from './editor/sidebar/LeftSidebar'
 import { RightSidebar } from './editor/sidebar/RightSidebar'
 import { CreateBlankCoverModal } from './panels/CreateBlankCoverModal'
-import { useScrollVisibility } from '@/hooks/useScrollVisibility'
-import { usePanelResize } from '@/hooks/usePanelResize'
-import { useCanvasInteraction } from '@/hooks/useCanvasInteraction'
-import { useDialogState } from '@/hooks/useDialogState'
+import { useScrollVisibility } from '@/hooks/ui/useScrollVisibility'
+import { usePanelResize } from '@/hooks/ui/usePanelResize'
+import { useCanvasInteraction } from '@/hooks/canvas/useCanvasInteraction'
+import { useDialogState } from '@/hooks/ui/useDialogState'
 
 export default function SceneEditor() {
   const { leftPanelRef, rightPanelRef, stageViewportRef } = useScrollVisibility()

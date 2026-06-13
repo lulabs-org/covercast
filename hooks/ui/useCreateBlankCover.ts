@@ -5,10 +5,10 @@ import {
   cloneScene,
   BUILT_IN_TEMPLATES,
   type Scene,
-} from '../lib/scene'
-import { selectSingle, createSelectionState, type SelectionState } from '../lib/selection'
-import type { CanvasSizePreset, CanvasSize } from '../stores/useCanvasStore'
-import type { CustomSceneTemplate } from '../stores/useTemplateStore'
+} from '../../lib/scene'
+import { selectSingle, createSelectionState, type SelectionState } from '../../lib/selection'
+import type { CanvasSizePreset, CanvasSize } from '../../stores/useCanvasStore'
+import type { CustomSceneTemplate } from '../../stores/useTemplateStore'
 
 export type BlankCoverConfig = {
   coverName: string

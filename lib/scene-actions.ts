@@ -4,10 +4,10 @@ import {
   createTextElement,
   type Scene,
   type SceneElement,
-} from '../lib/scene'
-import { clearSelection, selectSingle, type SelectionState } from '../lib/selection'
+} from './scene'
+import { clearSelection, selectSingle, type SelectionState } from './selection'
 
-export function useSceneActions({
+export function createSceneActions({
   scene,
   selection,
   changeScene,

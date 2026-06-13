@@ -1,7 +1,7 @@
 'use client'
 
 import { TemplateToolbarButtons } from '../panels/TemplatePanel'
-import { EXPORT_FORMAT_OPTIONS } from '@/hooks/useExportScene'
+import { EXPORT_FORMAT_OPTIONS } from '@/hooks/ui/useExportScene'
 import { useEditorStore } from '@/stores/useEditorStore'
 
 interface SceneToolbarProps {

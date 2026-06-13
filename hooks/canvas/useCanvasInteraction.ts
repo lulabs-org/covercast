@@ -5,7 +5,7 @@ import { type SceneElement } from '@/lib/scene'
 import { type HitTestStrategy } from '@/lib/marquee'
 import { useDragManager } from './useDragManager'
 import { useMarqueeSelection } from './useMarqueeSelection'
-import { useVisibleGuides } from './useVisibleGuides'
+import { computeVisibleGuides } from '@/lib/visible-guides'
 import { useEditorStore } from '@/stores/useEditorStore'
 
 /**
@@ -23,8 +23,6 @@ export function useCanvasInteraction() {
   const pushPast = useEditorStore((s) => s.pushPast)
   const markSceneEdited = useEditorStore((s) => s.markSceneEdited)
   const canvasSize = useEditorStore((s) => s.canvasSize)
-  const guidesSelectedIds = useEditorStore((s) => s.guidesSelectedIds)
-  const setGuidesSelectedIds = useEditorStore((s) => s.setGuidesSelectedIds)
 
   // ── Refs ──
   const svgRef = useRef<SVGSVGElement>(null)
@@ -48,7 +46,7 @@ export function useCanvasInteraction() {
   }, [selectedElement])
 
   // ── Marquee selection ──
-  const { marquee, handleCanvasPointerDown } = useMarqueeSelection({
+  const { handleCanvasPointerDown } = useMarqueeSelection({
     svgRef,
     sceneElementsRef,
     hitTestStrategy,
@@ -59,13 +57,7 @@ export function useCanvasInteraction() {
 
   // ── Drag manager ──
   const {
-    drag,
-    guides,
-    spacingGuides,
-    resizeLabel,
     spatialIndexRef,
-    setGuides,
-    setSpacingGuides,
     handleElementPointerDown,
     handleResizePointerDown,
     handleGroupResizePointerDown,
@@ -84,29 +76,23 @@ export function useCanvasInteraction() {
     canvasHeight: canvasSize.height,
   })
 
-  // ── Visible guides ──
-  const { visibleGuides, visibleSpacingGuides } = useVisibleGuides(
+  // ── Visible guides（从 store 读取 guides，计算后写回 store） ──
+  const guides = useEditorStore((s) => s.guides)
+  const spacingGuides = useEditorStore((s) => s.spacingGuides)
+  const guidesSelectedIds = useEditorStore((s) => s.guidesSelectedIds)
+
+  const { visibleGuides, visibleSpacingGuides } = computeVisibleGuides(
     guides,
     spacingGuides,
     selection.selectedIds,
     guidesSelectedIds,
   )
 
-  // Sync visible guides to store for StagePanel
+  // 将计算后的 visible guides 同步到 store（这是派生数据，不是双写）
   useEffect(() => {
     useEditorStore.getState().setVisibleGuides(visibleGuides)
     useEditorStore.getState().setVisibleSpacingGuides(visibleSpacingGuides)
   }, [visibleGuides, visibleSpacingGuides])
-
-  // Sync marquee and drag state to store for StagePanel
-  useEffect(() => {
-    useEditorStore.getState().setMarquee(marquee)
-  }, [marquee])
-
-  useEffect(() => {
-    useEditorStore.getState().setDrag(drag)
-    useEditorStore.getState().setResizeLabel(resizeLabel)
-  }, [drag, resizeLabel])
 
   // ── Handlers ──
   function handleTextElementDoubleClick(elementId: string) {
@@ -127,8 +113,5 @@ export function useCanvasInteraction() {
     // exposed for shortcuts
     selectedElementRef,
     spatialIndexRef,
-    setGuidesSelectedIds,
-    setGuides,
-    setSpacingGuides,
   }
 }
