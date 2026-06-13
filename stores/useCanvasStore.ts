@@ -1,6 +1,5 @@
-import { create } from 'zustand'
-import type { ExportFormat } from '../hooks/useExportScene'
-import { DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT } from '../lib/scene'
+import { StateCreator } from 'zustand'
+import type { EditorStore } from './useEditorStore'
 
 export type CanvasSize = {
   width: number
@@ -27,7 +26,7 @@ export const CANVAS_SIZE_PRESETS: CanvasSizePreset[] = [
 
 type SidebarSectionId = 'scene' | 'sources' | 'templates' | 'layers'
 
-type CanvasStoreState = {
+export type CanvasSlice = {
   // Status
   status: string
   setStatus: (status: string) => void
@@ -37,8 +36,8 @@ type CanvasStoreState = {
   setAppOrigin: (origin: string) => void
 
   // Export
-  exportFormat: ExportFormat
-  setExportFormat: (format: ExportFormat) => void
+  exportFormat: 'png' | 'jpeg' | 'svg' | 'json'
+  setExportFormat: (format: 'png' | 'jpeg' | 'svg' | 'json') => void
 
   // Canvas size
   canvasSize: CanvasSize
@@ -111,11 +110,11 @@ function saveCanvasSizeToStorage(size: CanvasSize): void {
   } catch {}
 }
 
-export const useCanvasStore = create<CanvasStoreState>((set) => {
+export const createCanvasSlice: StateCreator<EditorStore, [], [], CanvasSlice> = (set) => {
   const savedSize = typeof window !== 'undefined' ? loadSavedCanvasSize() : null
   const initialSize: CanvasSize = savedSize ?? {
-    width: DEFAULT_CANVAS_WIDTH,
-    height: DEFAULT_CANVAS_HEIGHT,
+    width: 941,
+    height: 1672,
   }
   const initialIsCustom = savedSize
     ? !CANVAS_SIZE_PRESETS.some((p) => p.width === savedSize.width && p.height === savedSize.height)
@@ -128,7 +127,7 @@ export const useCanvasStore = create<CanvasStoreState>((set) => {
     appOrigin: '',
     setAppOrigin: (origin) => set({ appOrigin: origin }),
 
-    exportFormat: 'png' as ExportFormat,
+    exportFormat: 'png' as const,
     setExportFormat: (format) => set({ exportFormat: format }),
 
     canvasSize: initialSize,
@@ -249,4 +248,4 @@ export const useCanvasStore = create<CanvasStoreState>((set) => {
       }))
     },
   }
-})
+}

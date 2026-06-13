@@ -1,22 +1,25 @@
-import { create } from 'zustand'
+import { StateCreator } from 'zustand'
 import type { GuideLine, MeasurementGuide, ResizeLabel } from '../lib/smart-guide'
 import type { MarqueeState } from '../lib/marquee'
 import { createMarqueeState } from '../lib/marquee'
 import type { ResizeHandleType } from '../lib/group-drag'
+import type { SceneElement } from '../lib/scene'
+import type { BoundingBox } from '../lib/group-drag'
+import type { EditorStore } from './useEditorStore'
 
 type SingleDragState = {
   id: string
   mode: 'move' | 'resize'
   startX: number
   startY: number
-  element: import('../lib/scene').SceneElement
+  element: SceneElement
 }
 
 type GroupDragState = {
   mode: 'group-move'
   startX: number
   startY: number
-  elements: import('../lib/scene').SceneElement[]
+  elements: SceneElement[]
 }
 
 type GroupResizeState = {
@@ -24,13 +27,13 @@ type GroupResizeState = {
   handle: ResizeHandleType
   startX: number
   startY: number
-  elements: import('../lib/scene').SceneElement[]
-  originalBounds: import('../lib/group-drag').BoundingBox
+  elements: SceneElement[]
+  originalBounds: BoundingBox
 }
 
-type DragState = SingleDragState | GroupDragState | GroupResizeState
+export type DragState = SingleDragState | GroupDragState | GroupResizeState
 
-type InteractionStoreState = {
+export type InteractionSlice = {
   // Drag
   drag: DragState | null
   setDrag: (drag: DragState | null) => void
@@ -45,7 +48,7 @@ type InteractionStoreState = {
   guidesSelectedIds: string[]
   setGuidesSelectedIds: (ids: string[]) => void
 
-  // Visible (filtered) guides — synced from SceneEditor after useVisibleGuides
+  // Visible (filtered) guides
   visibleGuides: GuideLine[]
   setVisibleGuides: (guides: GuideLine[]) => void
   visibleSpacingGuides: MeasurementGuide[]
@@ -56,7 +59,9 @@ type InteractionStoreState = {
   setMarquee: (updater: MarqueeState | ((prev: MarqueeState) => MarqueeState)) => void
 }
 
-export const useInteractionStore = create<InteractionStoreState>((set) => ({
+export const createInteractionSlice: StateCreator<EditorStore, [], [], InteractionSlice> = (
+  set,
+) => ({
   drag: null,
   setDrag: (drag) => set({ drag }),
 
@@ -82,4 +87,4 @@ export const useInteractionStore = create<InteractionStoreState>((set) => ({
       set({ marquee: updater })
     }
   },
-}))
+})

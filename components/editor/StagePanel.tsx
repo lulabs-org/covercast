@@ -2,9 +2,7 @@
 
 import SceneCanvas from '../SceneCanvas'
 import { useEditor } from '../EditorContext'
-import { useSceneStore } from '@/stores/useSceneStore'
-import { useCanvasStore } from '@/stores/useCanvasStore'
-import { useInteractionStore } from '@/stores/useInteractionStore'
+import { useEditorStore } from '@/stores/useEditorStore'
 
 export function StagePanel() {
   const { resolveSrc, canvasInteraction } = useEditor()
@@ -19,33 +17,29 @@ export function StagePanel() {
     handleTextElementDoubleClick,
   } = canvasInteraction
 
-  // ── Scene Store ──
-  const scene = useSceneStore((s) => s.scene)
-  const selectedIds = useSceneStore((s) => s.selection.selectedIds)
-  const editingTextId = useSceneStore((s) => s.editingTextId)
-
-  // ── Canvas Store ──
-  const status = useCanvasStore((s) => s.status)
-  const canvasSize = useCanvasStore((s) => s.canvasSize)
-  const canvasZoom = useCanvasStore((s) => s.canvasZoom)
-  const canvasZoomPercent = useCanvasStore((s) => s.canvasZoomPercent)
-  const canvasPreviewWidth = useCanvasStore((s) => s.canvasPreviewWidth)
-  const CANVAS_ZOOM_MIN = useCanvasStore((s) => s.CANVAS_ZOOM_MIN)
-  const CANVAS_ZOOM_MAX = useCanvasStore((s) => s.CANVAS_ZOOM_MAX)
-  const CANVAS_ZOOM_STEP = useCanvasStore((s) => s.CANVAS_ZOOM_STEP)
-  const setCanvasZoomLevel = useCanvasStore((s) => s.setCanvasZoomLevel)
-  const zoomCanvasIn = useCanvasStore((s) => s.zoomCanvasIn)
-  const zoomCanvasOut = useCanvasStore((s) => s.zoomCanvasOut)
-  const resetCanvasZoom = useCanvasStore((s) => s.resetCanvasZoom)
-  const handleZoomSliderWheel = useCanvasStore((s) => s.handleZoomSliderWheel)
-  const handleStageWheel = useCanvasStore((s) => s.handleStageWheel)
-
-  // ── Interaction Store ──
-  const visibleGuides = useInteractionStore((s) => s.visibleGuides)
-  const visibleSpacingGuides = useInteractionStore((s) => s.visibleSpacingGuides)
-  const resizeLabel = useInteractionStore((s) => s.resizeLabel)
-  const drag = useInteractionStore((s) => s.drag)
-  const marquee = useInteractionStore((s) => s.marquee)
+  // ── Editor Store ──
+  const scene = useEditorStore((s) => s.scene)
+  const selectedIds = useEditorStore((s) => s.selection.selectedIds)
+  const editingTextId = useEditorStore((s) => s.editingTextId)
+  const status = useEditorStore((s) => s.status)
+  const canvasSize = useEditorStore((s) => s.canvasSize)
+  const canvasZoom = useEditorStore((s) => s.canvasZoom)
+  const canvasZoomPercent = useEditorStore((s) => s.canvasZoomPercent)
+  const canvasPreviewWidth = useEditorStore((s) => s.canvasPreviewWidth)
+  const CANVAS_ZOOM_MIN = useEditorStore((s) => s.CANVAS_ZOOM_MIN)
+  const CANVAS_ZOOM_MAX = useEditorStore((s) => s.CANVAS_ZOOM_MAX)
+  const CANVAS_ZOOM_STEP = useEditorStore((s) => s.CANVAS_ZOOM_STEP)
+  const setCanvasZoomLevel = useEditorStore((s) => s.setCanvasZoomLevel)
+  const zoomCanvasIn = useEditorStore((s) => s.zoomCanvasIn)
+  const zoomCanvasOut = useEditorStore((s) => s.zoomCanvasOut)
+  const resetCanvasZoom = useEditorStore((s) => s.resetCanvasZoom)
+  const handleZoomSliderWheel = useEditorStore((s) => s.handleZoomSliderWheel)
+  const handleStageWheel = useEditorStore((s) => s.handleStageWheel)
+  const visibleGuides = useEditorStore((s) => s.visibleGuides)
+  const visibleSpacingGuides = useEditorStore((s) => s.visibleSpacingGuides)
+  const resizeLabel = useEditorStore((s) => s.resizeLabel)
+  const drag = useEditorStore((s) => s.drag)
+  const marquee = useEditorStore((s) => s.marquee)
 
   return (
     <section className="stage-panel" aria-label="Canvas preview">

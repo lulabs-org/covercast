@@ -6,9 +6,7 @@ import { useCanvasInteraction } from '@/hooks/useCanvasInteraction'
 import { useLocalFonts } from '@/hooks/useLocalFonts'
 import { useLocalAssets } from '@/hooks/useLocalAssets'
 import { useSceneLoader } from '@/hooks/useSceneLoader'
-import { useSceneStore } from '@/stores/useSceneStore'
-import { useCanvasStore } from '@/stores/useCanvasStore'
-import { useTemplateStore } from '@/stores/useTemplateStore'
+import { useEditorStore } from '@/stores/useEditorStore'
 
 const CANVAS_PREVIEW_MAX_WIDTH = 560
 const STAGE_VIEWPORT_PADDING = 36
@@ -42,19 +40,19 @@ export function EditorProvider({
   const localFontManager = useLocalFonts()
 
   // ── Local assets ──
-  const scene = useSceneStore((s) => s.scene)
+  const scene = useEditorStore((s) => s.scene)
   const { resolveSrc } = useLocalAssets(scene)
 
   // ── Scene loader ──
-  const setScene = useSceneStore((s) => s.setScene)
-  const setStatus = useCanvasStore((s) => s.setStatus)
-  const setActiveTemplateId = useTemplateStore((s) => s.setActiveTemplateId)
-  const setSelection = useSceneStore((s) => s.setSelection)
+  const setScene = useEditorStore((s) => s.setScene)
+  const setStatus = useEditorStore((s) => s.setStatus)
+  const setActiveTemplateId = useEditorStore((s) => s.setActiveTemplateId)
+  const setSelection = useEditorStore((s) => s.setSelection)
 
   useSceneLoader({ setScene, setStatus, setActiveTemplateId, setSelection })
 
   // ── Canvas zoom fit-width bridge (ResizeObserver) ──
-  const canvasSize = useCanvasStore((s) => s.canvasSize)
+  const canvasSize = useEditorStore((s) => s.canvasSize)
 
   useEffect(() => {
     const viewport = stageViewportRef.current
@@ -70,7 +68,7 @@ export function EditorProvider({
         availableHeight * canvasAspectRatio,
         CANVAS_PREVIEW_MAX_WIDTH,
       )
-      useCanvasStore.getState().setCanvasFitWidth(Math.max(160, nextFitWidth))
+      useEditorStore.getState().setCanvasFitWidth(Math.max(160, nextFitWidth))
     }
 
     updateFitWidth()
@@ -86,20 +84,20 @@ export function EditorProvider({
   // ── Template store init ──
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      useTemplateStore.getState().initFromStorage()
+      useEditorStore.getState().initFromStorage()
     }, 0)
     return () => window.clearTimeout(timer)
   }, [])
 
   // ── Slot loading ──
   useEffect(() => {
-    useTemplateStore.getState().loadSlots()
+    useEditorStore.getState().loadSlots()
   }, [])
 
   // ── App origin ──
   useEffect(() => {
     const timer = window.setTimeout(
-      () => useCanvasStore.getState().setAppOrigin(window.location.origin),
+      () => useEditorStore.getState().setAppOrigin(window.location.origin),
       0,
     )
     return () => window.clearTimeout(timer)

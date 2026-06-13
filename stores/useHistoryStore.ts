@@ -1,31 +1,31 @@
-import { create } from 'zustand'
-import type { Scene } from '../lib/scene'
+import { StateCreator } from 'zustand'
+import { cloneScene, type Scene } from '../lib/scene'
+import type { EditorStore } from './useEditorStore'
 
 const MAX_HISTORY_SIZE = 50
 
-type HistoryEntry = {
+export type HistoryEntry = {
   scene: Scene
   selectedIds: string[]
   description: string
   timestamp: number
 }
 
-type HistoryState = {
-  past: HistoryEntry[]
-  future: HistoryEntry[]
-}
+export type HistorySlice = {
+  history: { past: HistoryEntry[]; future: HistoryEntry[] }
 
-type HistoryStoreState = {
-  history: HistoryState
-
-  // Pure state actions — no cross-store calls
+  // Pure state actions
   pushPast: (entry: HistoryEntry) => void
   undoShift: () => HistoryEntry | null
   redoShift: () => HistoryEntry | null
   pushFuture: (entry: HistoryEntry) => void
+
+  // Cross-slice actions (from actions.ts)
+  undoAction: () => void
+  redoAction: () => void
 }
 
-export const useHistoryStore = create<HistoryStoreState>((set, get) => ({
+export const createHistorySlice: StateCreator<EditorStore, [], [], HistorySlice> = (set, get) => ({
   history: { past: [], future: [] },
 
   pushPast: (entry) => {
@@ -44,7 +44,7 @@ export const useHistoryStore = create<HistoryStoreState>((set, get) => ({
     set((state) => ({
       history: {
         past: state.history.past.slice(0, -1),
-        future: state.history.future, // caller will push via pushFuture
+        future: state.history.future,
       },
     }))
     return previous
@@ -56,7 +56,7 @@ export const useHistoryStore = create<HistoryStoreState>((set, get) => ({
     const next = history.future[0]
     set((state) => ({
       history: {
-        past: state.history.past, // caller will push via pushPast
+        past: state.history.past,
         future: state.history.future.slice(1),
       },
     }))
@@ -71,4 +71,44 @@ export const useHistoryStore = create<HistoryStoreState>((set, get) => ({
       },
     }))
   },
-}))
+
+  undoAction: () => {
+    const previous = get().undoShift()
+    if (!previous) {
+      set({ status: '没有可撤销的操作' })
+      return
+    }
+    const { scene, selection } = get()
+    get().pushFuture({
+      scene: cloneScene(scene),
+      selectedIds: selection.selectedIds,
+      description: '当前状态',
+      timestamp: Date.now(),
+    })
+    set({
+      scene: previous.scene,
+      selection: { ...selection, selectedIds: previous.selectedIds },
+      status: `已撤销：${previous.description}`,
+    })
+  },
+
+  redoAction: () => {
+    const next = get().redoShift()
+    if (!next) {
+      set({ status: '没有可重做的操作' })
+      return
+    }
+    const { scene, selection } = get()
+    get().pushPast({
+      scene: cloneScene(scene),
+      selectedIds: selection.selectedIds,
+      description: '当前状态',
+      timestamp: Date.now(),
+    })
+    set({
+      scene: next.scene,
+      selection: { ...selection, selectedIds: next.selectedIds },
+      status: `已重做：${next.description}`,
+    })
+  },
+})

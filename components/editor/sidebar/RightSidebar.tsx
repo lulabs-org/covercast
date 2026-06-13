@@ -2,7 +2,7 @@
 
 import { useEditor } from '../../EditorContext'
 import { ElementInspector } from '../../panels/ElementInspector'
-import { useSceneStore } from '@/stores/useSceneStore'
+import { useEditorStore } from '@/stores/useEditorStore'
 
 interface RightSidebarProps {
   rightPanelRef: React.RefObject<HTMLDivElement | null>
@@ -20,9 +20,9 @@ export function RightSidebar({ rightPanelRef, rightPanelWidth }: RightSidebarPro
     localFontManager,
   } = useEditor()
 
-  // ── Scene Store ──
-  const scene = useSceneStore((s) => s.scene)
-  const selection = useSceneStore((s) => s.selection)
+  // ── Editor Store ──
+  const scene = useEditorStore((s) => s.scene)
+  const selection = useEditorStore((s) => s.selection)
 
   // ── Computed ──
   const selectedElement =

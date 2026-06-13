@@ -6,9 +6,7 @@ import { useSceneActions } from './useSceneActions'
 import { useClipboard } from './useClipboard'
 import { useAssetManager } from './useAssetManager'
 import { useEditorShortcuts } from './useEditorShortcuts'
-import { useSceneStore } from '@/stores/useSceneStore'
-import { useCanvasStore } from '@/stores/useCanvasStore'
-import { changeSceneWithHistory, undoAction, redoAction } from '@/stores/actions'
+import { useEditorStore } from '@/stores/useEditorStore'
 
 /**
  * 编辑器操作：scene actions + clipboard + asset + shortcuts。
@@ -21,16 +19,17 @@ export function useEditorActions(canvasInteraction: {
   setGuides: (guides: import('@/lib/smart-guide').GuideLine[]) => void
   setSpacingGuides: (guides: import('@/lib/smart-guide').MeasurementGuide[]) => void
 }) {
-  // ── Scene Store ──
-  const scene = useSceneStore((s) => s.scene)
-  const selection = useSceneStore((s) => s.selection)
-  const editingTextId = useSceneStore((s) => s.editingTextId)
-  const setSelection = useSceneStore((s) => s.setSelection)
-  const setSceneFromStore = useSceneStore((s) => s.setScene)
-
-  // ── Canvas Store ──
-  const setStatus = useCanvasStore((s) => s.setStatus)
-  const canvasSize = useCanvasStore((s) => s.canvasSize)
+  // ── Editor Store ──
+  const scene = useEditorStore((s) => s.scene)
+  const selection = useEditorStore((s) => s.selection)
+  const editingTextId = useEditorStore((s) => s.editingTextId)
+  const setSelection = useEditorStore((s) => s.setSelection)
+  const setSceneFromStore = useEditorStore((s) => s.setScene)
+  const changeSceneWithHistory = useEditorStore((s) => s.changeSceneWithHistory)
+  const undoAction = useEditorStore((s) => s.undoAction)
+  const redoAction = useEditorStore((s) => s.redoAction)
+  const setStatus = useEditorStore((s) => s.setStatus)
+  const canvasSize = useEditorStore((s) => s.canvasSize)
 
   // ── Computed ──
   const selectedElement = useMemo(() => {

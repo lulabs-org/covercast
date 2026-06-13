@@ -6,34 +6,25 @@ import { type HitTestStrategy } from '@/lib/marquee'
 import { useDragManager } from './useDragManager'
 import { useMarqueeSelection } from './useMarqueeSelection'
 import { useVisibleGuides } from './useVisibleGuides'
-import { useSceneStore } from '@/stores/useSceneStore'
-import { useHistoryStore } from '@/stores/useHistoryStore'
-import { useCanvasStore } from '@/stores/useCanvasStore'
-import { useInteractionStore } from '@/stores/useInteractionStore'
-import { markSceneEdited } from '@/stores/actions'
+import { useEditorStore } from '@/stores/useEditorStore'
 
 /**
  * 画布交互：svgRef + 拖拽/框选/交互 handlers + guides/marquee。
  * 仅由 StagePanel 使用，不需要 Context 共享。
  */
 export function useCanvasInteraction() {
-  // ── Scene Store ──
-  const scene = useSceneStore((s) => s.scene)
-  const selection = useSceneStore((s) => s.selection)
-  const editingTextId = useSceneStore((s) => s.editingTextId)
-  const setScene = useSceneStore((s) => s.setScene)
-  const setSelection = useSceneStore((s) => s.setSelection)
-  const setEditingTextId = useSceneStore((s) => s.setEditingTextId)
-
-  // ── History Store ──
-  const pushPast = useHistoryStore((s) => s.pushPast)
-
-  // ── Canvas Store ──
-  const canvasSize = useCanvasStore((s) => s.canvasSize)
-
-  // ── Interaction Store ──
-  const guidesSelectedIds = useInteractionStore((s) => s.guidesSelectedIds)
-  const setGuidesSelectedIds = useInteractionStore((s) => s.setGuidesSelectedIds)
+  // ── Editor Store ──
+  const scene = useEditorStore((s) => s.scene)
+  const selection = useEditorStore((s) => s.selection)
+  const editingTextId = useEditorStore((s) => s.editingTextId)
+  const setScene = useEditorStore((s) => s.setScene)
+  const setSelection = useEditorStore((s) => s.setSelection)
+  const setEditingTextId = useEditorStore((s) => s.setEditingTextId)
+  const pushPast = useEditorStore((s) => s.pushPast)
+  const markSceneEdited = useEditorStore((s) => s.markSceneEdited)
+  const canvasSize = useEditorStore((s) => s.canvasSize)
+  const guidesSelectedIds = useEditorStore((s) => s.guidesSelectedIds)
+  const setGuidesSelectedIds = useEditorStore((s) => s.setGuidesSelectedIds)
 
   // ── Refs ──
   const svgRef = useRef<SVGSVGElement>(null)
@@ -101,20 +92,20 @@ export function useCanvasInteraction() {
     guidesSelectedIds,
   )
 
-  // Sync visible guides to interaction store for StagePanel
+  // Sync visible guides to store for StagePanel
   useEffect(() => {
-    useInteractionStore.getState().setVisibleGuides(visibleGuides)
-    useInteractionStore.getState().setVisibleSpacingGuides(visibleSpacingGuides)
+    useEditorStore.getState().setVisibleGuides(visibleGuides)
+    useEditorStore.getState().setVisibleSpacingGuides(visibleSpacingGuides)
   }, [visibleGuides, visibleSpacingGuides])
 
-  // Sync marquee and drag state to interaction store for StagePanel
+  // Sync marquee and drag state to store for StagePanel
   useEffect(() => {
-    useInteractionStore.getState().setMarquee(marquee)
+    useEditorStore.getState().setMarquee(marquee)
   }, [marquee])
 
   useEffect(() => {
-    useInteractionStore.getState().setDrag(drag)
-    useInteractionStore.getState().setResizeLabel(resizeLabel)
+    useEditorStore.getState().setDrag(drag)
+    useEditorStore.getState().setResizeLabel(resizeLabel)
   }, [drag, resizeLabel])
 
   // ── Handlers ──

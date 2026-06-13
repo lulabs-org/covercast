@@ -1,8 +1,9 @@
-import { create } from 'zustand'
-import { createDefaultScene, type Scene } from '../lib/scene'
-import { createSelectionState, type SelectionState } from '../lib/selection'
+import { StateCreator } from 'zustand'
+import { createDefaultScene, cloneScene, type Scene } from '../lib/scene'
+import { createSelectionState, selectSingle, type SelectionState } from '../lib/selection'
+import type { EditorStore } from './useEditorStore'
 
-type SceneState = {
+export type SceneSlice = {
   scene: Scene
   selection: SelectionState
   editingTextId: string | null
@@ -11,9 +12,13 @@ type SceneState = {
   setScene: (updater: Scene | ((prev: Scene) => Scene)) => void
   setSelection: (updater: SelectionState | ((prev: SelectionState) => SelectionState)) => void
   setEditingTextId: (id: string | null | ((prev: string | null) => string | null)) => void
+
+  // Cross-slice actions (from actions.ts)
+  changeSceneWithHistory: (updater: (scene: Scene) => Scene, description?: string) => void
+  markSceneEdited: () => void
 }
 
-export const useSceneStore = create<SceneState>((set) => ({
+export const createSceneSlice: StateCreator<EditorStore, [], [], SceneSlice> = (set, get) => ({
   scene: createDefaultScene(),
   selection: createSelectionState(),
   editingTextId: null,
@@ -41,4 +46,30 @@ export const useSceneStore = create<SceneState>((set) => ({
       set({ editingTextId: id })
     }
   },
-}))
+
+  changeSceneWithHistory: (updater, description) => {
+    if (description) {
+      const { scene, selection } = get()
+      get().pushPast({
+        scene: cloneScene(scene),
+        selectedIds: selection.selectedIds,
+        description,
+        timestamp: Date.now(),
+      })
+    }
+    set((state) => ({ scene: updater(state.scene) }))
+    get().markSceneEdited()
+  },
+
+  markSceneEdited: () => {
+    const activeCustom = get().getActiveCustomTemplate()
+    if (activeCustom) return
+    const activeBuiltIn = get().getActiveBuiltInTemplate()
+    if (activeBuiltIn) {
+      set({ activeTemplateId: '' })
+    }
+  },
+})
+
+// Re-export selectSingle for cross-slice use
+export { selectSingle, cloneScene }
