@@ -2,15 +2,10 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 
 export default function HeroSection() {
-  const [isVisible, setIsVisible] = useState(false)
   const sectionRef = useRef<HTMLElement>(null)
-
-  useEffect(() => {
-    setIsVisible(true)
-  }, [])
 
   return (
     <section
@@ -26,11 +21,7 @@ export default function HeroSection() {
       </div>
 
       {/* Covercast Logo */}
-      <div
-        className={`relative mb-10 transition-all duration-1000 ease-out ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-        }`}
-      >
+      <div className="relative mb-10 hero-animate-up">
         <div className="absolute inset-0 rounded-none blur-3xl bg-[rgba(201,168,124,0.15)] scale-125 pointer-events-none" />
         <div className="relative animate-float">
           <Image
@@ -45,11 +36,7 @@ export default function HeroSection() {
       </div>
 
       {/* Badge */}
-      <div
-        className={`mb-8 transition-all duration-700 delay-200 ease-out ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-        }`}
-      >
+      <div className="mb-8 hero-animate-up-sm hero-delay-200">
         <span
           className="inline-flex items-center gap-2 px-4 py-1.5 rounded-none text-[13px] font-medium tracking-wide
                          bg-[rgba(201,168,124,0.1)] text-[#c9a87c] border border-[rgba(201,168,124,0.2)]"
@@ -60,11 +47,7 @@ export default function HeroSection() {
       </div>
 
       {/* Title with serif literary style */}
-      <h1
-        className={`relative mb-6 transition-all duration-1000 delay-300 ease-out ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-        }`}
-      >
+      <h1 className="relative mb-6 hero-animate-up hero-delay-300">
         <span className="block font-serif text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight text-[#0a0e1a] leading-[1.1]">
           Covercast
         </span>
@@ -74,22 +57,14 @@ export default function HeroSection() {
       </h1>
 
       {/* Subtitle */}
-      <p
-        className={`relative max-w-2xl text-base md:text-lg text-[#64748b] leading-[1.8] mb-12 transition-all duration-1000 delay-500 ease-out ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-        }`}
-      >
+      <p className="relative max-w-2xl text-base md:text-lg text-[#64748b] leading-[1.8] mb-12 hero-animate-up hero-delay-500">
         可视化拖拽编辑，实时预览，一键导出 SVG / PNG
         <br className="hidden md:block" />
         为直播创作者打造的精美背景制作工具
       </p>
 
       {/* CTA Buttons */}
-      <div
-        className={`relative flex flex-wrap items-center justify-center gap-5 transition-all duration-1000 delay-700 ease-out ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-        }`}
-      >
+      <div className="relative flex flex-wrap items-center justify-center gap-5 hero-animate-up hero-delay-700">
         <Link
           href="/editor"
           className="group relative inline-flex items-center justify-center px-9 py-4 rounded-none text-white font-bold text-base overflow-hidden
@@ -133,11 +108,7 @@ export default function HeroSection() {
       </div>
 
       {/* Scroll indicator */}
-      <div
-        className={`absolute bottom-8 left-1/2 -translate-x-1/2 transition-all duration-1000 delay-1000 ease-out ${
-          isVisible ? 'opacity-100' : 'opacity-0'
-        }`}
-      >
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 hero-animate-fade hero-delay-1000">
         <div className="flex flex-col items-center gap-2 text-[#94a3b8]">
           <span className="text-[11px] tracking-[0.2em] uppercase font-light">探索更多</span>
           <div className="w-5 h-8 rounded-full border border-[rgba(148,163,184,0.3)] flex items-start justify-center p-1">
