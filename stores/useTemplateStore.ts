@@ -6,9 +6,6 @@ import {
   createDefaultScene,
   type Scene,
 } from '../lib/scene'
-import { selectSingle } from '../lib/selection'
-import { useSceneStore } from './useSceneStore'
-import { useCanvasStore } from './useCanvasStore'
 
 const CUSTOM_TEMPLATE_STORAGE_KEY = 'covercast.customTemplates.v1'
 const SLOT_NAMES_STORAGE_KEY = 'covercast.slotNames.v1'
@@ -25,12 +22,6 @@ export type SceneSlotInfo = {
   templateId: string
   slotId: string
   name: string
-}
-
-type TemplateExportPayload = {
-  format: 'covercast.template'
-  version: 1
-  template: CustomSceneTemplate
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -112,55 +103,23 @@ function scenesMatch(left: Scene, right: Scene) {
   return JSON.stringify(left) === JSON.stringify(right)
 }
 
-function createTemplateExportPayload(name: string, scene: Scene): TemplateExportPayload {
-  const timestamp = new Date().toISOString()
-  return {
-    format: 'covercast.template',
-    version: 1,
-    template: {
-      id: createCustomTemplateId(),
-      name: name.trim() || '自定义场景',
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      scene: cloneScene(scene),
-    },
-  }
-}
-
-function downloadBlob(blob: Blob, filename: string) {
-  const objectUrl = URL.createObjectURL(blob)
-  const download = document.createElement('a')
-  download.href = objectUrl
-  download.download = filename
-  document.body.appendChild(download)
-  download.click()
-  download.remove()
-  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0)
-}
-
 type TemplateStoreState = {
   // Templates
   customTemplates: CustomSceneTemplate[]
   activeTemplateId: string
   setActiveTemplateId: (id: string) => void
+  setCustomTemplates: (templates: CustomSceneTemplate[]) => void
 
-  // Computed helpers
+  // Computed helpers (only read own state)
   getActiveBuiltInTemplate: () => (typeof BUILT_IN_TEMPLATES)[number] | null
   getActiveCustomTemplate: () => CustomSceneTemplate | null
   getActiveTemplate: () => (typeof BUILT_IN_TEMPLATES)[number] | CustomSceneTemplate | null
-  getHasUnsavedChanges: () => boolean
+  getHasUnsavedChanges: (currentScene: Scene) => boolean
 
-  // Template actions
-  applyTemplate: (template: { id: string; name: string; scene: Scene }) => void
-  applyBuiltInTemplate: (templateId: string) => void
-  saveCustomTemplateWithName: (name: string) => void
-  saveCustomTemplateWithScene: (name: string, sceneToSave: Scene) => void
-  saveActiveCustomTemplate: () => void
+  // Pure template state actions (no cross-store calls)
   deleteCustomTemplate: (templateId: string) => void
   duplicateCustomTemplate: (templateId: string) => void
-  renameCustomTemplate: (templateId: string, newName: string) => void
-  exportTemplateJson: () => void
-  importTemplateFile: (file: File) => Promise<void>
+  renameCustomTemplate: (templateId: string, newName: string) => string | null
 
   // Slots
   templateSlots: SceneSlotInfo[]
@@ -169,10 +128,10 @@ type TemplateStoreState = {
   setTemplateSlots: (
     updater: SceneSlotInfo[] | ((prev: SceneSlotInfo[]) => SceneSlotInfo[]),
   ) => void
-  addSlot: (templateId: string) => Promise<void>
-  removeSlot: (templateId: string, slotId: string) => Promise<void>
+  addSlot: (templateId: string) => Promise<string | null>
+  removeSlot: (templateId: string, slotId: string) => Promise<boolean>
   selectSlotForEditing: (slotId: string) => void
-  getSlotUrl: (templateId: string, slotId: string) => string
+  getSlotUrl: (templateId: string, slotId: string, appOrigin: string) => string
   writeSlotNameToStorage: (templateId: string, slotId: string, name: string) => void
 
   // Init
@@ -184,6 +143,10 @@ export const useTemplateStore = create<TemplateStoreState>((set, get) => ({
   customTemplates: [],
   activeTemplateId: DEFAULT_TEMPLATE_ID,
   setActiveTemplateId: (id) => set({ activeTemplateId: id }),
+  setCustomTemplates: (templates) => {
+    writeCustomTemplatesToStorage(templates)
+    set({ customTemplates: templates })
+  },
 
   getActiveBuiltInTemplate: () => {
     const { activeTemplateId } = get()
@@ -199,111 +162,19 @@ export const useTemplateStore = create<TemplateStoreState>((set, get) => ({
     return get().getActiveBuiltInTemplate() ?? get().getActiveCustomTemplate()
   },
 
-  getHasUnsavedChanges: () => {
+  getHasUnsavedChanges: (currentScene: Scene) => {
     const activeCustom = get().getActiveCustomTemplate()
     if (!activeCustom) return false
-    return !scenesMatch(activeCustom.scene, useSceneStore.getState().scene)
-  },
-
-  applyTemplate: (template) => {
-    const nextScene = cloneScene(template.scene)
-    useSceneStore.getState().setScene(nextScene)
-    if (nextScene.elements[0]?.id) {
-      useSceneStore.getState().setSelection((prev) => selectSingle(prev, nextScene.elements[0].id))
-    }
-    set({ activeTemplateId: template.id })
-
-    const { templateSlots } = get()
-    const templateSlot = templateSlots.find((s) => s.templateId === template.id)
-    if (templateSlot) {
-      set({ activeSlotId: templateSlot.slotId })
-    } else {
-      set({ activeSlotId: 'default' })
-    }
-
-    useCanvasStore.getState().setStatus(`已套用「${template.name}」到当前画布`)
-  },
-
-  applyBuiltInTemplate: (templateId) => {
-    const template = BUILT_IN_TEMPLATES.find((t) => t.id === templateId)
-    if (template) get().applyTemplate(template)
-  },
-
-  saveCustomTemplateWithName: (name) => {
-    const { customTemplates } = get()
-    const timestamp = new Date().toISOString()
-    const templateName = name.trim() || `自定义模板 ${customTemplates.length + 1}`
-    const template: CustomSceneTemplate = {
-      id: createCustomTemplateId(),
-      name: templateName,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      scene: cloneScene(useSceneStore.getState().scene),
-    }
-    const nextTemplates = [template, ...customTemplates]
-    try {
-      writeCustomTemplatesToStorage(nextTemplates)
-      set({ customTemplates: nextTemplates, activeTemplateId: template.id })
-      useCanvasStore.getState().setStatus(`已保存「${template.name}」到浏览器缓存`)
-    } catch {
-      useCanvasStore.getState().setStatus('自定义模板保存失败，浏览器缓存空间可能不足')
-    }
-  },
-
-  saveCustomTemplateWithScene: (name, sceneToSave) => {
-    const { customTemplates } = get()
-    const timestamp = new Date().toISOString()
-    const templateName = name.trim() || `自定义模板 ${customTemplates.length + 1}`
-    const template: CustomSceneTemplate = {
-      id: createCustomTemplateId(),
-      name: templateName,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      scene: cloneScene(sceneToSave),
-    }
-    const nextTemplates = [template, ...customTemplates]
-    try {
-      writeCustomTemplatesToStorage(nextTemplates)
-      set({ customTemplates: nextTemplates, activeTemplateId: template.id })
-      useCanvasStore.getState().setStatus(`已创建「${template.name}」`)
-    } catch {
-      useCanvasStore.getState().setStatus('自定义模板保存失败，浏览器缓存空间可能不足')
-    }
-  },
-
-  saveActiveCustomTemplate: () => {
-    const activeCustom = get().getActiveCustomTemplate()
-    const { customTemplates } = get()
-    if (!activeCustom) {
-      useCanvasStore.getState().setStatus('当前不是自定义模板，请另存为新模板')
-      return
-    }
-    const updated: CustomSceneTemplate = {
-      ...activeCustom,
-      updatedAt: new Date().toISOString(),
-      scene: cloneScene(useSceneStore.getState().scene),
-    }
-    const nextTemplates = customTemplates.map((t) => (t.id === activeCustom.id ? updated : t))
-    try {
-      writeCustomTemplatesToStorage(nextTemplates)
-      set({ customTemplates: nextTemplates, activeTemplateId: updated.id })
-      useCanvasStore.getState().setStatus(`已保存「${updated.name}」的修改`)
-    } catch {
-      useCanvasStore.getState().setStatus('模板保存失败，浏览器缓存空间可能不足')
-    }
+    return !scenesMatch(activeCustom.scene, currentScene)
   },
 
   deleteCustomTemplate: (templateId) => {
     const { customTemplates, activeTemplateId } = get()
     const nextTemplates = customTemplates.filter((t) => t.id !== templateId)
-    try {
-      writeCustomTemplatesToStorage(nextTemplates)
-      set({ customTemplates: nextTemplates })
-      if (activeTemplateId === templateId) set({ activeTemplateId: '' })
-      useCanvasStore.getState().setStatus('已删除自定义模板')
-    } catch {
-      useCanvasStore.getState().setStatus('自定义模板删除失败，请检查浏览器缓存权限')
-    }
+    writeCustomTemplatesToStorage(nextTemplates)
+    const updates: Partial<TemplateStoreState> = { customTemplates: nextTemplates }
+    if (activeTemplateId === templateId) updates.activeTemplateId = ''
+    set(updates)
   },
 
   duplicateCustomTemplate: (templateId) => {
@@ -319,104 +190,25 @@ export const useTemplateStore = create<TemplateStoreState>((set, get) => ({
       scene: cloneScene(template.scene),
     }
     const nextTemplates = [duplicated, ...customTemplates]
-    try {
-      writeCustomTemplatesToStorage(nextTemplates)
-      set({ customTemplates: nextTemplates })
-      useCanvasStore.getState().setStatus(`已创建副本「${duplicated.name}」`)
-    } catch {
-      useCanvasStore.getState().setStatus('创建副本失败，浏览器缓存空间可能不足')
-    }
+    writeCustomTemplatesToStorage(nextTemplates)
+    set({ customTemplates: nextTemplates })
   },
 
   renameCustomTemplate: (templateId, newName) => {
     const { customTemplates } = get()
     const template = customTemplates.find((t) => t.id === templateId)
-    if (!template) return
+    if (!template) return '模板不存在'
     const trimmedName = newName.trim()
-    if (!trimmedName) {
-      useCanvasStore.getState().setStatus('模板名称不能为空')
-      return
-    }
+    if (!trimmedName) return '模板名称不能为空'
     const updated: CustomSceneTemplate = {
       ...template,
       name: trimmedName,
       updatedAt: new Date().toISOString(),
     }
     const nextTemplates = customTemplates.map((t) => (t.id === templateId ? updated : t))
-    try {
-      writeCustomTemplatesToStorage(nextTemplates)
-      set({ customTemplates: nextTemplates })
-      useCanvasStore.getState().setStatus(`已重命名为「${trimmedName}」`)
-    } catch {
-      useCanvasStore.getState().setStatus('重命名失败，请检查浏览器缓存权限')
-    }
-  },
-
-  exportTemplateJson: () => {
-    const activeTemplate = get().getActiveTemplate()
-    const payload = createTemplateExportPayload(
-      activeTemplate?.name ?? '自定义场景',
-      useSceneStore.getState().scene,
-    )
-    const filename = `covercast-template-${new Date().toISOString().slice(0, 10)}.json`
-    const json = JSON.stringify(payload, null, 2)
-    downloadBlob(new Blob([json], { type: 'application/json;charset=utf-8' }), filename)
-    useCanvasStore.getState().setStatus(`模板 JSON 已导出：${payload.template.name}`)
-  },
-
-  importTemplateFile: async (file) => {
-    const isJsonFile = file.type === 'application/json' || file.name.toLowerCase().endsWith('.json')
-    if (!isJsonFile) {
-      useCanvasStore.getState().setStatus('导入失败，仅支持 JSON 文件')
-      return
-    }
-    useCanvasStore.getState().setStatus('正在导入模板 JSON...')
-    try {
-      const parsedValue = JSON.parse(await file.text()) as unknown
-      if (
-        !isRecord(parsedValue) ||
-        parsedValue.format !== 'covercast.template' ||
-        parsedValue.version !== 1
-      ) {
-        useCanvasStore.getState().setStatus('导入失败，请选择 Covercast 导出的模板 JSON')
-        return
-      }
-      const tpl = parsedValue.template as unknown
-      if (
-        !isRecord(tpl) ||
-        !isScene(tpl.scene) ||
-        typeof tpl.id !== 'string' ||
-        typeof tpl.name !== 'string' ||
-        typeof tpl.createdAt !== 'string'
-      ) {
-        useCanvasStore.getState().setStatus('导入失败，请选择 Covercast 导出的模板 JSON')
-        return
-      }
-      const { customTemplates } = get()
-      const imported: CustomSceneTemplate = {
-        id: createCustomTemplateId(),
-        name: uniqueTemplateName(tpl.name as string, customTemplates),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        scene: cloneScene(tpl.scene as Scene),
-      }
-      const nextTemplates = [imported, ...customTemplates]
-      writeCustomTemplatesToStorage(nextTemplates)
-      set({
-        customTemplates: nextTemplates,
-        activeTemplateId: imported.id,
-        activeSlotId: 'default',
-      })
-      useSceneStore.getState().setScene(cloneScene(imported.scene))
-      if (imported.scene.elements[0]?.id) {
-        useSceneStore
-          .getState()
-          .setSelection((prev) => selectSingle(prev, imported.scene.elements[0].id))
-      }
-      useCanvasStore.getState().setStatus(`已导入模板「${imported.name}」`)
-    } catch {
-      useCanvasStore.getState().setStatus('导入失败，请检查 JSON 文件内容或浏览器缓存空间')
-    }
+    writeCustomTemplatesToStorage(nextTemplates)
+    set({ customTemplates: nextTemplates })
+    return null
   },
 
   // Slots
@@ -450,9 +242,9 @@ export const useTemplateStore = create<TemplateStoreState>((set, get) => ({
       writeSlotNameToStorageFn(templateId, slotId, name)
       const newSlot: SceneSlotInfo = { templateId, slotId, name }
       set((s) => ({ templateSlots: [...s.templateSlots, newSlot], activeSlotId: slotId }))
-      useCanvasStore.getState().setStatus(`已创建浏览器源「${name}」`)
+      return name
     } catch {
-      useCanvasStore.getState().setStatus('创建浏览器源失败')
+      return null
     }
   },
 
@@ -477,16 +269,18 @@ export const useTemplateStore = create<TemplateStoreState>((set, get) => ({
           )
           set({ activeSlotId: remaining[0]?.slotId ?? 'default' })
         }
+        return true
       }
+      return false
     } catch {
-      useCanvasStore.getState().setStatus('删除浏览器源失败')
+      return false
     }
   },
 
   selectSlotForEditing: (slotId) => set({ activeSlotId: slotId }),
 
-  getSlotUrl: (templateId, slotId) => {
-    const origin = useCanvasStore.getState().appOrigin || ''
+  getSlotUrl: (templateId, slotId, appOrigin) => {
+    const origin = appOrigin || ''
     return `${origin}/live?t=${encodeURIComponent(templateId)}&s=${encodeURIComponent(slotId)}`
   },
 

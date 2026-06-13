@@ -9,6 +9,8 @@ import { CanvasSizeSelector } from '../../controls/CanvasSizeSelector'
 import { useSceneStore } from '@/stores/useSceneStore'
 import { useCanvasStore } from '@/stores/useCanvasStore'
 import { useTemplateStore } from '@/stores/useTemplateStore'
+import { changeSceneWithHistory, applyTemplateAction } from '@/stores/actions'
+import { BUILT_IN_TEMPLATES } from '@/lib/scene'
 
 interface LeftSidebarProps {
   leftPanelRef: React.RefObject<HTMLDivElement | null>
@@ -20,7 +22,6 @@ export function LeftSidebar({ leftPanelRef, leftPanelWidth }: LeftSidebarProps) 
 
   // ── Scene Store ──
   const scene = useSceneStore((s) => s.scene)
-  const changeScene = useSceneStore((s) => s.changeScene)
   const selection = useSceneStore((s) => s.selection)
   const setSelection = useSceneStore((s) => s.setSelection)
 
@@ -34,6 +35,7 @@ export function LeftSidebar({ leftPanelRef, leftPanelWidth }: LeftSidebarProps) 
   const collapsedSections = useCanvasStore((s) => s.collapsedSections)
   const toggleSidebarSection = useCanvasStore((s) => s.toggleSidebarSection)
   const setStatus = useCanvasStore((s) => s.setStatus)
+  const appOrigin = useCanvasStore((s) => s.appOrigin)
 
   // ── Template Store ──
   const customTemplates = useTemplateStore((s) => s.customTemplates)
@@ -46,13 +48,11 @@ export function LeftSidebar({ leftPanelRef, leftPanelWidth }: LeftSidebarProps) 
   const selectSlotForEditing = useTemplateStore((s) => s.selectSlotForEditing)
   const getSlotUrl = useTemplateStore((s) => s.getSlotUrl)
   const writeSlotNameToStorage = useTemplateStore((s) => s.writeSlotNameToStorage)
-  const applyTemplate = useTemplateStore((s) => s.applyTemplate)
-  const applyBuiltInTemplate = useTemplateStore((s) => s.applyBuiltInTemplate)
   const duplicateCustomTemplate = useTemplateStore((s) => s.duplicateCustomTemplate)
   const renameCustomTemplate = useTemplateStore((s) => s.renameCustomTemplate)
   const deleteCustomTemplate = useTemplateStore((s) => s.deleteCustomTemplate)
   const activeTemplate = useTemplateStore((s) => s.getActiveCustomTemplate())
-  const hasUnsavedCustomTemplateChanges = useTemplateStore((s) => s.getHasUnsavedChanges())
+  const hasUnsavedCustomTemplateChanges = useTemplateStore((s) => s.getHasUnsavedChanges(scene))
 
   // ── Computed ──
   const activeSlot = templateSlots.find((slot) => slot.slotId === activeSlotId) ?? null
@@ -61,6 +61,30 @@ export function LeftSidebar({ leftPanelRef, leftPanelWidth }: LeftSidebarProps) 
       ? '自定义模板有未保存修改'
       : '自定义模板已保存'
     : (activeSlot?.name ?? '未选择 OBS 源')
+
+  // ── Handlers ──
+  function handleApplyBuiltInTemplate(templateId: string) {
+    const found = BUILT_IN_TEMPLATES.find((t) => t.id === templateId)
+    if (found) applyTemplateAction(found)
+  }
+
+  function handleAddSlot(templateId: string) {
+    void addSlot(templateId).then((name) => {
+      if (name) setStatus(`已创建浏览器源「${name}」`)
+      else setStatus('创建浏览器源失败')
+    })
+  }
+
+  function handleRemoveSlot(templateId: string, slotId: string) {
+    void removeSlot(templateId, slotId).then((ok) => {
+      if (!ok) setStatus('删除浏览器源失败')
+    })
+  }
+
+  function handleGetSlotUrl(templateId: string, slotId: string) {
+    return getSlotUrl(templateId, slotId, appOrigin)
+  }
+
   return (
     <aside
       ref={leftPanelRef}
@@ -96,7 +120,7 @@ export function LeftSidebar({ leftPanelRef, leftPanelWidth }: LeftSidebarProps) 
             label="背景颜色"
             value={scene.backgroundColor}
             onChange={(value) =>
-              changeScene((currentScene) => ({
+              changeSceneWithHistory((currentScene) => ({
                 ...currentScene,
                 backgroundColor: value,
               }))
@@ -106,7 +130,7 @@ export function LeftSidebar({ leftPanelRef, leftPanelWidth }: LeftSidebarProps) 
             label="背景透明度"
             value={scene.backgroundOpacity}
             onChange={(value) =>
-              changeScene((currentScene) => ({
+              changeSceneWithHistory((currentScene) => ({
                 ...currentScene,
                 backgroundOpacity: value,
               }))
@@ -121,8 +145,8 @@ export function LeftSidebar({ leftPanelRef, leftPanelWidth }: LeftSidebarProps) 
         activeSlotId={activeSlotId}
         collapsed={collapsedSections.sources}
         onToggle={() => toggleSidebarSection('sources')}
-        onAddSlot={(templateId) => void addSlot(templateId)}
-        onRemoveSlot={(templateId, slotId) => void removeSlot(templateId, slotId)}
+        onAddSlot={handleAddSlot}
+        onRemoveSlot={handleRemoveSlot}
         onSelectSlot={selectSlotForEditing}
         onRenameSlot={(templateId, slotId, newName) => {
           writeSlotNameToStorage(templateId, slotId, newName)
@@ -132,7 +156,7 @@ export function LeftSidebar({ leftPanelRef, leftPanelWidth }: LeftSidebarProps) 
             ),
           )
         }}
-        getSlotUrl={getSlotUrl}
+        getSlotUrl={handleGetSlotUrl}
         setStatus={setStatus}
       />
 
@@ -142,8 +166,8 @@ export function LeftSidebar({ leftPanelRef, leftPanelWidth }: LeftSidebarProps) 
         hasUnsavedCustomTemplateChanges={hasUnsavedCustomTemplateChanges}
         collapsed={collapsedSections.templates}
         onToggle={() => toggleSidebarSection('templates')}
-        onApplyBuiltInTemplate={applyBuiltInTemplate}
-        onApplyCustomTemplate={applyTemplate}
+        onApplyBuiltInTemplate={handleApplyBuiltInTemplate}
+        onApplyCustomTemplate={applyTemplateAction}
         onDuplicateCustomTemplate={duplicateCustomTemplate}
         onRenameCustomTemplate={renameCustomTemplate}
         onDeleteCustomTemplate={deleteCustomTemplate}

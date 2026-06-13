@@ -7,30 +7,47 @@ import { StagePanel } from './editor/StagePanel'
 import { LeftSidebar } from './editor/sidebar/LeftSidebar'
 import { RightSidebar } from './editor/sidebar/RightSidebar'
 import { CreateBlankCoverModal } from './panels/CreateBlankCoverModal'
-import { useLayoutContext } from '@/hooks/useLayoutContext'
+import { useScrollVisibility } from '@/hooks/useScrollVisibility'
+import { usePanelResize } from '@/hooks/usePanelResize'
 import { useCanvasInteraction } from '@/hooks/useCanvasInteraction'
 import { useDialogState } from '@/hooks/useDialogState'
 
 export default function SceneEditor() {
-  const layout = useLayoutContext()
+  const { leftPanelRef, rightPanelRef, stageViewportRef } = useScrollVisibility()
+  const { panelWidths, resizerLeftRef, resizerRightRef, handleMouseDown } = usePanelResize()
   const canvasInteraction = useCanvasInteraction()
   const dialogState = useDialogState()
 
   return (
-    <EditorProvider
-      canvasInteraction={canvasInteraction}
-      stageViewportRef={layout.stageViewportRef}
-    >
-      <SceneEditorInner layout={layout} dialogState={dialogState} />
+    <EditorProvider canvasInteraction={canvasInteraction} stageViewportRef={stageViewportRef}>
+      <SceneEditorInner
+        leftPanelRef={leftPanelRef}
+        rightPanelRef={rightPanelRef}
+        resizerLeftRef={resizerLeftRef}
+        resizerRightRef={resizerRightRef}
+        panelWidths={panelWidths}
+        handleMouseDown={handleMouseDown}
+        dialogState={dialogState}
+      />
     </EditorProvider>
   )
 }
 
 function SceneEditorInner({
-  layout,
+  leftPanelRef,
+  rightPanelRef,
+  resizerLeftRef,
+  resizerRightRef,
+  panelWidths,
+  handleMouseDown,
   dialogState,
 }: {
-  layout: ReturnType<typeof useLayoutContext>
+  leftPanelRef: React.RefObject<HTMLDivElement | null>
+  rightPanelRef: React.RefObject<HTMLDivElement | null>
+  resizerLeftRef: React.RefObject<HTMLDivElement | null>
+  resizerRightRef: React.RefObject<HTMLDivElement | null>
+  panelWidths: { leftPanel: number; rightPanel: number }
+  handleMouseDown: (side: 'left' | 'right', e: React.MouseEvent) => void
   dialogState: ReturnType<typeof useDialogState>
 }) {
   const { addTextElement, addRectElement, addEllipseElement, handleAssetInput } = useEditor()
@@ -69,29 +86,23 @@ function SceneEditorInner({
         />
 
         <section className="editor-grid">
-          <LeftSidebar
-            leftPanelRef={layout.leftPanelRef}
-            leftPanelWidth={layout.panelWidths.leftPanel}
-          />
+          <LeftSidebar leftPanelRef={leftPanelRef} leftPanelWidth={panelWidths.leftPanel} />
 
           <div
-            ref={layout.resizerLeftRef}
+            ref={resizerLeftRef}
             className="panel-resizer"
-            onMouseDown={(e) => layout.handleMouseDown('left', e)}
+            onMouseDown={(e) => handleMouseDown('left', e)}
           />
 
           <StagePanel />
 
           <div
-            ref={layout.resizerRightRef}
+            ref={resizerRightRef}
             className="panel-resizer"
-            onMouseDown={(e) => layout.handleMouseDown('right', e)}
+            onMouseDown={(e) => handleMouseDown('right', e)}
           />
 
-          <RightSidebar
-            rightPanelRef={layout.rightPanelRef}
-            rightPanelWidth={layout.panelWidths.rightPanel}
-          />
+          <RightSidebar rightPanelRef={rightPanelRef} rightPanelWidth={panelWidths.rightPanel} />
         </section>
       </main>
     </>

@@ -6,6 +6,11 @@ import { useExportScene } from './useExportScene'
 import { useSceneStore } from '@/stores/useSceneStore'
 import { useCanvasStore } from '@/stores/useCanvasStore'
 import { useTemplateStore } from '@/stores/useTemplateStore'
+import {
+  saveCustomTemplateWithNameAction,
+  saveCustomTemplateWithSceneAction,
+  exportTemplateJsonAction,
+} from '@/stores/actions'
 
 /**
  * 对话框/模态框状态：新建封面 + 保存模板 + 导出。
@@ -21,20 +26,17 @@ export function useDialogState() {
   const setStatus = useCanvasStore((s) => s.setStatus)
   const canvasSize = useCanvasStore((s) => s.canvasSize)
   const presets = useCanvasStore((s) => s.presets)
+  const setCanvasSize = useCanvasStore((s) => s.setCanvasSize)
 
   // ── Template Store ──
   const customTemplates = useTemplateStore((s) => s.customTemplates)
   const setActiveTemplateId = useTemplateStore((s) => s.setActiveTemplateId)
-  const saveCustomTemplateWithName = useTemplateStore((s) => s.saveCustomTemplateWithName)
-  const saveCustomTemplateWithScene = useTemplateStore((s) => s.saveCustomTemplateWithScene)
-  const exportTemplateJson = useTemplateStore((s) => s.exportTemplateJson)
-  const setCanvasSize = useCanvasStore((s) => s.setCanvasSize)
 
   // ── Export ──
   const { exportScene } = useExportScene(
     scene,
     setStatus,
-    exportTemplateJson,
+    exportTemplateJsonAction,
     canvasSize.width,
     canvasSize.height,
   )
@@ -55,7 +57,7 @@ export function useDialogState() {
     setCanvasSize,
     setActiveTemplateId,
     setStatus,
-    saveCustomTemplate: saveCustomTemplateWithScene,
+    saveCustomTemplate: saveCustomTemplateWithSceneAction,
     canvasSizePresets: presets,
     customTemplates,
   })
@@ -63,7 +65,7 @@ export function useDialogState() {
   // ── Save template dialog ──
   const saveTemplateDialog = useSaveTemplateDialog({
     customTemplates,
-    onSave: saveCustomTemplateWithName,
+    onSave: saveCustomTemplateWithNameAction,
   })
 
   // ── Handlers ──

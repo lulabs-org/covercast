@@ -10,6 +10,7 @@ import { useSceneStore } from '@/stores/useSceneStore'
 import { useHistoryStore } from '@/stores/useHistoryStore'
 import { useCanvasStore } from '@/stores/useCanvasStore'
 import { useInteractionStore } from '@/stores/useInteractionStore'
+import { markSceneEdited } from '@/stores/actions'
 
 /**
  * 画布交互：svgRef + 拖拽/框选/交互 handlers + guides/marquee。
@@ -23,10 +24,9 @@ export function useCanvasInteraction() {
   const setScene = useSceneStore((s) => s.setScene)
   const setSelection = useSceneStore((s) => s.setSelection)
   const setEditingTextId = useSceneStore((s) => s.setEditingTextId)
-  const markSceneEdited = useSceneStore((s) => s.markSceneEdited)
 
   // ── History Store ──
-  const saveHistory = useHistoryStore((s) => s.saveHistory)
+  const pushPast = useHistoryStore((s) => s.pushPast)
 
   // ── Canvas Store ──
   const canvasSize = useCanvasStore((s) => s.canvasSize)
@@ -84,7 +84,7 @@ export function useCanvasInteraction() {
     selection,
     editingTextId,
     svgRef,
-    saveHistory,
+    pushPast,
     markSceneEdited,
     setScene,
     setSelection,

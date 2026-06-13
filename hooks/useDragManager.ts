@@ -96,7 +96,7 @@ export function useDragManager({
   selection,
   editingTextId,
   svgRef,
-  saveHistory,
+  pushPast,
   markSceneEdited,
   setScene,
   setSelection,
@@ -108,7 +108,12 @@ export function useDragManager({
   selection: SelectionState
   editingTextId: string | null
   svgRef: React.RefObject<SVGSVGElement | null>
-  saveHistory: (description: string, snapshot: Scene) => void
+  pushPast: (entry: {
+    scene: Scene
+    selectedIds: string[]
+    description: string
+    timestamp: number
+  }) => void
   markSceneEdited: () => void
   setScene: React.Dispatch<React.SetStateAction<Scene>>
   setSelection: React.Dispatch<React.SetStateAction<SelectionState>>
@@ -473,7 +478,12 @@ export function useDragManager({
       )
       spatialIndexRef.current = buildSpatialIndex(otherElements)
 
-      saveHistory(`移动元素「${element.name}」`, scene)
+      pushPast({
+        scene: { ...scene },
+        selectedIds: selection.selectedIds,
+        description: `移动元素「${element.name}」`,
+        timestamp: Date.now(),
+      })
       setDrag({
         id: elementId,
         mode: 'move',
@@ -482,7 +492,7 @@ export function useDragManager({
         element: { ...element },
       })
     },
-    [scene, selection, editingTextId, svgRef, setSelection, setEditingTextId, saveHistory],
+    [scene, selection, editingTextId, svgRef, setSelection, setEditingTextId, pushPast],
   )
 
   const handleResizePointerDown = useCallback(
@@ -503,7 +513,12 @@ export function useDragManager({
       )
       spatialIndexRef.current = buildSpatialIndex(otherElements)
 
-      saveHistory(`调整元素大小「${element.name}」`, scene)
+      pushPast({
+        scene: { ...scene },
+        selectedIds: selection.selectedIds,
+        description: `调整元素大小「${element.name}」`,
+        timestamp: Date.now(),
+      })
       const point = getSvgPoint(svg, event.clientX, event.clientY)
       setDrag({
         id: elementId,
@@ -513,7 +528,7 @@ export function useDragManager({
         element: { ...element },
       })
     },
-    [scene, selection, svgRef, setSelection, saveHistory],
+    [scene, selection, svgRef, setSelection, pushPast],
   )
 
   const handleGroupResizePointerDown = useCallback(

@@ -1,7 +1,5 @@
 import { create } from 'zustand'
-import { cloneScene, type Scene } from '../lib/scene'
-import { useSceneStore } from './useSceneStore'
-import { useCanvasStore } from './useCanvasStore'
+import type { Scene } from '../lib/scene'
 
 const MAX_HISTORY_SIZE = 50
 
@@ -20,24 +18,17 @@ type HistoryState = {
 type HistoryStoreState = {
   history: HistoryState
 
-  saveHistory: (description: string, sceneSnapshot?: Scene) => void
-  undo: () => void
-  redo: () => void
-  setStatus: (status: string) => void
+  // Pure state actions — no cross-store calls
+  pushPast: (entry: HistoryEntry) => void
+  undoShift: () => HistoryEntry | null
+  redoShift: () => HistoryEntry | null
+  pushFuture: (entry: HistoryEntry) => void
 }
 
 export const useHistoryStore = create<HistoryStoreState>((set, get) => ({
   history: { past: [], future: [] },
 
-  saveHistory: (description, sceneSnapshot) => {
-    const { scene, selection } = useSceneStore.getState()
-    const entry: HistoryEntry = {
-      scene: cloneScene(sceneSnapshot ?? scene),
-      selectedIds: selection.selectedIds,
-      description,
-      timestamp: Date.now(),
-    }
-
+  pushPast: (entry) => {
     set((state) => ({
       history: {
         past: [...state.history.past, entry].slice(-MAX_HISTORY_SIZE),
@@ -46,73 +37,38 @@ export const useHistoryStore = create<HistoryStoreState>((set, get) => ({
     }))
   },
 
-  undo: () => {
+  undoShift: () => {
     const { history } = get()
-    if (history.past.length === 0) {
-      get().setStatus('没有可撤销的操作')
-      return
-    }
-
+    if (history.past.length === 0) return null
     const previous = history.past[history.past.length - 1]
-    const { scene, selection } = useSceneStore.getState()
-
     set((state) => ({
       history: {
         past: state.history.past.slice(0, -1),
-        future: [
-          {
-            scene: cloneScene(scene),
-            selectedIds: selection.selectedIds,
-            description: '当前状态',
-            timestamp: Date.now(),
-          },
-          ...state.history.future,
-        ],
+        future: state.history.future, // caller will push via pushFuture
       },
     }))
-
-    useSceneStore.getState().setScene(previous.scene)
-    useSceneStore.getState().setSelection((prev) => ({
-      ...prev,
-      selectedIds: previous.selectedIds,
-    }))
-    get().setStatus(`已撤销：${previous.description}`)
+    return previous
   },
 
-  redo: () => {
+  redoShift: () => {
     const { history } = get()
-    if (history.future.length === 0) {
-      get().setStatus('没有可重做的操作')
-      return
-    }
-
+    if (history.future.length === 0) return null
     const next = history.future[0]
-    const { scene, selection } = useSceneStore.getState()
-
     set((state) => ({
       history: {
-        past: [
-          ...state.history.past,
-          {
-            scene: cloneScene(scene),
-            selectedIds: selection.selectedIds,
-            description: '当前状态',
-            timestamp: Date.now(),
-          },
-        ],
+        past: state.history.past, // caller will push via pushPast
         future: state.history.future.slice(1),
       },
     }))
-
-    useSceneStore.getState().setScene(next.scene)
-    useSceneStore.getState().setSelection((prev) => ({
-      ...prev,
-      selectedIds: next.selectedIds,
-    }))
-    get().setStatus(`已重做：${next.description}`)
+    return next
   },
 
-  setStatus: (status) => {
-    useCanvasStore.getState().setStatus(status)
+  pushFuture: (entry) => {
+    set((state) => ({
+      history: {
+        past: state.history.past,
+        future: [entry, ...state.history.future],
+      },
+    }))
   },
 }))

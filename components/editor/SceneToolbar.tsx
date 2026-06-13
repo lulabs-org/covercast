@@ -4,7 +4,14 @@ import { TemplateToolbarButtons } from '../panels/TemplatePanel'
 import { EXPORT_FORMAT_OPTIONS } from '@/hooks/useExportScene'
 import { useHistoryStore } from '@/stores/useHistoryStore'
 import { useCanvasStore } from '@/stores/useCanvasStore'
+import { useSceneStore } from '@/stores/useSceneStore'
 import { useTemplateStore } from '@/stores/useTemplateStore'
+import {
+  undoAction,
+  redoAction,
+  saveActiveCustomTemplateAction,
+  importTemplateFileAction,
+} from '@/stores/actions'
 
 interface SceneToolbarProps {
   addTextElement: () => void
@@ -27,18 +34,15 @@ export function SceneToolbar({
 }: SceneToolbarProps) {
   // ── History Store ──
   const history = useHistoryStore((s) => s.history)
-  const undo = useHistoryStore((s) => s.undo)
-  const redo = useHistoryStore((s) => s.redo)
 
   // ── Canvas Store ──
   const exportFormat = useCanvasStore((s) => s.exportFormat)
   const setExportFormat = useCanvasStore((s) => s.setExportFormat)
 
   // ── Template Store ──
+  const scene = useSceneStore((s) => s.scene)
   const activeCustomTemplate = useTemplateStore((s) => s.getActiveCustomTemplate())
-  const hasUnsavedCustomTemplateChanges = useTemplateStore((s) => s.getHasUnsavedChanges())
-  const saveActiveCustomTemplate = useTemplateStore((s) => s.saveActiveCustomTemplate)
-  const importTemplateFile = useTemplateStore((s) => s.importTemplateFile)
+  const hasUnsavedCustomTemplateChanges = useTemplateStore((s) => s.getHasUnsavedChanges(scene))
 
   return (
     <section className="editor-toolbar" aria-label="Covercast editor controls">
@@ -50,7 +54,7 @@ export function SceneToolbar({
         <button
           type="button"
           className="secondary-button"
-          onClick={undo}
+          onClick={undoAction}
           disabled={history.past.length === 0}
           title="撤销 (Ctrl+Z)"
         >
@@ -59,7 +63,7 @@ export function SceneToolbar({
         <button
           type="button"
           className="secondary-button"
-          onClick={redo}
+          onClick={redoAction}
           disabled={history.future.length === 0}
           title="重做 (Ctrl+Shift+Z 或 Ctrl+Y)"
         >
@@ -94,7 +98,7 @@ export function SceneToolbar({
           <button
             type="button"
             className="primary-button"
-            onClick={saveActiveCustomTemplate}
+            onClick={saveActiveCustomTemplateAction}
             disabled={!hasUnsavedCustomTemplateChanges}
             title={
               hasUnsavedCustomTemplateChanges ? '覆盖保存当前自定义模板' : '当前模板没有未保存修改'
@@ -106,7 +110,7 @@ export function SceneToolbar({
         <TemplateToolbarButtons
           activeCustomTemplate={activeCustomTemplate}
           onOpenSaveTemplateDialog={handleOpenSaveTemplateDialog}
-          onImport={(file) => void importTemplateFile(file)}
+          onImport={(file) => void importTemplateFileAction(file)}
         />
         <div className="export-control" aria-label="导出场景">
           <select

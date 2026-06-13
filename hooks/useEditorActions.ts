@@ -7,14 +7,12 @@ import { useClipboard } from './useClipboard'
 import { useAssetManager } from './useAssetManager'
 import { useEditorShortcuts } from './useEditorShortcuts'
 import { useSceneStore } from '@/stores/useSceneStore'
-import { useHistoryStore } from '@/stores/useHistoryStore'
 import { useCanvasStore } from '@/stores/useCanvasStore'
+import { changeSceneWithHistory, undoAction, redoAction } from '@/stores/actions'
 
 /**
  * 编辑器操作：scene actions + clipboard + asset + shortcuts。
  * 由 SceneEditor 调用，各子组件通过 Context 消费。
- *
- * canvasInteraction 来自 useCanvasInteraction，提供快捷键所需的 refs。
  */
 export function useEditorActions(canvasInteraction: {
   selectedElementRef: React.MutableRefObject<SceneElement | null>
@@ -27,18 +25,12 @@ export function useEditorActions(canvasInteraction: {
   const scene = useSceneStore((s) => s.scene)
   const selection = useSceneStore((s) => s.selection)
   const editingTextId = useSceneStore((s) => s.editingTextId)
-  const changeScene = useSceneStore((s) => s.changeScene)
   const setSelection = useSceneStore((s) => s.setSelection)
-  const markSceneEdited = useSceneStore((s) => s.markSceneEdited)
+  const setSceneFromStore = useSceneStore((s) => s.setScene)
 
   // ── Canvas Store ──
   const setStatus = useCanvasStore((s) => s.setStatus)
   const canvasSize = useCanvasStore((s) => s.canvasSize)
-
-  // ── History Store ──
-  const undo = useHistoryStore((s) => s.undo)
-  const redo = useHistoryStore((s) => s.redo)
-  const setSceneFromStore = useSceneStore((s) => s.setScene)
 
   // ── Computed ──
   const selectedElement = useMemo(() => {
@@ -57,14 +49,14 @@ export function useEditorActions(canvasInteraction: {
     addRectElement,
     addEllipseElement,
     deleteSelected,
-  } = useSceneActions({ scene, selection, changeScene, setSelection })
+  } = useSceneActions({ scene, selection, changeScene: changeSceneWithHistory, setSelection })
 
   // ── Asset manager ──
   const { handleAssetInput } = useAssetManager({
     setStatus,
     selectedElement,
     patchElement,
-    changeScene,
+    changeScene: changeSceneWithHistory,
     selection,
     setSelection,
   })
@@ -82,9 +74,9 @@ export function useEditorActions(canvasInteraction: {
     selectedElementRef: canvasInteraction.selectedElementRef,
     sceneElementsRef,
     selectedIds: selection.selectedIds,
-    changeScene,
+    changeScene: changeSceneWithHistory,
     setSelection,
-    markSceneEdited,
+    markSceneEdited: () => {}, // handled inside changeSceneWithHistory
     setStatus,
     canvasWidth: canvasSize.width,
     canvasHeight: canvasSize.height,
@@ -95,8 +87,8 @@ export function useEditorActions(canvasInteraction: {
     scene,
     selection,
     editingTextId,
-    undo,
-    redo,
+    undo: undoAction,
+    redo: redoAction,
     copySelectedElements,
     pasteCopiedElements,
     deleteSelected,
@@ -108,7 +100,7 @@ export function useEditorActions(canvasInteraction: {
     setGuides: canvasInteraction.setGuides,
     setSpacingGuides: canvasInteraction.setSpacingGuides,
     setScene: setSceneFromStore,
-    markSceneEdited,
+    markSceneEdited: () => {}, // handled inside changeSceneWithHistory
   })
 
   return {
