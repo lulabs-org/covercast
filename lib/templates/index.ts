@@ -1,4 +1,6 @@
-import type { SceneTemplate } from '../scene'
+import type { SceneTemplate } from '../domain/scene'
+import { cloneScene } from '../domain/scene'
+import type { Scene } from '../domain/scene'
 import { emptyScene } from './empty-scene'
 import { dualCourseScene } from './dual-course'
 import { soloInterviewScene } from './solo-interview'
@@ -53,3 +55,18 @@ export { soloInterviewScene } from './solo-interview'
 export { roundtableScene } from './roundtable'
 export { launchPosterScene } from './launch-poster'
 export { courseSprintScene } from './course-sprint'
+
+export function createDefaultScene(): Scene {
+  return createSceneFromTemplate(DEFAULT_TEMPLATE_ID)
+}
+
+export function createSceneFromTemplate(templateId: string): Scene {
+  const template =
+    BUILT_IN_TEMPLATES.find((item) => item.id === templateId) ?? BUILT_IN_TEMPLATES[0]
+
+  return cloneScene(template.scene)
+}
+
+export function createEmptyScene(): Scene {
+  return cloneScene(emptyScene)
+}
