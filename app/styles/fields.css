@@ -1,0 +1,119 @@
+.field,
+.color-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field span {
+  color: #39485f;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid #cfd8e8;
+  border-radius: 6px;
+  padding: 8px 9px;
+  color: #142033;
+  background: #ffffff;
+  outline: none;
+}
+
+.field textarea {
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(39, 100, 246, 0.14);
+}
+
+.field.field-error input {
+  border-color: var(--danger);
+}
+
+.field.field-error input:focus {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(217, 45, 32, 0.14);
+}
+
+.field.field-error .field-error-message {
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.checkbox-field {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkbox-field input {
+  width: 20px;
+  min-height: 20px;
+}
+
+.field-help {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.color-field > div {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 8px;
+}
+
+.color-field input[type='color'] {
+  padding: 3px;
+}
+
+.opacity-field > div {
+  display: grid;
+  grid-template-columns: 1fr 72px;
+  align-items: center;
+  gap: 8px;
+}
+
+.opacity-field input[type='range'] {
+  padding: 0;
+}
+
+.color-input-wrapper {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.color-input-wrapper input[type='color'] {
+  padding: 3px;
+}
+
+.color-input-wrapper input[type='text'] {
+  font-family: monospace;
+}
+
+.opacity-value {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}

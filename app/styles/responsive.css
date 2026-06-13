@@ -1,0 +1,78 @@
+@media (max-width: 1180px) {
+  .editor-grid {
+    flex-wrap: wrap;
+  }
+
+  .stage-panel {
+    order: 2;
+    flex: 1 1 100%;
+    min-width: 0;
+    border-right: 0;
+  }
+
+  .left-panel {
+    order: 1;
+    width: 260px !important;
+  }
+
+  .panel-resizer {
+    display: none;
+  }
+
+  .right-panel {
+    order: 3;
+    width: 100% !important;
+    border-top: 1px solid var(--panel-border);
+  }
+}
+
+@media (max-width: 820px) {
+  .editor-shell {
+    padding: 0;
+  }
+
+  .editor-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .toolbar-actions {
+    justify-content: flex-start;
+  }
+
+  .template-save-panel {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .editor-grid {
+    flex-direction: column;
+  }
+
+  .left-panel,
+  .right-panel,
+  .stage-panel {
+    width: 100% !important;
+    border-right: 0;
+    border-bottom: 1px solid var(--panel-border);
+  }
+
+  .panel-resizer {
+    display: none;
+  }
+
+  .stage-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .stage-header-tools {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .stage-viewport {
+    min-height: 640px;
+  }
+}

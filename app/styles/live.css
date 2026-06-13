@@ -1,0 +1,14 @@
+.live-shell {
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: transparent;
+}
+
+.live-canvas {
+  width: 100vw;
+  height: 100vh;
+  display: block;
+}
