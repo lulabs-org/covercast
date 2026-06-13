@@ -1,8 +1,10 @@
 'use client'
 
+import { useMemo } from 'react'
 import SceneCanvas from '../SceneCanvas'
 import { useEditor } from '../EditorContext'
 import { useEditorStore } from '@/stores/useEditorStore'
+import { computeVisibleGuides } from '@/lib/visible-guides'
 
 export function StagePanel() {
   const { resolveSrc, canvasInteraction } = useEditor()
@@ -35,11 +37,18 @@ export function StagePanel() {
   const resetCanvasZoom = useEditorStore((s) => s.resetCanvasZoom)
   const handleZoomSliderWheel = useEditorStore((s) => s.handleZoomSliderWheel)
   const handleStageWheel = useEditorStore((s) => s.handleStageWheel)
-  const visibleGuides = useEditorStore((s) => s.visibleGuides)
-  const visibleSpacingGuides = useEditorStore((s) => s.visibleSpacingGuides)
+  const guides = useEditorStore((s) => s.guides)
+  const spacingGuides = useEditorStore((s) => s.spacingGuides)
+  const guidesSelectedIds = useEditorStore((s) => s.guidesSelectedIds)
   const resizeLabel = useEditorStore((s) => s.resizeLabel)
   const drag = useEditorStore((s) => s.drag)
   const marquee = useEditorStore((s) => s.marquee)
+
+  // ── 派生数据：直接计算，不存入 store ──
+  const { visibleGuides, visibleSpacingGuides } = useMemo(
+    () => computeVisibleGuides(guides, spacingGuides, selectedIds, guidesSelectedIds),
+    [guides, spacingGuides, selectedIds, guidesSelectedIds],
+  )
 
   return (
     <section className="stage-panel" aria-label="Canvas preview">

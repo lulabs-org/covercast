@@ -15,6 +15,7 @@ import {
   saveLocalAsset,
   type LocalAssetMeta,
 } from './localAssetStorage'
+import { useEditorStore } from '@/stores/useEditorStore'
 
 export function createAssetManager({
   setStatus,
@@ -22,15 +23,18 @@ export function createAssetManager({
   patchElement,
   changeScene,
   selection,
-  setSelection,
 }: {
   setStatus: (status: string) => void
   selectedElement: SceneElement | null | undefined
   patchElement: (elementId: string, patch: Partial<SceneElement>) => void
   changeScene: (updater: (currentScene: Scene) => Scene, description?: string) => void
   selection: SelectionState
-  setSelection: React.Dispatch<React.SetStateAction<SelectionState>>
 }) {
+  // ── 直接从 store 获取 setter（消除双写） ──
+  const setSelection = (updater: SelectionState | ((prev: SelectionState) => SelectionState)) => {
+    useEditorStore.getState().setSelection(updater)
+  }
+
   async function uploadAsset(file: File, mode: 'add' | 'replace') {
     if (!isSupportedImageType(file)) {
       setStatus('素材上传失败，仅支持 PNG、JPG、WebP')

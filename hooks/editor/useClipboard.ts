@@ -5,7 +5,8 @@ import {
   type Scene,
   type SceneElement,
 } from '../../lib/scene'
-import { selectSingle, selectMultiple, type SelectionState } from '../../lib/selection'
+import { selectSingle, selectMultiple } from '../../lib/selection'
+import { useEditorStore } from '@/stores/useEditorStore'
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max)
@@ -59,7 +60,6 @@ type UseClipboardOptions = {
   sceneElementsRef: React.MutableRefObject<SceneElement[]>
   selectedIds: string[]
   changeScene: (updater: (currentScene: Scene) => Scene, description?: string) => void
-  setSelection: (updater: (prev: SelectionState) => SelectionState) => void
   markSceneEdited: () => void
   setStatus: (status: string) => void
   canvasWidth?: number
@@ -72,12 +72,14 @@ export function useClipboard(options: UseClipboardOptions) {
     sceneElementsRef,
     selectedIds,
     changeScene,
-    setSelection,
     markSceneEdited,
     setStatus,
     canvasWidth = DEFAULT_CANVAS_WIDTH,
     canvasHeight = DEFAULT_CANVAS_HEIGHT,
   } = options
+
+  // ── 直接从 store 获取 setter（消除双写） ──
+  const setSelection = useEditorStore((s) => s.setSelection)
 
   const elementClipboardRef = useRef<SceneElement | null>(null)
   const elementsClipboardRef = useRef<SceneElement[] | null>(null)

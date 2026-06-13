@@ -83,9 +83,6 @@ export function useDragManager({
   svgRef,
   pushPast,
   markSceneEdited,
-  setScene,
-  setSelection,
-  setEditingTextId,
   canvasWidth = DEFAULT_CANVAS_WIDTH,
   canvasHeight = DEFAULT_CANVAS_HEIGHT,
 }: {
@@ -100,12 +97,14 @@ export function useDragManager({
     timestamp: number
   }) => void
   markSceneEdited: () => void
-  setScene: React.Dispatch<React.SetStateAction<Scene>>
-  setSelection: React.Dispatch<React.SetStateAction<SelectionState>>
-  setEditingTextId: React.Dispatch<React.SetStateAction<string | null>>
   canvasWidth?: number
   canvasHeight?: number
 }) {
+  // ── 直接从 store 获取 setter（消除双写） ──
+  const setScene = useEditorStore((s) => s.setScene)
+  const setSelection = useEditorStore((s) => s.setSelection)
+  const setEditingTextId = useEditorStore((s) => s.setEditingTextId)
+
   // ── 交互状态直接读写 Zustand store（消除双写） ──
   const drag = useEditorStore((s) => s.drag)
 

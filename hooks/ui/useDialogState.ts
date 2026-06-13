@@ -12,8 +12,6 @@ import { useEditorStore } from '@/stores/useEditorStore'
 export function useDialogState() {
   // ── Editor Store ──
   const scene = useEditorStore((s) => s.scene)
-  const setScene = useEditorStore((s) => s.setScene)
-  const setSelection = useEditorStore((s) => s.setSelection)
   const setStatus = useEditorStore((s) => s.setStatus)
   const canvasSize = useEditorStore((s) => s.canvasSize)
   const presets = useEditorStore((s) => s.presets)
@@ -46,8 +44,6 @@ export function useDialogState() {
     presetOptions: createBlankCoverPresetOptions,
     templateOptions: createBlankCoverTemplateOptions,
   } = useCreateBlankCover({
-    setScene,
-    setSelection,
     setCanvasSize,
     setActiveTemplateId,
     setStatus,

@@ -40,7 +40,6 @@ type UseEditorShortcutsOptions = {
   elementClipboardRef: React.MutableRefObject<SceneElement | null>
   elementsClipboardRef: React.MutableRefObject<SceneElement[] | null>
   spatialIndexRef: React.MutableRefObject<SpatialIndex>
-  setScene: (updater: (currentScene: Scene) => Scene) => void
   markSceneEdited: () => void
 }
 
@@ -57,9 +56,11 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
     elementClipboardRef,
     elementsClipboardRef,
     spatialIndexRef,
-    setScene,
     markSceneEdited,
   } = options
+
+  // ── 直接从 store 获取 setter（消除双写） ──
+  const setScene = useEditorStore((s) => s.setScene)
 
   useEffect(() => {
     function handleEditorKeyDown(event: KeyboardEvent) {
@@ -229,7 +230,7 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
     markSceneEdited,
     elementClipboardRef,
     elementsClipboardRef,
-    setScene,
     spatialIndexRef,
+    setScene,
   ])
 }

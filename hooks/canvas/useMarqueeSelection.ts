@@ -34,16 +34,16 @@ export function useMarqueeSelection({
   sceneElementsRef,
   hitTestStrategy,
   editingTextId,
-  setSelection,
-  setEditingTextId,
 }: {
   svgRef: React.RefObject<SVGSVGElement | null>
   sceneElementsRef: React.MutableRefObject<SceneElement[]>
   hitTestStrategy: HitTestStrategy
   editingTextId: string | null
-  setSelection: React.Dispatch<React.SetStateAction<SelectionState>>
-  setEditingTextId: React.Dispatch<React.SetStateAction<string | null>>
 }) {
+  // ── 直接从 store 获取 setter（消除双写） ──
+  const setSelection = useEditorStore((s) => s.setSelection)
+  const setEditingTextId = useEditorStore((s) => s.setEditingTextId)
+
   // ── 交互状态直接读写 Zustand store（消除双写） ──
   const marquee = useEditorStore((s) => s.marquee)
 

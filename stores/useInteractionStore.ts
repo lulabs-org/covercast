@@ -48,12 +48,6 @@ export type InteractionSlice = {
   guidesSelectedIds: string[]
   setGuidesSelectedIds: (ids: string[]) => void
 
-  // Visible (filtered) guides
-  visibleGuides: GuideLine[]
-  setVisibleGuides: (guides: GuideLine[]) => void
-  visibleSpacingGuides: MeasurementGuide[]
-  setVisibleSpacingGuides: (guides: MeasurementGuide[]) => void
-
   // Marquee
   marquee: MarqueeState
   setMarquee: (updater: MarqueeState | ((prev: MarqueeState) => MarqueeState)) => void
@@ -73,11 +67,6 @@ export const createInteractionSlice: StateCreator<EditorStore, [], [], Interacti
   setResizeLabel: (resizeLabel) => set({ resizeLabel }),
   guidesSelectedIds: [],
   setGuidesSelectedIds: (ids) => set({ guidesSelectedIds: ids }),
-
-  visibleGuides: [],
-  setVisibleGuides: (visibleGuides) => set({ visibleGuides }),
-  visibleSpacingGuides: [],
-  setVisibleSpacingGuides: (visibleSpacingGuides) => set({ visibleSpacingGuides }),
 
   marquee: createMarqueeState(),
   setMarquee: (updater) => {

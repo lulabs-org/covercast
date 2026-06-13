@@ -1,18 +1,19 @@
 import { useEffect } from 'react'
 import { BUILT_IN_TEMPLATES, type Scene } from '../../lib/scene'
-import { selectSingle, type SelectionState } from '../../lib/selection'
+import { selectSingle } from '../../lib/selection'
+import { useEditorStore } from '@/stores/useEditorStore'
 
 export function useSceneLoader({
-  setScene,
   setStatus,
   setActiveTemplateId,
-  setSelection,
 }: {
-  setScene: React.Dispatch<React.SetStateAction<Scene>>
   setStatus: (status: string) => void
   setActiveTemplateId: (id: string) => void
-  setSelection: React.Dispatch<React.SetStateAction<SelectionState>>
 }) {
+  // ── 直接从 store 获取 setter（消除双写） ──
+  const setScene = useEditorStore((s) => s.setScene)
+  const setSelection = useEditorStore((s) => s.setSelection)
+
   useEffect(() => {
     let active = true
 
@@ -48,5 +49,5 @@ export function useSceneLoader({
     return () => {
       active = false
     }
-  }, [setScene, setStatus, setActiveTemplateId, setSelection])
+  }, [setScene, setSelection, setStatus, setActiveTemplateId])
 }

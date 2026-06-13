@@ -44,12 +44,10 @@ export function EditorProvider({
   const { resolveSrc } = useLocalAssets(scene)
 
   // ── Scene loader ──
-  const setScene = useEditorStore((s) => s.setScene)
   const setStatus = useEditorStore((s) => s.setStatus)
   const setActiveTemplateId = useEditorStore((s) => s.setActiveTemplateId)
-  const setSelection = useEditorStore((s) => s.setSelection)
 
-  useSceneLoader({ setScene, setStatus, setActiveTemplateId, setSelection })
+  useSceneLoader({ setStatus, setActiveTemplateId })
 
   // ── Canvas zoom fit-width bridge (ResizeObserver) ──
   const canvasSize = useEditorStore((s) => s.canvasSize)

@@ -6,9 +6,10 @@ import {
   BUILT_IN_TEMPLATES,
   type Scene,
 } from '../../lib/scene'
-import { selectSingle, createSelectionState, type SelectionState } from '../../lib/selection'
+import { selectSingle, createSelectionState } from '../../lib/selection'
 import type { CanvasSizePreset, CanvasSize } from '../../stores/useCanvasStore'
 import type { CustomSceneTemplate } from '../../stores/useTemplateStore'
+import { useEditorStore } from '@/stores/useEditorStore'
 
 export type BlankCoverConfig = {
   coverName: string
@@ -27,8 +28,6 @@ const DEFAULT_CONFIG: BlankCoverConfig = {
 }
 
 type UseCreateBlankCoverOptions = {
-  setScene: (scene: Scene) => void
-  setSelection: (value: SelectionState | ((prev: SelectionState) => SelectionState)) => void
   setCanvasSize: (size: CanvasSize) => void
   setActiveTemplateId: (id: string) => void
   setStatus: (status: string) => void
@@ -38,15 +37,12 @@ type UseCreateBlankCoverOptions = {
 }
 
 export function useCreateBlankCover(options: UseCreateBlankCoverOptions) {
-  const {
-    setScene,
-    setSelection,
-    setCanvasSize,
-    setStatus,
-    saveCustomTemplate,
-    canvasSizePresets,
-    customTemplates,
-  } = options
+  const { setCanvasSize, setStatus, saveCustomTemplate, canvasSizePresets, customTemplates } =
+    options
+
+  // ── 直接从 store 获取 setter（消除双写） ──
+  const setScene = useEditorStore((s) => s.setScene)
+  const setSelection = useEditorStore((s) => s.setSelection)
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [config, setConfig] = useState<BlankCoverConfig>(DEFAULT_CONFIG)

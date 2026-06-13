@@ -21,8 +21,6 @@ export function useEditorActions(canvasInteraction: {
   const scene = useEditorStore((s) => s.scene)
   const selection = useEditorStore((s) => s.selection)
   const editingTextId = useEditorStore((s) => s.editingTextId)
-  const setSelection = useEditorStore((s) => s.setSelection)
-  const setSceneFromStore = useEditorStore((s) => s.setScene)
   const changeSceneWithHistory = useEditorStore((s) => s.changeSceneWithHistory)
   const undoAction = useEditorStore((s) => s.undoAction)
   const redoAction = useEditorStore((s) => s.redoAction)
@@ -46,7 +44,7 @@ export function useEditorActions(canvasInteraction: {
     addRectElement,
     addEllipseElement,
     deleteSelected,
-  } = createSceneActions({ scene, selection, changeScene: changeSceneWithHistory, setSelection })
+  } = createSceneActions({ scene, selection, changeScene: changeSceneWithHistory })
 
   // ── Asset manager ──
   const { handleAssetInput } = createAssetManager({
@@ -55,7 +53,6 @@ export function useEditorActions(canvasInteraction: {
     patchElement,
     changeScene: changeSceneWithHistory,
     selection,
-    setSelection,
   })
 
   // ── Clipboard ──
@@ -64,15 +61,17 @@ export function useEditorActions(canvasInteraction: {
     sceneElementsRef.current = scene.elements
   }, [scene.elements])
 
-  const elementClipboardRef = useRef<SceneElement | null>(null)
-  const elementsClipboardRef = useRef<SceneElement[] | null>(null)
-
-  const { canPasteElement, copySelectedElements, pasteCopiedElements } = useClipboard({
+  const {
+    canPasteElement,
+    copySelectedElements,
+    pasteCopiedElements,
+    elementClipboardRef,
+    elementsClipboardRef,
+  } = useClipboard({
     selectedElementRef: canvasInteraction.selectedElementRef,
     sceneElementsRef,
     selectedIds: selection.selectedIds,
     changeScene: changeSceneWithHistory,
-    setSelection,
     markSceneEdited: () => {}, // handled inside changeSceneWithHistory
     setStatus,
     canvasWidth: canvasSize.width,
@@ -93,7 +92,6 @@ export function useEditorActions(canvasInteraction: {
     elementClipboardRef,
     elementsClipboardRef,
     spatialIndexRef: canvasInteraction.spatialIndexRef,
-    setScene: setSceneFromStore,
     markSceneEdited: () => {}, // handled inside changeSceneWithHistory
   })
 

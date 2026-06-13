@@ -5,7 +5,6 @@ import { type SceneElement } from '@/lib/scene'
 import { type HitTestStrategy } from '@/lib/marquee'
 import { useDragManager } from './useDragManager'
 import { useMarqueeSelection } from './useMarqueeSelection'
-import { computeVisibleGuides } from '@/lib/visible-guides'
 import { useEditorStore } from '@/stores/useEditorStore'
 
 /**
@@ -17,9 +16,6 @@ export function useCanvasInteraction() {
   const scene = useEditorStore((s) => s.scene)
   const selection = useEditorStore((s) => s.selection)
   const editingTextId = useEditorStore((s) => s.editingTextId)
-  const setScene = useEditorStore((s) => s.setScene)
-  const setSelection = useEditorStore((s) => s.setSelection)
-  const setEditingTextId = useEditorStore((s) => s.setEditingTextId)
   const pushPast = useEditorStore((s) => s.pushPast)
   const markSceneEdited = useEditorStore((s) => s.markSceneEdited)
   const canvasSize = useEditorStore((s) => s.canvasSize)
@@ -51,8 +47,6 @@ export function useCanvasInteraction() {
     sceneElementsRef,
     hitTestStrategy,
     editingTextId,
-    setSelection,
-    setEditingTextId,
   })
 
   // ── Drag manager ──
@@ -69,37 +63,16 @@ export function useCanvasInteraction() {
     svgRef,
     pushPast,
     markSceneEdited,
-    setScene,
-    setSelection,
-    setEditingTextId,
     canvasWidth: canvasSize.width,
     canvasHeight: canvasSize.height,
   })
-
-  // ── Visible guides（从 store 读取 guides，计算后写回 store） ──
-  const guides = useEditorStore((s) => s.guides)
-  const spacingGuides = useEditorStore((s) => s.spacingGuides)
-  const guidesSelectedIds = useEditorStore((s) => s.guidesSelectedIds)
-
-  const { visibleGuides, visibleSpacingGuides } = computeVisibleGuides(
-    guides,
-    spacingGuides,
-    selection.selectedIds,
-    guidesSelectedIds,
-  )
-
-  // 将计算后的 visible guides 同步到 store（这是派生数据，不是双写）
-  useEffect(() => {
-    useEditorStore.getState().setVisibleGuides(visibleGuides)
-    useEditorStore.getState().setVisibleSpacingGuides(visibleSpacingGuides)
-  }, [visibleGuides, visibleSpacingGuides])
 
   // ── Handlers ──
   function handleTextElementDoubleClick(elementId: string) {
     const element = scene.elements.find((item) => item.id === elementId)
     if (!element || element.type !== 'text') return
-    setSelection({ selectedIds: [elementId] })
-    setEditingTextId(elementId)
+    useEditorStore.getState().setSelection({ selectedIds: [elementId] })
+    useEditorStore.getState().setEditingTextId(elementId)
   }
 
   return {
