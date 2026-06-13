@@ -1,4 +1,4 @@
-import { saveAssetFile } from '../../../lib/storage'
+import { saveAssetFile } from '@/lib/storage/server-storage'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

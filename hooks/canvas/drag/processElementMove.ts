@@ -1,10 +1,10 @@
-import type { Scene, SceneElement } from '@/lib/scene'
+import type { Scene, SceneElement } from '@/lib/domain/scene'
 import {
   computeSnapOptimized,
   computeSpacingGuidesOptimized,
   type SnapState,
-} from '@/lib/smart-guide'
-import type { SpatialIndex } from '@/lib/spatial-index'
+} from '@/lib/algorithms'
+import type { SpatialIndex } from '@/lib/algorithms/spatial-index'
 import type { ProcessResult, MoveDelta } from './utils'
 import { clamp } from './utils'
 

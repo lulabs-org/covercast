@@ -1,5 +1,5 @@
-import { DEFAULT_FONT_FAMILY } from '../fonts'
-import type { Scene } from '../scene'
+import { DEFAULT_FONT_FAMILY } from '../domain/fonts'
+import type { Scene } from '../domain/scene'
 
 export const roundtableScene: Scene = {
   version: 1,

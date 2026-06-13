@@ -1,12 +1,7 @@
 import { useState, useCallback } from 'react'
-import {
-  createEmptyScene,
-  createSceneFromTemplate,
-  cloneScene,
-  BUILT_IN_TEMPLATES,
-  type Scene,
-} from '../../lib/scene'
-import { selectSingle, createSelectionState } from '../../lib/selection'
+import { cloneScene, type Scene } from '@/lib/domain/scene'
+import { createEmptyScene, createSceneFromTemplate, BUILT_IN_TEMPLATES } from '@/lib/templates'
+import { selectSingle, createSelectionState } from '@/lib/domain/selection'
 import type { CanvasSizePreset, CanvasSize } from '../../stores/useCanvasStore'
 import type { CustomSceneTemplate } from '../../stores/useTemplateStore'
 import { useEditorStore } from '@/stores/useEditorStore'

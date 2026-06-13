@@ -1,6 +1,7 @@
 import { StateCreator } from 'zustand'
-import { createDefaultScene, cloneScene, type Scene } from '../lib/scene'
-import { createSelectionState, selectSingle, type SelectionState } from '../lib/selection'
+import { cloneScene, type Scene } from '@/lib/domain/scene'
+import { createDefaultScene } from '@/lib/templates'
+import { createSelectionState, selectSingle, type SelectionState } from '@/lib/domain/selection'
 import type { EditorStore } from './useEditorStore'
 
 export type SceneSlice = {

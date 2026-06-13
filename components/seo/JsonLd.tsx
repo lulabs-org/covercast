@@ -3,7 +3,7 @@
  * 遵循架构要求：独立组件，UI与数据分离
  */
 
-import { JSON_LD_CONFIG, SITE_CONFIG } from '@/lib/seo-config'
+import { JSON_LD_CONFIG, SITE_CONFIG } from '@/lib/config/seo'
 
 interface JsonLdProps {
   type: 'organization' | 'softwareApplication' | 'webPage' | 'faq' | 'howTo'

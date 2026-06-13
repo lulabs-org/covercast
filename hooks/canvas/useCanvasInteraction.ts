@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { type SceneElement } from '@/lib/scene'
-import { type HitTestStrategy } from '@/lib/marquee'
+import { type SceneElement } from '@/lib/domain/scene'
+import { type HitTestStrategy } from '@/lib/algorithms/marquee'
 import { useDragManager } from './useDragManager'
 import { useMarqueeSelection } from './useMarqueeSelection'
 import { useEditorStore } from '@/stores/useEditorStore'

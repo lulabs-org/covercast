@@ -1,4 +1,4 @@
-import { type ImageElement } from '@/lib/scene'
+import { type ImageElement } from '@/lib/domain/scene'
 
 export function ImageElementView({
   element,

@@ -1,5 +1,5 @@
 import { StateCreator } from 'zustand'
-import { cloneScene, type Scene } from '../lib/scene'
+import { cloneScene, type Scene } from '@/lib/domain/scene'
 import type { EditorStore } from './useEditorStore'
 
 const MAX_HISTORY_SIZE = 50

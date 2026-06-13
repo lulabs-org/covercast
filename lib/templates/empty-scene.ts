@@ -1,4 +1,4 @@
-import type { Scene } from '../scene'
+import type { Scene } from '../domain/scene'
 
 export const emptyScene: Scene = {
   version: 1,

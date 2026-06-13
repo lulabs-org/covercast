@@ -4,8 +4,8 @@ import {
   DEFAULT_CANVAS_HEIGHT,
   type Scene,
   type SceneElement,
-} from '../../lib/scene'
-import { selectSingle, selectMultiple } from '../../lib/selection'
+} from '@/lib/domain/scene'
+import { selectSingle, selectMultiple } from '@/lib/domain/selection'
 import { useEditorStore } from '@/stores/useEditorStore'
 
 function clamp(value: number, min: number, max: number) {

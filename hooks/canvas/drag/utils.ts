@@ -1,6 +1,6 @@
-import { isTextElement, type SceneElement } from '@/lib/scene'
-import type { GuideLine, MeasurementGuide, ResizeLabel } from '@/lib/smart-guide'
-import type { Scene } from '@/lib/scene'
+import { isTextElement, type SceneElement } from '@/lib/domain/scene'
+import type { GuideLine, MeasurementGuide, ResizeLabel } from '@/lib/algorithms'
+import type { Scene } from '@/lib/domain/scene'
 
 export function getSvgPoint(svg: SVGSVGElement, clientX: number, clientY: number) {
   const point = svg.createSVGPoint()

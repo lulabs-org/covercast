@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import type { FontOption } from '../../lib/fonts'
+import type { FontOption } from '@/lib/domain/fonts'
 import {
   restoreLocalFonts,
   saveLocalFont,
@@ -9,7 +9,7 @@ import {
   readFileAsArrayBuffer,
   getFontMimeType,
   type LocalFontMeta,
-} from '../../lib/localFontStorage'
+} from '@/lib/storage/local-font-storage'
 
 /** 将 LocalFontMeta 转为 FontOption */
 function metaToOption(meta: LocalFontMeta): FontOption {

@@ -1,12 +1,7 @@
 import { StateCreator } from 'zustand'
-import {
-  BUILT_IN_TEMPLATES,
-  DEFAULT_TEMPLATE_ID,
-  cloneScene,
-  createDefaultScene,
-  type Scene,
-} from '../lib/scene'
-import { selectSingle } from '../lib/selection'
+import { cloneScene, type Scene } from '@/lib/domain/scene'
+import { BUILT_IN_TEMPLATES, DEFAULT_TEMPLATE_ID, createDefaultScene } from '@/lib/templates'
+import { selectSingle } from '@/lib/domain/selection'
 import type { EditorStore } from './useEditorStore'
 
 const CUSTOM_TEMPLATE_STORAGE_KEY = 'covercast.customTemplates.v1'

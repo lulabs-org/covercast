@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import SceneCanvas from '../SceneCanvas'
 import { useEditor } from '../EditorContext'
 import { useEditorStore } from '@/stores/useEditorStore'
-import { computeVisibleGuides } from '@/lib/visible-guides'
+import { computeVisibleGuides } from '@/lib/algorithms/visible-guides'
 
 export function StagePanel() {
   const { resolveSrc, canvasInteraction } = useEditor()

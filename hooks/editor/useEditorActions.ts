@@ -1,13 +1,13 @@
 'use client'
 
 import { useEffect, useMemo, useRef } from 'react'
-import { type SceneElement } from '@/lib/scene'
-import { createSceneActions } from '@/lib/scene-actions'
-import { createAssetManager } from '@/lib/asset-manager'
+import { type SceneElement } from '@/lib/domain/scene'
+import { createSceneActions } from '@/lib/actions/scene-actions'
+import { createAssetManager } from '@/lib/actions/asset-manager'
 import { useClipboard } from './useClipboard'
 import { useEditorShortcuts } from './useEditorShortcuts'
 import { useEditorStore } from '@/stores/useEditorStore'
-import type { SpatialIndex } from '@/lib/spatial-index'
+import type { SpatialIndex } from '@/lib/algorithms/spatial-index'
 
 /**
  * 编辑器操作：scene actions + clipboard + asset + shortcuts。

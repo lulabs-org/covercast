@@ -1,7 +1,8 @@
 import { randomUUID } from 'crypto'
 import { mkdir, readFile, readdir, stat, unlink, writeFile } from 'fs/promises'
 import path from 'path'
-import { createDefaultScene, type Scene } from '../scene'
+import { type Scene } from '../domain/scene'
+import { createDefaultScene } from '../templates'
 
 const DATA_DIR = path.join(process.cwd(), '.covercast')
 const ASSETS_DIR = path.join(DATA_DIR, 'assets')

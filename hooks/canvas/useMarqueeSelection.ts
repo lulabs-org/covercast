@@ -10,9 +10,9 @@ import {
   startMarquee,
   updateMarquee,
   type HitTestStrategy,
-} from '../../lib/marquee'
-import { clearSelection, selectMultiple, type SelectionState } from '../../lib/selection'
-import { type SceneElement } from '../../lib/scene'
+} from '@/lib/algorithms/marquee'
+import { clearSelection, selectMultiple, type SelectionState } from '@/lib/domain/selection'
+import { type SceneElement } from '@/lib/domain/scene'
 import { useEditorStore } from '@/stores/useEditorStore'
 
 function getSvgPoint(svg: SVGSVGElement, clientX: number, clientY: number) {

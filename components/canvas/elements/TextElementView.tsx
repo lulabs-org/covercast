@@ -1,5 +1,5 @@
-import { type TextElement } from '@/lib/scene'
-import { textAnchorForAlign, textX } from '@/lib/scene-svg'
+import { type TextElement } from '@/lib/domain/scene'
+import { textAnchorForAlign, textX } from '@/lib/rendering/scene-helpers'
 
 export function TextElementView({
   element,

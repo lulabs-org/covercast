@@ -1,21 +1,21 @@
 'use client'
 
 import { type PointerEvent as ReactPointerEvent, useRef, useEffect, useCallback } from 'react'
-import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH, type Scene } from '../../lib/scene'
+import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH, type Scene } from '@/lib/domain/scene'
 import {
   createResizeSnapState,
   createSnapState,
   type ResizeSnapState,
   type SnapState,
-} from '../../lib/smart-guide'
-import { SpatialIndex, buildSpatialIndex } from '../../lib/spatial-index'
+} from '@/lib/algorithms'
+import { SpatialIndex, buildSpatialIndex } from '@/lib/algorithms/spatial-index'
 import {
   handleElementClick,
   isSelected,
   selectSingle,
   type SelectionState,
-} from '../../lib/selection'
-import { createGroupResizeState, type ResizeHandleType } from '../../lib/group-drag'
+} from '@/lib/domain/selection'
+import { createGroupResizeState, type ResizeHandleType } from '@/lib/algorithms/group-drag'
 import { useEditorStore } from '@/stores/useEditorStore'
 import { getSvgPoint } from './drag/utils'
 import { processElementMove, type SingleMoveDragState } from './drag/processElementMove'

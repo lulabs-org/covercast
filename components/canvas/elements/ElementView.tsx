@@ -1,5 +1,5 @@
 import { type PointerEvent } from 'react'
-import { type SceneElement } from '@/lib/scene'
+import { type SceneElement } from '@/lib/domain/scene'
 import { ShapeElementView } from './ShapeElementView'
 import { TextElementView } from './TextElementView'
 import { ImageElementView } from './ImageElementView'

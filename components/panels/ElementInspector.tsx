@@ -12,7 +12,7 @@ import {
   type ShapeFillMode,
   type TextAlign,
   type TextElement,
-} from '@/lib/scene'
+} from '@/lib/domain/scene'
 import { FontFamilyField } from '../FontFamilyField'
 import type { useLocalFonts } from '@/hooks/editor/useLocalFonts'
 

@@ -1,4 +1,4 @@
-import type { GuideLine } from '@/lib/smart-guide'
+import type { GuideLine } from '@/lib/algorithms'
 
 type ArrowCapLine = {
   x1: number

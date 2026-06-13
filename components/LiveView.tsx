@@ -1,8 +1,13 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { createDefaultScene, isImageElement, type Scene } from '@/lib/scene'
-import { isLocalAssetSrc, parseLocalAssetId, getLocalAssetBlobUrl } from '@/lib/localAssetStorage'
+import { isImageElement, type Scene } from '@/lib/domain/scene'
+import { createDefaultScene } from '@/lib/templates'
+import {
+  isLocalAssetSrc,
+  parseLocalAssetId,
+  getLocalAssetBlobUrl,
+} from '@/lib/storage/local-asset-storage'
 import SceneCanvas from './SceneCanvas'
 
 type LiveViewProps = {

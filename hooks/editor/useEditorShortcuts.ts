@@ -1,13 +1,13 @@
 import { useEffect } from 'react'
-import { type Scene, type SceneElement } from '../../lib/scene'
+import { type Scene, type SceneElement } from '@/lib/domain/scene'
 import {
   computeGuidesOptimized,
   computeSpacingGuidesOptimized,
   type GuideContext,
-} from '../../lib/smart-guide'
-import { SpatialIndex, buildSpatialIndex } from '../../lib/spatial-index'
-import { computeBoundingBox } from '../../lib/group-drag'
-import { type SelectionState } from '../../lib/selection'
+} from '@/lib/algorithms'
+import { SpatialIndex, buildSpatialIndex } from '@/lib/algorithms/spatial-index'
+import { computeBoundingBox } from '@/lib/algorithms/group-drag'
+import { type SelectionState } from '@/lib/domain/selection'
 import { useEditorStore } from '@/stores/useEditorStore'
 
 function isCopyPasteModifier(event: KeyboardEvent) {

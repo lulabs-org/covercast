@@ -7,7 +7,7 @@ import { SourcesPanel } from '../../panels/SourcesPanel'
 import { TemplatePanel } from '../../panels/TemplatePanel'
 import { CanvasSizeSelector } from '../../controls/CanvasSizeSelector'
 import { useEditorStore } from '@/stores/useEditorStore'
-import { BUILT_IN_TEMPLATES } from '@/lib/scene'
+import { BUILT_IN_TEMPLATES } from '@/lib/templates'
 
 interface LeftSidebarProps {
   leftPanelRef: React.RefObject<HTMLDivElement | null>

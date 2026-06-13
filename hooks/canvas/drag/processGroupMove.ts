@@ -1,11 +1,11 @@
-import type { Scene, SceneElement } from '@/lib/scene'
+import type { Scene, SceneElement } from '@/lib/domain/scene'
 import {
   computeSnapOptimized,
   computeSpacingGuidesOptimized,
   type SnapState,
-} from '@/lib/smart-guide'
-import { computeBoundingBox } from '@/lib/group-drag'
-import type { SpatialIndex } from '@/lib/spatial-index'
+} from '@/lib/algorithms'
+import { computeBoundingBox } from '@/lib/algorithms/group-drag'
+import type { SpatialIndex } from '@/lib/algorithms/spatial-index'
 import type { ProcessResult, MoveDelta } from './utils'
 import { clamp } from './utils'
 

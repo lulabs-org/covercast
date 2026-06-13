@@ -1,7 +1,7 @@
 'use client'
 
 import { type ReactNode } from 'react'
-import { BUILT_IN_TEMPLATES } from '@/lib/scene'
+import { BUILT_IN_TEMPLATES } from '@/lib/templates'
 import { type CustomSceneTemplate } from '@/stores/useTemplateStore'
 import { CustomTemplateCard } from './CustomTemplateCard'
 

@@ -1,10 +1,10 @@
 import { StateCreator } from 'zustand'
-import type { GuideLine, MeasurementGuide, ResizeLabel } from '../lib/smart-guide'
-import type { MarqueeState } from '../lib/marquee'
-import { createMarqueeState } from '../lib/marquee'
-import type { ResizeHandleType } from '../lib/group-drag'
-import type { SceneElement } from '../lib/scene'
-import type { BoundingBox } from '../lib/group-drag'
+import type { GuideLine, MeasurementGuide, ResizeLabel } from '@/lib/algorithms'
+import type { MarqueeState } from '@/lib/algorithms/marquee'
+import { createMarqueeState } from '@/lib/algorithms/marquee'
+import type { ResizeHandleType } from '@/lib/algorithms/group-drag'
+import type { SceneElement } from '@/lib/domain/scene'
+import type { BoundingBox } from '@/lib/algorithms/group-drag'
 import type { EditorStore } from './useEditorStore'
 
 type SingleDragState = {
