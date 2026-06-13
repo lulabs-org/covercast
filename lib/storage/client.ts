@@ -1,4 +1,7 @@
-export * from './server-storage'
+/**
+ * 客户端存储 — 仅可在 Client Components / Hooks 中导入。
+ * 使用 IndexedDB / localStorage / File API，服务端导入会导致运行时错误。
+ */
 export {
   isLocalAssetSrc,
   parseLocalAssetId,

@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useRef } from 'react'
 import { type SceneElement } from '@/lib/domain/scene'
-import { createSceneActions } from '@/lib/actions/scene-actions'
-import { createAssetManager } from '@/lib/actions/asset-manager'
+import { createSceneActions } from '@/lib/operations/scene-actions'
+import { createAssetManager } from '@/lib/operations/asset-manager'
 import { useClipboard } from './useClipboard'
 import { useEditorShortcuts } from './useEditorShortcuts'
 import { useEditorStore } from '@/stores/useEditorStore'
