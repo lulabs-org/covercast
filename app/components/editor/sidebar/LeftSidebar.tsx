@@ -6,9 +6,9 @@ import { LayerPanel } from '../../panels/LayerPanel'
 import { SourcesPanel } from '../../panels/SourcesPanel'
 import { TemplatePanel } from '../../panels/TemplatePanel'
 import { CanvasSizeSelector } from '../../controls/CanvasSizeSelector'
-import { useSceneStore } from '../../../stores/useSceneStore'
-import { useCanvasStore } from '../../../stores/useCanvasStore'
-import { useTemplateStore } from '../../../stores/useTemplateStore'
+import { useSceneStore } from '../../../../stores/useSceneStore'
+import { useCanvasStore } from '../../../../stores/useCanvasStore'
+import { useTemplateStore } from '../../../../stores/useTemplateStore'
 
 export function LeftSidebar() {
   const { leftPanelRef, panelWidths, toggleElementHidden, toggleElementLocked, moveElementLayer } =

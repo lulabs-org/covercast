@@ -1,5 +1,5 @@
-import { type ShapeElement, type SceneElement } from '../../../lib/scene'
-import { resolvePaint } from '../../../lib/scene-svg'
+import { type ShapeElement, type SceneElement } from '../../../../lib/scene'
+import { resolvePaint } from '../../../../lib/scene-svg'
 
 export function ShapeElementView({
   element,

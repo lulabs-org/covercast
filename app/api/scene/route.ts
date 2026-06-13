@@ -5,8 +5,8 @@ import {
   writeSceneBySlot,
   deleteSceneSlot,
   listAllSlots,
-} from '../../lib/storage'
-import type { Scene } from '../../lib/scene'
+} from '../../../lib/storage'
+import type { Scene } from '../../../lib/scene'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

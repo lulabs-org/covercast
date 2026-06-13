@@ -12,9 +12,9 @@ import {
   type ShapeFillMode,
   type TextAlign,
   type TextElement,
-} from '../../lib/scene'
+} from '../../../lib/scene'
 import { FontFamilyField } from '../FontFamilyField'
-import type { useLocalFonts } from '../../hooks/useLocalFonts'
+import type { useLocalFonts } from '../../../hooks/useLocalFonts'
 
 type LocalFontManager = ReturnType<typeof useLocalFonts>
 

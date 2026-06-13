@@ -2,9 +2,9 @@
 
 import SceneCanvas from '../SceneCanvas'
 import { useEditor } from '../EditorContext'
-import { useSceneStore } from '../../stores/useSceneStore'
-import { useCanvasStore } from '../../stores/useCanvasStore'
-import { useInteractionStore } from '../../stores/useInteractionStore'
+import { useSceneStore } from '../../../stores/useSceneStore'
+import { useCanvasStore } from '../../../stores/useCanvasStore'
+import { useInteractionStore } from '../../../stores/useInteractionStore'
 
 export function StagePanel() {
   const {

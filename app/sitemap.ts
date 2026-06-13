@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next'
-import { SITE_CONFIG, ROUTES } from './lib/seo-config'
+import { SITE_CONFIG, ROUTES } from '../lib/seo-config'
 
 /**
  * 动态生成sitemap.xml

@@ -1,6 +1,6 @@
 import { type PointerEvent } from 'react'
-import { type SceneElement } from '../../lib/scene'
-import { computeBoundingBox, formatDimension, type ResizeHandleType } from '../../lib/group-drag'
+import { type SceneElement } from '../../../lib/scene'
+import { computeBoundingBox, formatDimension, type ResizeHandleType } from '../../../lib/group-drag'
 
 export function GroupSelectionFrame({
   elements,

@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback, type ChangeEvent } from 'react'
-import { FONT_GROUPS, findFontOption, type FontOption } from '../lib/fonts'
-import { useFontLoader } from '../hooks/useFontLoader'
-import type { useLocalFonts } from '../hooks/useLocalFonts'
+import { FONT_GROUPS, findFontOption, type FontOption } from '../../lib/fonts'
+import { useFontLoader } from '../../hooks/useFontLoader'
+import type { useLocalFonts } from '../../hooks/useLocalFonts'
 
 // 扩展 FontFaceSet 类型声明
 declare global {
