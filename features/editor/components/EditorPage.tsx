@@ -1,21 +1,21 @@
 'use client'
 
-import { EditorProviders } from './editor/contexts'
-import { useEditorBootstrap } from './editor/contexts/EditorBootstrap'
-import { useEditorActions } from './editor/contexts/EditorActionContext'
-import { useEditorAsset } from './editor/contexts/EditorAssetContext'
-import { SaveTemplateDialog } from './dialogs/SaveTemplateDialog'
-import { SceneToolbar } from './editor/SceneToolbar'
-import { StagePanel } from './editor/StagePanel'
-import { LeftSidebar } from './editor/sidebar/LeftSidebar'
-import { RightSidebar } from './editor/sidebar/RightSidebar'
-import { CreateBlankCoverModal } from './panels/CreateBlankCoverModal'
+import { EditorProviders } from '@/components/editor/contexts'
+import { useEditorBootstrap } from '@/components/editor/contexts/EditorBootstrap'
+import { useEditorActions } from '@/components/editor/contexts/EditorActionContext'
+import { useEditorAsset } from '@/components/editor/contexts/EditorAssetContext'
+import { SaveTemplateDialog } from '@/components/dialogs/SaveTemplateDialog'
+import { SceneToolbar } from '@/components/editor/SceneToolbar'
+import { StagePanel } from '@/components/editor/StagePanel'
+import { LeftSidebar } from '@/components/editor/sidebar/LeftSidebar'
+import { RightSidebar } from '@/components/editor/sidebar/RightSidebar'
+import { CreateBlankCoverModal } from '@/components/panels/CreateBlankCoverModal'
 import { useScrollVisibility } from '@/hooks/ui/useScrollVisibility'
 import { usePanelResize } from '@/hooks/ui/usePanelResize'
 import { useDialogState } from '@/hooks/ui/useDialogState'
-import styles from './SceneEditor.module.css'
+import styles from '../styles/editor-page.module.css'
 
-export default function SceneEditor() {
+export default function EditorPage() {
   const { leftPanelRef, rightPanelRef, stageViewportRef } = useScrollVisibility()
   const { panelWidths, resizerLeftRef, resizerRightRef, handleMouseDown } = usePanelResize()
   const dialogState = useDialogState()
@@ -25,7 +25,7 @@ export default function SceneEditor() {
 
   return (
     <EditorProviders>
-      <SceneEditorInner
+      <EditorPageInner
         leftPanelRef={leftPanelRef}
         rightPanelRef={rightPanelRef}
         resizerLeftRef={resizerLeftRef}
@@ -38,7 +38,7 @@ export default function SceneEditor() {
   )
 }
 
-function SceneEditorInner({
+function EditorPageInner({
   leftPanelRef,
   rightPanelRef,
   resizerLeftRef,

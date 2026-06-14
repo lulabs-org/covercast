@@ -5,7 +5,7 @@ import { useEditorAsset } from '../contexts/EditorAssetContext'
 import { useEditorFont } from '../contexts/EditorFontContext'
 import { ElementInspector } from '../../panels/ElementInspector'
 import { useSceneStore } from '@/stores/useSceneStore'
-import styles from '../../SceneEditor.module.css'
+import styles from '@/features/editor/styles/editor-page.module.css'
 import ui from '@/styles/ui.module.css'
 
 interface RightSidebarProps {

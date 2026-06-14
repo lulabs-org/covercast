@@ -8,15 +8,15 @@ import {
   parseLocalAssetId,
   getLocalAssetBlobUrl,
 } from '@/lib/storage/local-asset-storage'
-import SceneCanvas from './SceneCanvas'
-import styles from './LiveView.module.css'
+import SceneCanvas from '@/components/SceneCanvas'
+import styles from '../styles/live-page.module.css'
 
-type LiveViewProps = {
+type LivePageProps = {
   templateId?: string
   slotId?: string
 }
 
-export default function LiveView({ templateId, slotId }: LiveViewProps) {
+export default function LivePage({ templateId, slotId }: LivePageProps) {
   const [scene, setScene] = useState<Scene>(() => createDefaultScene())
   const [blobUrlMap, setBlobUrlMap] = useState<Record<string, string>>({})
 

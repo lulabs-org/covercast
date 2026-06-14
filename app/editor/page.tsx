@@ -1,7 +1,7 @@
 // This file MUST remain a Server Component — do not add 'use client' here,
 // because we export `metadata` which only works in Server Components.
 import type { Metadata } from 'next'
-import SceneEditor from '@/components/SceneEditor'
+import EditorPage from '@/features/editor/components/EditorPage'
 import { PAGE_METADATA, SITE_CONFIG, OPEN_GRAPH, TWITTER_CARD } from '@/lib/config/seo'
 
 export const metadata: Metadata = {
@@ -24,6 +24,6 @@ export const metadata: Metadata = {
   },
 }
 
-export default function EditorPage() {
-  return <SceneEditor />
+export default function Page() {
+  return <EditorPage />
 }

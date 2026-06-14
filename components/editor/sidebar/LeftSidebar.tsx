@@ -11,7 +11,7 @@ import { useCanvasStore } from '@/stores/useCanvasStore'
 import { useTemplateStore } from '@/stores/useTemplateStore'
 import { changeSceneWithHistory, applyTemplateAction } from '@/stores/editor-actions'
 import { BUILT_IN_TEMPLATES } from '@/lib/templates'
-import styles from '../../SceneEditor.module.css'
+import styles from '@/features/editor/styles/editor-page.module.css'
 import ui from '@/styles/ui.module.css'
 
 interface LeftSidebarProps {

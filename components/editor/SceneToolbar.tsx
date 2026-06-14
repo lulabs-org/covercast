@@ -12,7 +12,7 @@ import {
   saveActiveCustomTemplateAction,
   importTemplateFileAction,
 } from '@/stores/editor-actions'
-import styles from '../SceneEditor.module.css'
+import styles from '@/features/editor/styles/editor-page.module.css'
 import ui from '@/styles/ui.module.css'
 
 interface SceneToolbarProps {

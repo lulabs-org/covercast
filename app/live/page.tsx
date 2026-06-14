@@ -1,7 +1,7 @@
 // This file MUST remain a Server Component — do not add 'use client' here,
 // because we export `metadata` which only works in Server Components.
 import type { Metadata } from 'next'
-import LiveView from '@/components/LiveView'
+import LivePage from '@/features/live/components/LivePage'
 import { PAGE_METADATA, SITE_CONFIG, OPEN_GRAPH, TWITTER_CARD } from '@/lib/config/seo'
 
 export const metadata: Metadata = {
@@ -24,11 +24,11 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function LivePage({
+export default async function Page({
   searchParams,
 }: {
   searchParams: Promise<{ t?: string; s?: string }>
 }) {
   const params = await searchParams
-  return <LiveView templateId={params.t} slotId={params.s} />
+  return <LivePage templateId={params.t} slotId={params.s} />
 }
