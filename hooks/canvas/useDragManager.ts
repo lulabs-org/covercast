@@ -16,7 +16,8 @@ import {
   type SelectionState,
 } from '@/lib/domain/selection'
 import { createGroupResizeState, type ResizeHandleType } from '@/lib/algorithms/group-drag'
-import { useEditorStore } from '@/stores/useEditorStore'
+import { useSceneStore } from '@/stores/useSceneStore'
+import { useInteractionStore } from '@/stores/useInteractionStore'
 import { getSvgPoint } from './drag/utils'
 import { processElementMove, type SingleMoveDragState } from './drag/processElementMove'
 import { processElementResize, type SingleResizeDragState } from './drag/processElementResize'
@@ -47,17 +48,17 @@ export function useDragManager({
   canvasWidth?: number
   canvasHeight?: number
 }) {
-  // ── Store setters（通过 hook selector 获取，闭包引用避免 getState） ──
-  const setScene = useEditorStore((s) => s.setScene)
-  const setSelection = useEditorStore((s) => s.setSelection)
-  const setEditingTextId = useEditorStore((s) => s.setEditingTextId)
-  const setDrag = useEditorStore((s) => s.setDrag)
-  const setGuides = useEditorStore((s) => s.setGuides)
-  const setSpacingGuides = useEditorStore((s) => s.setSpacingGuides)
-  const setResizeLabel = useEditorStore((s) => s.setResizeLabel)
+  // ── Store setters ──
+  const setScene = useSceneStore((s) => s.setScene)
+  const setSelection = useSceneStore((s) => s.setSelection)
+  const setEditingTextId = useSceneStore((s) => s.setEditingTextId)
+  const setDrag = useInteractionStore((s) => s.setDrag)
+  const setGuides = useInteractionStore((s) => s.setGuides)
+  const setSpacingGuides = useInteractionStore((s) => s.setSpacingGuides)
+  const setResizeLabel = useInteractionStore((s) => s.setResizeLabel)
 
   // ── 交互状态 ──
-  const drag = useEditorStore((s) => s.drag)
+  const drag = useInteractionStore((s) => s.drag)
 
   const snapStateRef = useRef<SnapState>(createSnapState())
   const resizeSnapStateRef = useRef<ResizeSnapState>(createResizeSnapState())

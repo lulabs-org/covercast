@@ -2,9 +2,9 @@ import { useState, useCallback } from 'react'
 import { cloneScene, type Scene } from '@/lib/domain/scene'
 import { createEmptyScene, createSceneFromTemplate, BUILT_IN_TEMPLATES } from '@/lib/templates'
 import { selectSingle, createSelectionState } from '@/lib/domain/selection'
-import type { CanvasSizePreset, CanvasSize } from '../../stores/useCanvasStore'
-import type { CustomSceneTemplate } from '../../stores/useTemplateStore'
-import { useEditorStore } from '@/stores/useEditorStore'
+import type { CanvasSize, CanvasSizePreset } from '@/stores/useCanvasStore'
+import type { CustomSceneTemplate } from '@/stores/useTemplateStore'
+import { useSceneStore } from '@/stores/useSceneStore'
 
 export type BlankCoverConfig = {
   coverName: string
@@ -35,9 +35,9 @@ export function useCreateBlankCover(options: UseCreateBlankCoverOptions) {
   const { setCanvasSize, setStatus, saveCustomTemplate, canvasSizePresets, customTemplates } =
     options
 
-  // ── 直接从 store 获取 setter（消除双写） ──
-  const setScene = useEditorStore((s) => s.setScene)
-  const setSelection = useEditorStore((s) => s.setSelection)
+  // ── 直接从 SceneStore 获取 setter ──
+  const setScene = useSceneStore((s) => s.setScene)
+  const setSelection = useSceneStore((s) => s.setSelection)
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [config, setConfig] = useState<BlankCoverConfig>(DEFAULT_CONFIG)

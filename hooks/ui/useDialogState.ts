@@ -3,27 +3,33 @@
 import { useCreateBlankCover } from './useCreateBlankCover'
 import { useSaveTemplateDialog } from './useSaveTemplateDialog'
 import { useExportScene } from './useExportScene'
-import { useEditorStore } from '@/stores/useEditorStore'
+import { useSceneStore } from '@/stores/useSceneStore'
+import { useCanvasStore } from '@/stores/useCanvasStore'
+import { useTemplateStore } from '@/stores/useTemplateStore'
+import {
+  saveCustomTemplateWithNameAction,
+  saveCustomTemplateWithSceneAction,
+  exportTemplateJsonAction,
+} from '@/stores/editor-actions'
 
 /**
  * 对话框/模态框状态：新建封面 + 保存模板 + 导出。
  * 仅由 SceneEditor 使用，不需要 Context 共享。
  */
 export function useDialogState() {
-  // ── Editor Store ──
-  const scene = useEditorStore((s) => s.scene)
-  const setStatus = useEditorStore((s) => s.setStatus)
-  const canvasSize = useEditorStore((s) => s.canvasSize)
-  const presets = useEditorStore((s) => s.presets)
-  const setCanvasSize = useEditorStore((s) => s.setCanvasSize)
-  const customTemplates = useEditorStore((s) => s.customTemplates)
-  const setActiveTemplateId = useEditorStore((s) => s.setActiveTemplateId)
-  const saveCustomTemplateWithNameAction = useEditorStore((s) => s.saveCustomTemplateWithNameAction)
-  const saveCustomTemplateWithSceneAction = useEditorStore(
-    (s) => s.saveCustomTemplateWithSceneAction,
-  )
-  const exportTemplateJsonAction = useEditorStore((s) => s.exportTemplateJsonAction)
-  const getActiveTemplate = useEditorStore((s) => s.getActiveTemplate)
+  // ── Scene Store ──
+  const scene = useSceneStore((s) => s.scene)
+
+  // ── Canvas Store ──
+  const setStatus = useCanvasStore((s) => s.setStatus)
+  const canvasSize = useCanvasStore((s) => s.canvasSize)
+  const presets = useCanvasStore((s) => s.presets)
+  const setCanvasSize = useCanvasStore((s) => s.setCanvasSize)
+
+  // ── Template Store ──
+  const customTemplates = useTemplateStore((s) => s.customTemplates)
+  const setActiveTemplateId = useTemplateStore((s) => s.setActiveTemplateId)
+  const getActiveTemplate = useTemplateStore((s) => s.getActiveTemplate)
 
   // ── Export ──
   const { exportScene } = useExportScene(

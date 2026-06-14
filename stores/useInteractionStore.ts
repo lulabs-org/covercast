@@ -1,11 +1,10 @@
-import { StateCreator } from 'zustand'
+import { create } from 'zustand'
 import type { GuideLine, MeasurementGuide, ResizeLabel } from '@/lib/algorithms'
 import type { MarqueeState } from '@/lib/algorithms/marquee'
 import { createMarqueeState } from '@/lib/algorithms/marquee'
 import type { ResizeHandleType } from '@/lib/algorithms/group-drag'
 import type { SceneElement } from '@/lib/domain/scene'
 import type { BoundingBox } from '@/lib/algorithms/group-drag'
-import type { EditorStore } from './useEditorStore'
 
 type SingleDragState = {
   id: string
@@ -53,9 +52,7 @@ export type InteractionSlice = {
   setMarquee: (updater: MarqueeState | ((prev: MarqueeState) => MarqueeState)) => void
 }
 
-export const createInteractionSlice: StateCreator<EditorStore, [], [], InteractionSlice> = (
-  set,
-) => ({
+export const useInteractionStore = create<InteractionSlice>()((set) => ({
   drag: null,
   setDrag: (drag) => set({ drag }),
 
@@ -76,4 +73,4 @@ export const createInteractionSlice: StateCreator<EditorStore, [], [], Interacti
       set({ marquee: updater })
     }
   },
-})
+}))

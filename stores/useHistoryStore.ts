@@ -1,6 +1,5 @@
-import { StateCreator } from 'zustand'
+import { create } from 'zustand'
 import { cloneScene, type Scene } from '@/lib/domain/scene'
-import type { EditorStore } from './useEditorStore'
 
 const MAX_HISTORY_SIZE = 50
 
@@ -14,18 +13,13 @@ export type HistoryEntry = {
 export type HistorySlice = {
   history: { past: HistoryEntry[]; future: HistoryEntry[] }
 
-  // Pure state actions
   pushPast: (entry: HistoryEntry) => void
   undoShift: () => HistoryEntry | null
   redoShift: () => HistoryEntry | null
   pushFuture: (entry: HistoryEntry) => void
-
-  // Cross-slice actions (from actions.ts)
-  undoAction: () => void
-  redoAction: () => void
 }
 
-export const createHistorySlice: StateCreator<EditorStore, [], [], HistorySlice> = (set, get) => ({
+export const useHistoryStore = create<HistorySlice>()((set, get) => ({
   history: { past: [], future: [] },
 
   pushPast: (entry) => {
@@ -71,44 +65,6 @@ export const createHistorySlice: StateCreator<EditorStore, [], [], HistorySlice>
       },
     }))
   },
+}))
 
-  undoAction: () => {
-    const previous = get().undoShift()
-    if (!previous) {
-      set({ status: '没有可撤销的操作' })
-      return
-    }
-    const { scene, selection } = get()
-    get().pushFuture({
-      scene: cloneScene(scene),
-      selectedIds: selection.selectedIds,
-      description: '当前状态',
-      timestamp: Date.now(),
-    })
-    set({
-      scene: previous.scene,
-      selection: { ...selection, selectedIds: previous.selectedIds },
-      status: `已撤销：${previous.description}`,
-    })
-  },
-
-  redoAction: () => {
-    const next = get().redoShift()
-    if (!next) {
-      set({ status: '没有可重做的操作' })
-      return
-    }
-    const { scene, selection } = get()
-    get().pushPast({
-      scene: cloneScene(scene),
-      selectedIds: selection.selectedIds,
-      description: '当前状态',
-      timestamp: Date.now(),
-    })
-    set({
-      scene: next.scene,
-      selection: { ...selection, selectedIds: next.selectedIds },
-      status: `已重做：${next.description}`,
-    })
-  },
-})
+export { cloneScene }

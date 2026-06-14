@@ -1,8 +1,10 @@
 'use client'
 
-import { useEditor } from '../../EditorContext'
+import { useEditorActions } from '../contexts/EditorActionContext'
+import { useEditorAsset } from '../contexts/EditorAssetContext'
+import { useEditorFont } from '../contexts/EditorFontContext'
 import { ElementInspector } from '../../panels/ElementInspector'
-import { useEditorStore } from '@/stores/useEditorStore'
+import { useSceneStore } from '@/stores/useSceneStore'
 import styles from '../../SceneEditor.module.css'
 import ui from '@/styles/ui.module.css'
 
@@ -18,13 +20,13 @@ export function RightSidebar({ rightPanelRef, rightPanelWidth }: RightSidebarPro
     pasteCopiedElements,
     canPasteElement,
     deleteSelected,
-    handleAssetInput,
-    localFontManager,
-  } = useEditor()
+  } = useEditorActions()
+  const { handleAssetInput } = useEditorAsset()
+  const localFontManager = useEditorFont()
 
-  // ── Editor Store ──
-  const scene = useEditorStore((s) => s.scene)
-  const selection = useEditorStore((s) => s.selection)
+  // ── Scene Store ──
+  const scene = useSceneStore((s) => s.scene)
+  const selection = useSceneStore((s) => s.selection)
 
   // ── Computed ──
   const selectedElement =
@@ -50,7 +52,7 @@ export function RightSidebar({ rightPanelRef, rightPanelWidth }: RightSidebarPro
           key={selectedElement.id}
           element={selectedElement}
           allElements={scene.elements}
-          onPatch={patchSelected}
+          onPatch={(patch) => patchSelected(selectedElement, patch)}
           onCopy={copySelectedElements}
           onPaste={pasteCopiedElements}
           canPaste={canPasteElement}

@@ -1,5 +1,4 @@
-import { StateCreator } from 'zustand'
-import type { EditorStore } from './useEditorStore'
+import { create } from 'zustand'
 
 export type CanvasSize = {
   width: number
@@ -75,7 +74,7 @@ const CANVAS_ZOOM_STEP = 0.1
 const CANVAS_PREVIEW_MAX_WIDTH = 560
 
 function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max)
+  return Math.min(Math.max(value, min, max))
 }
 
 function clampZoom(value: number) {
@@ -110,7 +109,7 @@ function saveCanvasSizeToStorage(size: CanvasSize): void {
   } catch {}
 }
 
-export const createCanvasSlice: StateCreator<EditorStore, [], [], CanvasSlice> = (set) => {
+export const useCanvasStore = create<CanvasSlice>()((set) => {
   const savedSize = typeof window !== 'undefined' ? loadSavedCanvasSize() : null
   const initialSize: CanvasSize = savedSize ?? {
     width: 941,
@@ -248,4 +247,4 @@ export const createCanvasSlice: StateCreator<EditorStore, [], [], CanvasSlice> =
       }))
     },
   }
-}
+})

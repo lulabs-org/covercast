@@ -2,7 +2,16 @@
 
 import { TemplateToolbarButtons } from '../panels/TemplatePanel'
 import { EXPORT_FORMAT_OPTIONS } from '@/hooks/ui/useExportScene'
-import { useEditorStore } from '@/stores/useEditorStore'
+import { useHistoryStore } from '@/stores/useHistoryStore'
+import { useCanvasStore } from '@/stores/useCanvasStore'
+import { useSceneStore } from '@/stores/useSceneStore'
+import { useTemplateStore } from '@/stores/useTemplateStore'
+import {
+  undoAction,
+  redoAction,
+  saveActiveCustomTemplateAction,
+  importTemplateFileAction,
+} from '@/stores/editor-actions'
 import styles from '../SceneEditor.module.css'
 import ui from '@/styles/ui.module.css'
 
@@ -25,17 +34,19 @@ export function SceneToolbar({
   exportScene,
   handleOpenSaveTemplateDialog,
 }: SceneToolbarProps) {
-  // ── Editor Store ──
-  const history = useEditorStore((s) => s.history)
-  const undoAction = useEditorStore((s) => s.undoAction)
-  const redoAction = useEditorStore((s) => s.redoAction)
-  const exportFormat = useEditorStore((s) => s.exportFormat)
-  const setExportFormat = useEditorStore((s) => s.setExportFormat)
-  const scene = useEditorStore((s) => s.scene)
-  const activeCustomTemplate = useEditorStore((s) => s.getActiveCustomTemplate())
-  const hasUnsavedCustomTemplateChanges = useEditorStore((s) => s.getHasUnsavedChanges(scene))
-  const saveActiveCustomTemplateAction = useEditorStore((s) => s.saveActiveCustomTemplateAction)
-  const importTemplateFileAction = useEditorStore((s) => s.importTemplateFileAction)
+  // ── History Store ──
+  const history = useHistoryStore((s) => s.history)
+
+  // ── Canvas Store ──
+  const exportFormat = useCanvasStore((s) => s.exportFormat)
+  const setExportFormat = useCanvasStore((s) => s.setExportFormat)
+
+  // ── Scene Store ──
+  const scene = useSceneStore((s) => s.scene)
+
+  // ── Template Store ──
+  const activeCustomTemplate = useTemplateStore((s) => s.getActiveCustomTemplate())
+  const hasUnsavedCustomTemplateChanges = useTemplateStore((s) => s.getHasUnsavedChanges(scene))
 
   return (
     <section className={styles.editorToolbar} aria-label="Covercast editor controls">

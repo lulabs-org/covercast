@@ -1,12 +1,15 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { useEditor } from '../../EditorContext'
+import { useEditorActions } from '../contexts/EditorActionContext'
 import { LayerPanel } from '../../panels/LayerPanel'
 import { SourcesPanel } from '../../panels/SourcesPanel'
 import { TemplatePanel } from '../../panels/TemplatePanel'
 import { CanvasSizeSelector } from '../../controls/CanvasSizeSelector'
-import { useEditorStore } from '@/stores/useEditorStore'
+import { useSceneStore } from '@/stores/useSceneStore'
+import { useCanvasStore } from '@/stores/useCanvasStore'
+import { useTemplateStore } from '@/stores/useTemplateStore'
+import { changeSceneWithHistory, applyTemplateAction } from '@/stores/editor-actions'
 import { BUILT_IN_TEMPLATES } from '@/lib/templates'
 import styles from '../../SceneEditor.module.css'
 import ui from '@/styles/ui.module.css'
@@ -17,43 +20,41 @@ interface LeftSidebarProps {
 }
 
 export function LeftSidebar({ leftPanelRef, leftPanelWidth }: LeftSidebarProps) {
-  const { toggleElementHidden, toggleElementLocked, moveElementLayer } = useEditor()
+  const { toggleElementHidden, toggleElementLocked, moveElementLayer } = useEditorActions()
 
-  // ── Editor Store ──
-  const scene = useEditorStore((s) => s.scene)
-  const selection = useEditorStore((s) => s.selection)
-  const setSelection = useEditorStore((s) => s.setSelection)
-  const changeSceneWithHistory = useEditorStore((s) => s.changeSceneWithHistory)
-  const applyTemplateAction = useEditorStore((s) => s.applyTemplateAction)
+  // ── Scene Store ──
+  const scene = useSceneStore((s) => s.scene)
+  const selection = useSceneStore((s) => s.selection)
+  const setSelection = useSceneStore((s) => s.setSelection)
 
-  // ── Canvas slice ──
-  const canvasSize = useEditorStore((s) => s.canvasSize)
-  const presets = useEditorStore((s) => s.presets)
-  const currentPreset = useEditorStore((s) => s.currentPreset)
-  const isCustomSize = useEditorStore((s) => s.isCustomSize)
-  const setPresetSize = useEditorStore((s) => s.setPresetSize)
-  const setCustomSize = useEditorStore((s) => s.setCustomSize)
-  const collapsedSections = useEditorStore((s) => s.collapsedSections)
-  const toggleSidebarSection = useEditorStore((s) => s.toggleSidebarSection)
-  const setStatus = useEditorStore((s) => s.setStatus)
-  const appOrigin = useEditorStore((s) => s.appOrigin)
+  // ── Canvas Store ──
+  const canvasSize = useCanvasStore((s) => s.canvasSize)
+  const presets = useCanvasStore((s) => s.presets)
+  const currentPreset = useCanvasStore((s) => s.currentPreset)
+  const isCustomSize = useCanvasStore((s) => s.isCustomSize)
+  const setPresetSize = useCanvasStore((s) => s.setPresetSize)
+  const setCustomSize = useCanvasStore((s) => s.setCustomSize)
+  const collapsedSections = useCanvasStore((s) => s.collapsedSections)
+  const toggleSidebarSection = useCanvasStore((s) => s.toggleSidebarSection)
+  const setStatus = useCanvasStore((s) => s.setStatus)
+  const appOrigin = useCanvasStore((s) => s.appOrigin)
 
-  // ── Template slice ──
-  const customTemplates = useEditorStore((s) => s.customTemplates)
-  const activeTemplateId = useEditorStore((s) => s.activeTemplateId)
-  const templateSlots = useEditorStore((s) => s.templateSlots)
-  const activeSlotId = useEditorStore((s) => s.activeSlotId)
-  const setTemplateSlots = useEditorStore((s) => s.setTemplateSlots)
-  const addSlot = useEditorStore((s) => s.addSlot)
-  const removeSlot = useEditorStore((s) => s.removeSlot)
-  const selectSlotForEditing = useEditorStore((s) => s.selectSlotForEditing)
-  const getSlotUrl = useEditorStore((s) => s.getSlotUrl)
-  const writeSlotNameToStorage = useEditorStore((s) => s.writeSlotNameToStorage)
-  const duplicateCustomTemplate = useEditorStore((s) => s.duplicateCustomTemplate)
-  const renameCustomTemplate = useEditorStore((s) => s.renameCustomTemplate)
-  const deleteCustomTemplate = useEditorStore((s) => s.deleteCustomTemplate)
-  const activeTemplate = useEditorStore((s) => s.getActiveCustomTemplate())
-  const hasUnsavedCustomTemplateChanges = useEditorStore((s) => s.getHasUnsavedChanges(scene))
+  // ── Template Store ──
+  const customTemplates = useTemplateStore((s) => s.customTemplates)
+  const activeTemplateId = useTemplateStore((s) => s.activeTemplateId)
+  const templateSlots = useTemplateStore((s) => s.templateSlots)
+  const activeSlotId = useTemplateStore((s) => s.activeSlotId)
+  const setTemplateSlots = useTemplateStore((s) => s.setTemplateSlots)
+  const addSlot = useTemplateStore((s) => s.addSlot)
+  const removeSlot = useTemplateStore((s) => s.removeSlot)
+  const selectSlotForEditing = useTemplateStore((s) => s.selectSlotForEditing)
+  const getSlotUrl = useTemplateStore((s) => s.getSlotUrl)
+  const writeSlotNameToStorage = useTemplateStore((s) => s.writeSlotNameToStorage)
+  const duplicateCustomTemplate = useTemplateStore((s) => s.duplicateCustomTemplate)
+  const renameCustomTemplate = useTemplateStore((s) => s.renameCustomTemplate)
+  const deleteCustomTemplate = useTemplateStore((s) => s.deleteCustomTemplate)
+  const activeTemplate = useTemplateStore((s) => s.getActiveCustomTemplate())
+  const hasUnsavedCustomTemplateChanges = useTemplateStore((s) => s.getHasUnsavedChanges(scene))
 
   // ── Computed ──
   const activeSlot = templateSlots.find((slot) => slot.slotId === activeSlotId) ?? null
@@ -65,8 +66,7 @@ export function LeftSidebar({ leftPanelRef, leftPanelWidth }: LeftSidebarProps) 
 
   // ── Handlers ──
   function handleApplyBuiltInTemplate(templateId: string) {
-    const found = BUILT_IN_TEMPLATES.find((t) => t.id === templateId)
-    if (found) applyTemplateAction(found)
+    applyTemplateAction(templateId)
   }
 
   function handleAddSlot(templateId: string) {
@@ -169,7 +169,7 @@ export function LeftSidebar({ leftPanelRef, leftPanelWidth }: LeftSidebarProps) 
         collapsed={collapsedSections.templates}
         onToggle={() => toggleSidebarSection('templates')}
         onApplyBuiltInTemplate={handleApplyBuiltInTemplate}
-        onApplyCustomTemplate={applyTemplateAction}
+        onApplyCustomTemplate={(template) => applyTemplateAction(template.id)}
         onDuplicateCustomTemplate={duplicateCustomTemplate}
         onRenameCustomTemplate={renameCustomTemplate}
         onDeleteCustomTemplate={deleteCustomTemplate}

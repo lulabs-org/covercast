@@ -2,13 +2,17 @@
 
 import { useMemo } from 'react'
 import SceneCanvas from '../SceneCanvas'
-import { useEditor } from '../EditorContext'
-import { useEditorStore } from '@/stores/useEditorStore'
+import { useEditorCanvas } from './contexts/EditorCanvasContext'
+import { useEditorAsset } from './contexts/EditorAssetContext'
+import { useSceneStore } from '@/stores/useSceneStore'
+import { useCanvasStore } from '@/stores/useCanvasStore'
+import { useInteractionStore } from '@/stores/useInteractionStore'
 import { computeVisibleGuides } from '@/lib/algorithms/visible-guides'
 import styles from './stage.module.css'
 
 export function StagePanel() {
-  const { resolveSrc, canvasInteraction } = useEditor()
+  const canvasInteraction = useEditorCanvas()
+  const { resolveSrc } = useEditorAsset()
 
   const {
     svgRef,
@@ -20,30 +24,34 @@ export function StagePanel() {
     handleTextElementDoubleClick,
   } = canvasInteraction
 
-  // ── Editor Store ──
-  const scene = useEditorStore((s) => s.scene)
-  const selectedIds = useEditorStore((s) => s.selection.selectedIds)
-  const editingTextId = useEditorStore((s) => s.editingTextId)
-  const status = useEditorStore((s) => s.status)
-  const canvasSize = useEditorStore((s) => s.canvasSize)
-  const canvasZoom = useEditorStore((s) => s.canvasZoom)
-  const canvasZoomPercent = useEditorStore((s) => s.canvasZoomPercent)
-  const canvasPreviewWidth = useEditorStore((s) => s.canvasPreviewWidth)
-  const CANVAS_ZOOM_MIN = useEditorStore((s) => s.CANVAS_ZOOM_MIN)
-  const CANVAS_ZOOM_MAX = useEditorStore((s) => s.CANVAS_ZOOM_MAX)
-  const CANVAS_ZOOM_STEP = useEditorStore((s) => s.CANVAS_ZOOM_STEP)
-  const setCanvasZoomLevel = useEditorStore((s) => s.setCanvasZoomLevel)
-  const zoomCanvasIn = useEditorStore((s) => s.zoomCanvasIn)
-  const zoomCanvasOut = useEditorStore((s) => s.zoomCanvasOut)
-  const resetCanvasZoom = useEditorStore((s) => s.resetCanvasZoom)
-  const handleZoomSliderWheel = useEditorStore((s) => s.handleZoomSliderWheel)
-  const handleStageWheel = useEditorStore((s) => s.handleStageWheel)
-  const guides = useEditorStore((s) => s.guides)
-  const spacingGuides = useEditorStore((s) => s.spacingGuides)
-  const guidesSelectedIds = useEditorStore((s) => s.guidesSelectedIds)
-  const resizeLabel = useEditorStore((s) => s.resizeLabel)
-  const drag = useEditorStore((s) => s.drag)
-  const marquee = useEditorStore((s) => s.marquee)
+  // ── Scene Store ──
+  const scene = useSceneStore((s) => s.scene)
+  const selectedIds = useSceneStore((s) => s.selection.selectedIds)
+  const editingTextId = useSceneStore((s) => s.editingTextId)
+
+  // ── Canvas Store ──
+  const status = useCanvasStore((s) => s.status)
+  const canvasSize = useCanvasStore((s) => s.canvasSize)
+  const canvasZoom = useCanvasStore((s) => s.canvasZoom)
+  const canvasZoomPercent = useCanvasStore((s) => s.canvasZoomPercent)
+  const canvasPreviewWidth = useCanvasStore((s) => s.canvasPreviewWidth)
+  const CANVAS_ZOOM_MIN = useCanvasStore((s) => s.CANVAS_ZOOM_MIN)
+  const CANVAS_ZOOM_MAX = useCanvasStore((s) => s.CANVAS_ZOOM_MAX)
+  const CANVAS_ZOOM_STEP = useCanvasStore((s) => s.CANVAS_ZOOM_STEP)
+  const setCanvasZoomLevel = useCanvasStore((s) => s.setCanvasZoomLevel)
+  const zoomCanvasIn = useCanvasStore((s) => s.zoomCanvasIn)
+  const zoomCanvasOut = useCanvasStore((s) => s.zoomCanvasOut)
+  const resetCanvasZoom = useCanvasStore((s) => s.resetCanvasZoom)
+  const handleZoomSliderWheel = useCanvasStore((s) => s.handleZoomSliderWheel)
+  const handleStageWheel = useCanvasStore((s) => s.handleStageWheel)
+
+  // ── Interaction Store ──
+  const guides = useInteractionStore((s) => s.guides)
+  const spacingGuides = useInteractionStore((s) => s.spacingGuides)
+  const guidesSelectedIds = useInteractionStore((s) => s.guidesSelectedIds)
+  const resizeLabel = useInteractionStore((s) => s.resizeLabel)
+  const drag = useInteractionStore((s) => s.drag)
+  const marquee = useInteractionStore((s) => s.marquee)
 
   // ── 派生数据：直接计算，不存入 store ──
   const { visibleGuides, visibleSpacingGuides } = useMemo(

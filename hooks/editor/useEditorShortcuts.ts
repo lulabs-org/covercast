@@ -8,7 +8,8 @@ import {
 import { SpatialIndex, buildSpatialIndex } from '@/lib/algorithms/spatial-index'
 import { computeBoundingBox } from '@/lib/algorithms/group-drag'
 import { type SelectionState } from '@/lib/domain/selection'
-import { useEditorStore } from '@/stores/useEditorStore'
+import { useSceneStore } from '@/stores/useSceneStore'
+import { useInteractionStore } from '@/stores/useInteractionStore'
 
 function isCopyPasteModifier(event: KeyboardEvent) {
   return (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey
@@ -59,11 +60,11 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
     markSceneEdited,
   } = options
 
-  // ── Store setters（通过 hook selector 获取，闭包引用避免 getState） ──
-  const setScene = useEditorStore((s) => s.setScene)
-  const setGuides = useEditorStore((s) => s.setGuides)
-  const setSpacingGuides = useEditorStore((s) => s.setSpacingGuides)
-  const setGuidesSelectedIds = useEditorStore((s) => s.setGuidesSelectedIds)
+  // ── Store setters ──
+  const setScene = useSceneStore((s) => s.setScene)
+  const setGuides = useInteractionStore((s) => s.setGuides)
+  const setSpacingGuides = useInteractionStore((s) => s.setSpacingGuides)
+  const setGuidesSelectedIds = useInteractionStore((s) => s.setGuidesSelectedIds)
 
   useEffect(() => {
     function handleEditorKeyDown(event: KeyboardEvent) {

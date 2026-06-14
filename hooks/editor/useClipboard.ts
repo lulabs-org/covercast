@@ -6,7 +6,7 @@ import {
   type SceneElement,
 } from '@/lib/domain/scene'
 import { selectSingle, selectMultiple } from '@/lib/domain/selection'
-import { useEditorStore } from '@/stores/useEditorStore'
+import { useSceneStore } from '@/stores/useSceneStore'
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max)
@@ -78,8 +78,8 @@ export function useClipboard(options: UseClipboardOptions) {
     canvasHeight = DEFAULT_CANVAS_HEIGHT,
   } = options
 
-  // ── 直接从 store 获取 setter（消除双写） ──
-  const setSelection = useEditorStore((s) => s.setSelection)
+  // ── 直接从 SceneStore 获取 setter ──
+  const setSelection = useSceneStore((s) => s.setSelection)
 
   const elementClipboardRef = useRef<SceneElement | null>(null)
   const elementsClipboardRef = useRef<SceneElement[] | null>(null)

@@ -1,6 +1,9 @@
 'use client'
 
-import { EditorProvider, useEditor } from './EditorContext'
+import { EditorProviders } from './editor/contexts'
+import { useEditorBootstrap } from './editor/contexts/EditorBootstrap'
+import { useEditorActions } from './editor/contexts/EditorActionContext'
+import { useEditorAsset } from './editor/contexts/EditorAssetContext'
 import { SaveTemplateDialog } from './dialogs/SaveTemplateDialog'
 import { SceneToolbar } from './editor/SceneToolbar'
 import { StagePanel } from './editor/StagePanel'
@@ -9,18 +12,19 @@ import { RightSidebar } from './editor/sidebar/RightSidebar'
 import { CreateBlankCoverModal } from './panels/CreateBlankCoverModal'
 import { useScrollVisibility } from '@/hooks/ui/useScrollVisibility'
 import { usePanelResize } from '@/hooks/ui/usePanelResize'
-import { useCanvasInteraction } from '@/hooks/canvas/useCanvasInteraction'
 import { useDialogState } from '@/hooks/ui/useDialogState'
 import styles from './SceneEditor.module.css'
 
 export default function SceneEditor() {
   const { leftPanelRef, rightPanelRef, stageViewportRef } = useScrollVisibility()
   const { panelWidths, resizerLeftRef, resizerRightRef, handleMouseDown } = usePanelResize()
-  const canvasInteraction = useCanvasInteraction()
   const dialogState = useDialogState()
 
+  // ── Bootstrap: initialization side effects (no Context dependency) ──
+  useEditorBootstrap(stageViewportRef)
+
   return (
-    <EditorProvider canvasInteraction={canvasInteraction} stageViewportRef={stageViewportRef}>
+    <EditorProviders>
       <SceneEditorInner
         leftPanelRef={leftPanelRef}
         rightPanelRef={rightPanelRef}
@@ -30,7 +34,7 @@ export default function SceneEditor() {
         handleMouseDown={handleMouseDown}
         dialogState={dialogState}
       />
-    </EditorProvider>
+    </EditorProviders>
   )
 }
 
@@ -51,7 +55,8 @@ function SceneEditorInner({
   handleMouseDown: (side: 'left' | 'right', e: React.MouseEvent) => void
   dialogState: ReturnType<typeof useDialogState>
 }) {
-  const { addTextElement, addRectElement, addEllipseElement, handleAssetInput } = useEditor()
+  const { addTextElement, addRectElement, addEllipseElement } = useEditorActions()
+  const { handleAssetInput } = useEditorAsset()
 
   return (
     <>

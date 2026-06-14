@@ -13,7 +13,8 @@ import {
 } from '@/lib/algorithms/marquee'
 import { clearSelection, selectMultiple, type SelectionState } from '@/lib/domain/selection'
 import { type SceneElement } from '@/lib/domain/scene'
-import { useEditorStore } from '@/stores/useEditorStore'
+import { useSceneStore } from '@/stores/useSceneStore'
+import { useInteractionStore } from '@/stores/useInteractionStore'
 
 function getSvgPoint(svg: SVGSVGElement, clientX: number, clientY: number) {
   const point = svg.createSVGPoint()
@@ -40,13 +41,13 @@ export function useMarqueeSelection({
   hitTestStrategy: HitTestStrategy
   editingTextId: string | null
 }) {
-  // ── Store setters（通过 hook selector 获取，闭包引用避免 getState） ──
-  const setSelection = useEditorStore((s) => s.setSelection)
-  const setEditingTextId = useEditorStore((s) => s.setEditingTextId)
-  const setMarquee = useEditorStore((s) => s.setMarquee)
+  // ── Store setters ──
+  const setSelection = useSceneStore((s) => s.setSelection)
+  const setEditingTextId = useSceneStore((s) => s.setEditingTextId)
+  const setMarquee = useInteractionStore((s) => s.setMarquee)
 
   // ── 交互状态 ──
-  const marquee = useEditorStore((s) => s.marquee)
+  const marquee = useInteractionStore((s) => s.marquee)
 
   const marqueeRafRef = useRef<number>(0)
   const latestMarqueeRef = useRef<{ x: number; y: number } | null>(null)
@@ -94,7 +95,7 @@ export function useMarqueeSelection({
       // to avoid calling Zustand setSelection during React state update
       let selectionUpdater: ((prev: SelectionState) => SelectionState) | null = null
 
-      const prevMarquee = useEditorStore.getState().marquee
+      const prevMarquee = useInteractionStore.getState().marquee
 
       if (hasMarqueeSize(prevMarquee, 5)) {
         const rect = getMarqueeRect(prevMarquee)

@@ -6,7 +6,11 @@ import { createSceneActions } from '@/lib/operations/scene-actions'
 import { createAssetManager } from '@/lib/operations/asset-manager'
 import { useClipboard } from './useClipboard'
 import { useEditorShortcuts } from './useEditorShortcuts'
-import { useEditorStore } from '@/stores/useEditorStore'
+import { useSceneStore } from '@/stores/useSceneStore'
+import { useHistoryStore } from '@/stores/useHistoryStore'
+import { useCanvasStore } from '@/stores/useCanvasStore'
+import { useInteractionStore } from '@/stores/useInteractionStore'
+import { changeSceneWithHistory, undoAction, redoAction } from '@/stores/editor-actions'
 import type { SpatialIndex } from '@/lib/algorithms/spatial-index'
 
 /**
@@ -17,16 +21,15 @@ export function useEditorActions(canvasInteraction: {
   selectedElementRef: React.MutableRefObject<SceneElement | null>
   spatialIndexRef: React.MutableRefObject<SpatialIndex>
 }) {
-  // ── Editor Store ──
-  const scene = useEditorStore((s) => s.scene)
-  const selection = useEditorStore((s) => s.selection)
-  const editingTextId = useEditorStore((s) => s.editingTextId)
-  const changeSceneWithHistory = useEditorStore((s) => s.changeSceneWithHistory)
-  const undoAction = useEditorStore((s) => s.undoAction)
-  const redoAction = useEditorStore((s) => s.redoAction)
-  const setStatus = useEditorStore((s) => s.setStatus)
-  const setSelection = useEditorStore((s) => s.setSelection)
-  const canvasSize = useEditorStore((s) => s.canvasSize)
+  // ── Scene Store ──
+  const scene = useSceneStore((s) => s.scene)
+  const selection = useSceneStore((s) => s.selection)
+  const editingTextId = useSceneStore((s) => s.editingTextId)
+  const setSelection = useSceneStore((s) => s.setSelection)
+
+  // ── Canvas Store ──
+  const setStatus = useCanvasStore((s) => s.setStatus)
+  const canvasSize = useCanvasStore((s) => s.canvasSize)
 
   // ── Computed ──
   const selectedElement = useMemo(() => {
@@ -80,7 +83,7 @@ export function useEditorActions(canvasInteraction: {
     canvasHeight: canvasSize.height,
   })
 
-  // ── Editor shortcuts（直接使用 store 操作 guides） ──
+  // ── Editor shortcuts ──
   useEditorShortcuts({
     scene,
     selection,

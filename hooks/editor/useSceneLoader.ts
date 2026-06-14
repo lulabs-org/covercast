@@ -2,7 +2,9 @@ import { useEffect } from 'react'
 import { type Scene } from '@/lib/domain/scene'
 import { BUILT_IN_TEMPLATES } from '@/lib/templates'
 import { selectSingle } from '@/lib/domain/selection'
-import { useEditorStore } from '@/stores/useEditorStore'
+import { useSceneStore } from '@/stores/useSceneStore'
+import { useCanvasStore } from '@/stores/useCanvasStore'
+import { useTemplateStore } from '@/stores/useTemplateStore'
 
 export function useSceneLoader({
   setStatus,
@@ -11,9 +13,9 @@ export function useSceneLoader({
   setStatus: (status: string) => void
   setActiveTemplateId: (id: string) => void
 }) {
-  // ── 直接从 store 获取 setter（消除双写） ──
-  const setScene = useEditorStore((s) => s.setScene)
-  const setSelection = useEditorStore((s) => s.setSelection)
+  // ── 直接从各 Store 获取 setter ──
+  const setScene = useSceneStore((s) => s.setScene)
+  const setSelection = useSceneStore((s) => s.setSelection)
 
   useEffect(() => {
     let active = true
