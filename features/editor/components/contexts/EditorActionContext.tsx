@@ -7,9 +7,10 @@ import { createSceneActions } from '@/lib/operations/scene-actions'
 import { useClipboard } from '@/hooks/editor/useClipboard'
 import { useEditorShortcuts } from '@/hooks/editor/useEditorShortcuts'
 import { useSceneStore } from '@/stores/useSceneStore'
-import { useCanvasStore } from '@/stores/useCanvasStore'
+import { useSceneConfigStore } from '@/stores/useSceneConfigStore'
+import { useCanvasUIStore } from '@/stores/useCanvasUIStore'
 import { useInteractionStore } from '@/stores/useInteractionStore'
-import { changeSceneWithHistory, undoAction, redoAction } from '@/stores/editor-actions'
+import { changeSceneWithHistory, undoAction, redoAction } from '@/stores/scene-commands'
 import type { SpatialIndex } from '@/lib/algorithms/spatial-index'
 
 // ── Types ──
@@ -47,9 +48,11 @@ export function EditorActionProvider({
   const editingTextId = useSceneStore((s) => s.editingTextId)
   const setSelection = useSceneStore((s) => s.setSelection)
 
-  // ── Canvas Store ──
-  const setStatus = useCanvasStore((s) => s.setStatus)
-  const canvasSize = useCanvasStore((s) => s.canvasSize)
+  // ── Canvas UI Store ──
+  const setStatus = useCanvasUIStore((s) => s.setStatus)
+
+  // ── Scene Config Store ──
+  const canvasSize = useSceneConfigStore((s) => s.canvasSize)
 
   // ── Scene actions ──
   const sceneActions = useMemo(

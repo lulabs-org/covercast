@@ -91,6 +91,20 @@ export function isImageElement(element: SceneElement): element is ImageElement {
   return element.type === 'image'
 }
 
+export function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object'
+}
+
+export function isScene(value: unknown): value is Scene {
+  if (!isRecord(value)) return false
+  return (
+    value.version === 1 &&
+    typeof value.backgroundColor === 'string' &&
+    typeof value.backgroundOpacity === 'number' &&
+    Array.isArray(value.elements)
+  )
+}
+
 export function createTextElement(): TextElement {
   return {
     id: `text-${Date.now()}`,

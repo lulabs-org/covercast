@@ -3,7 +3,6 @@ import { type Scene } from '@/lib/domain/scene'
 import { BUILT_IN_TEMPLATES } from '@/lib/templates'
 import { selectSingle } from '@/lib/domain/selection'
 import { useSceneStore } from '@/stores/useSceneStore'
-import { useCanvasStore } from '@/stores/useCanvasStore'
 import { useTemplateStore } from '@/stores/useTemplateStore'
 
 export function useSceneLoader({

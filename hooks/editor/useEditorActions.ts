@@ -8,9 +8,10 @@ import { useClipboard } from './useClipboard'
 import { useEditorShortcuts } from './useEditorShortcuts'
 import { useSceneStore } from '@/stores/useSceneStore'
 import { useHistoryStore } from '@/stores/useHistoryStore'
-import { useCanvasStore } from '@/stores/useCanvasStore'
+import { useSceneConfigStore } from '@/stores/useSceneConfigStore'
+import { useCanvasUIStore } from '@/stores/useCanvasUIStore'
 import { useInteractionStore } from '@/stores/useInteractionStore'
-import { changeSceneWithHistory, undoAction, redoAction } from '@/stores/editor-actions'
+import { changeSceneWithHistory, undoAction, redoAction } from '@/stores/scene-commands'
 import type { SpatialIndex } from '@/lib/algorithms/spatial-index'
 
 /**
@@ -27,9 +28,11 @@ export function useEditorActions(canvasInteraction: {
   const editingTextId = useSceneStore((s) => s.editingTextId)
   const setSelection = useSceneStore((s) => s.setSelection)
 
-  // ── Canvas Store ──
-  const setStatus = useCanvasStore((s) => s.setStatus)
-  const canvasSize = useCanvasStore((s) => s.canvasSize)
+  // ── Canvas UI Store ──
+  const setStatus = useCanvasUIStore((s) => s.setStatus)
+
+  // ── Scene Config Store ──
+  const canvasSize = useSceneConfigStore((s) => s.canvasSize)
 
   // ── Computed ──
   const selectedElement = useMemo(() => {

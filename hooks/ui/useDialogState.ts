@@ -4,13 +4,14 @@ import { useCreateBlankCover } from './useCreateBlankCover'
 import { useSaveTemplateDialog } from './useSaveTemplateDialog'
 import { useExportScene } from './useExportScene'
 import { useSceneStore } from '@/stores/useSceneStore'
-import { useCanvasStore } from '@/stores/useCanvasStore'
+import { useSceneConfigStore } from '@/stores/useSceneConfigStore'
+import { useCanvasUIStore } from '@/stores/useCanvasUIStore'
 import { useTemplateStore } from '@/stores/useTemplateStore'
 import {
   saveCustomTemplateWithNameAction,
   saveCustomTemplateWithSceneAction,
   exportTemplateJsonAction,
-} from '@/stores/editor-actions'
+} from '@/stores/template-commands'
 
 /**
  * 对话框/模态框状态：新建封面 + 保存模板 + 导出。
@@ -20,11 +21,13 @@ export function useDialogState() {
   // ── Scene Store ──
   const scene = useSceneStore((s) => s.scene)
 
-  // ── Canvas Store ──
-  const setStatus = useCanvasStore((s) => s.setStatus)
-  const canvasSize = useCanvasStore((s) => s.canvasSize)
-  const presets = useCanvasStore((s) => s.presets)
-  const setCanvasSize = useCanvasStore((s) => s.setCanvasSize)
+  // ── Canvas UI Store ──
+  const setStatus = useCanvasUIStore((s) => s.setStatus)
+
+  // ── Scene Config Store ──
+  const canvasSize = useSceneConfigStore((s) => s.canvasSize)
+  const presets = useSceneConfigStore((s) => s.presets)
+  const setCanvasSize = useSceneConfigStore((s) => s.setCanvasSize)
 
   // ── Template Store ──
   const customTemplates = useTemplateStore((s) => s.customTemplates)

@@ -5,8 +5,11 @@ import SceneCanvas from '@/components/SceneCanvas'
 import { useEditorCanvas } from './contexts/EditorCanvasContext'
 import { useEditorAsset } from './contexts/EditorAssetContext'
 import { useSceneStore } from '@/stores/useSceneStore'
-import { useCanvasStore } from '@/stores/useCanvasStore'
+import { useSceneConfigStore } from '@/stores/useSceneConfigStore'
+import { useCanvasUIStore } from '@/stores/useCanvasUIStore'
 import { useInteractionStore } from '@/stores/useInteractionStore'
+import { useZoomHandler } from '@/hooks/canvas/useZoomHandler'
+import { CANVAS_ZOOM_MIN, CANVAS_ZOOM_MAX, CANVAS_ZOOM_STEP } from '@/lib/config/canvas-config'
 import { computeVisibleGuides } from '@/lib/algorithms/visible-guides'
 import styles from './stage.module.css'
 
@@ -24,26 +27,25 @@ export function StagePanel() {
     handleTextElementDoubleClick,
   } = canvasInteraction
 
+  const { handleStageWheel, handleZoomSliderWheel } = useZoomHandler()
+
   // ── Scene Store ──
   const scene = useSceneStore((s) => s.scene)
   const selectedIds = useSceneStore((s) => s.selection.selectedIds)
   const editingTextId = useSceneStore((s) => s.editingTextId)
 
-  // ── Canvas Store ──
-  const status = useCanvasStore((s) => s.status)
-  const canvasSize = useCanvasStore((s) => s.canvasSize)
-  const canvasZoom = useCanvasStore((s) => s.canvasZoom)
-  const canvasZoomPercent = useCanvasStore((s) => s.canvasZoomPercent)
-  const canvasPreviewWidth = useCanvasStore((s) => s.canvasPreviewWidth)
-  const CANVAS_ZOOM_MIN = useCanvasStore((s) => s.CANVAS_ZOOM_MIN)
-  const CANVAS_ZOOM_MAX = useCanvasStore((s) => s.CANVAS_ZOOM_MAX)
-  const CANVAS_ZOOM_STEP = useCanvasStore((s) => s.CANVAS_ZOOM_STEP)
-  const setCanvasZoomLevel = useCanvasStore((s) => s.setCanvasZoomLevel)
-  const zoomCanvasIn = useCanvasStore((s) => s.zoomCanvasIn)
-  const zoomCanvasOut = useCanvasStore((s) => s.zoomCanvasOut)
-  const resetCanvasZoom = useCanvasStore((s) => s.resetCanvasZoom)
-  const handleZoomSliderWheel = useCanvasStore((s) => s.handleZoomSliderWheel)
-  const handleStageWheel = useCanvasStore((s) => s.handleStageWheel)
+  // ── Scene Config Store ──
+  const canvasSize = useSceneConfigStore((s) => s.canvasSize)
+
+  // ── Canvas UI Store ──
+  const status = useCanvasUIStore((s) => s.status)
+  const canvasZoom = useCanvasUIStore((s) => s.canvasZoom)
+  const canvasZoomPercent = useCanvasUIStore((s) => s.canvasZoomPercent)
+  const canvasPreviewWidth = useCanvasUIStore((s) => s.canvasPreviewWidth)
+  const setCanvasZoomLevel = useCanvasUIStore((s) => s.setCanvasZoomLevel)
+  const zoomCanvasIn = useCanvasUIStore((s) => s.zoomCanvasIn)
+  const zoomCanvasOut = useCanvasUIStore((s) => s.zoomCanvasOut)
+  const resetCanvasZoom = useCanvasUIStore((s) => s.resetCanvasZoom)
 
   // ── Interaction Store ──
   const guides = useInteractionStore((s) => s.guides)

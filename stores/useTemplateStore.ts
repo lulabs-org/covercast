@@ -1,10 +1,18 @@
 import { create } from 'zustand'
 import { cloneScene, type Scene } from '@/lib/domain/scene'
+import { makeUniqueTemplateName } from '@/lib/domain/template'
 import { BUILT_IN_TEMPLATES, DEFAULT_TEMPLATE_ID, createDefaultScene } from '@/lib/templates'
 import { selectSingle } from '@/lib/domain/selection'
-
-const CUSTOM_TEMPLATE_STORAGE_KEY = 'covercast.customTemplates.v1'
-const SLOT_NAMES_STORAGE_KEY = 'covercast.slotNames.v1'
+import {
+  readCustomTemplatesFromStorage,
+  writeCustomTemplatesToStorage,
+  readSlotNamesFromStorage,
+  writeSlotNameToStorage as writeSlotNameToStorageFn,
+  removeSlotNameFromStorage,
+  fetchSlotList,
+  createSlot,
+  deleteSlot,
+} from '@/lib/storage/template-storage'
 
 export type CustomSceneTemplate = {
   id: string
@@ -20,79 +28,8 @@ export type SceneSlotInfo = {
   name: string
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object'
-}
-
-function isScene(value: unknown): value is Scene {
-  if (!isRecord(value)) return false
-  return (
-    value.version === 1 &&
-    typeof value.backgroundColor === 'string' &&
-    typeof value.backgroundOpacity === 'number' &&
-    Array.isArray(value.elements)
-  )
-}
-
-function readCustomTemplatesFromStorage(): CustomSceneTemplate[] {
-  try {
-    const rawValue = window.localStorage.getItem(CUSTOM_TEMPLATE_STORAGE_KEY)
-    if (!rawValue) return []
-    const parsedValue = JSON.parse(rawValue) as unknown
-    if (!Array.isArray(parsedValue)) return []
-    return parsedValue.filter(
-      (t): t is CustomSceneTemplate =>
-        isRecord(t) &&
-        isScene(t.scene) &&
-        typeof t.id === 'string' &&
-        typeof t.name === 'string' &&
-        typeof t.createdAt === 'string',
-    )
-  } catch {
-    return []
-  }
-}
-
-function writeCustomTemplatesToStorage(templates: CustomSceneTemplate[]) {
-  window.localStorage.setItem(CUSTOM_TEMPLATE_STORAGE_KEY, JSON.stringify(templates))
-}
-
-function readSlotNamesFromStorage(): Record<string, string> {
-  try {
-    const raw = window.localStorage.getItem(SLOT_NAMES_STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as Record<string, string>) : {}
-  } catch {
-    return {}
-  }
-}
-
-function writeSlotNameToStorageFn(templateId: string, slotId: string, name: string) {
-  const names = readSlotNamesFromStorage()
-  names[`${templateId}/${slotId}`] = name
-  window.localStorage.setItem(SLOT_NAMES_STORAGE_KEY, JSON.stringify(names))
-}
-
-function removeSlotNameFromStorage(templateId: string, slotId: string) {
-  const names = readSlotNamesFromStorage()
-  delete names[`${templateId}/${slotId}`]
-  window.localStorage.setItem(SLOT_NAMES_STORAGE_KEY, JSON.stringify(names))
-}
-
 function createCustomTemplateId() {
   return `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-}
-
-function uniqueTemplateName(name: string, templates: CustomSceneTemplate[]) {
-  const baseName = name.trim() || '导入模板'
-  const existingNames = new Set(templates.map((t) => t.name))
-  if (!existingNames.has(baseName)) return baseName
-  let suffix = 2
-  let candidate = `${baseName} ${suffix}`
-  while (existingNames.has(candidate)) {
-    suffix++
-    candidate = `${baseName} ${suffix}`
-  }
-  return candidate
 }
 
 function scenesMatch(left: Scene, right: Scene) {
@@ -180,7 +117,7 @@ export const useTemplateStore = create<TemplateSlice>()((set, get) => ({
     const timestamp = new Date().toISOString()
     const duplicated: CustomSceneTemplate = {
       id: createCustomTemplateId(),
-      name: uniqueTemplateName(`${template.name} 副本`, customTemplates),
+      name: makeUniqueTemplateName(`${template.name} 副本`, customTemplates),
       createdAt: timestamp,
       updatedAt: timestamp,
       scene: cloneScene(template.scene),
@@ -228,11 +165,8 @@ export const useTemplateStore = create<TemplateSlice>()((set, get) => ({
       customTemplates.find((t) => t.id === templateId)
     const defaultScene = template?.scene ?? createDefaultScene()
     try {
-      await fetch('/api/scene', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ templateId, slotId, scene: defaultScene }),
-      })
+      const ok = await createSlot(templateId, slotId, defaultScene)
+      if (!ok) return null
       const templateName = template?.name ?? '未命名模板'
       const name = `${templateName} - 源 ${templateSlots.length + 1}`
       writeSlotNameToStorageFn(templateId, slotId, name)
@@ -248,12 +182,8 @@ export const useTemplateStore = create<TemplateSlice>()((set, get) => ({
     const { activeSlotId, templateSlots } = get()
     removeSlotNameFromStorage(templateId, slotId)
     try {
-      const response = await fetch('/api/scene', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ templateId, slotId }),
-      })
-      if (response.ok) {
+      const ok = await deleteSlot(templateId, slotId)
+      if (ok) {
         set((s) => ({
           templateSlots: s.templateSlots.filter(
             (slot) => !(slot.templateId === templateId && slot.slotId === slotId),
@@ -290,9 +220,7 @@ export const useTemplateStore = create<TemplateSlice>()((set, get) => ({
 
   loadSlots: async () => {
     try {
-      const response = await fetch('/api/scene?list=1', { cache: 'no-store' })
-      if (!response.ok) return
-      const allSlots = (await response.json()) as { templateId: string; slots: string[] }[]
+      const allSlots = await fetchSlotList()
       const slotNames = readSlotNamesFromStorage()
       const currentSlots: SceneSlotInfo[] = []
       for (const entry of allSlots) {

@@ -1,5 +1,5 @@
 import { useState, useCallback, type ChangeEvent } from 'react'
-import type { CanvasSize, CanvasSizePreset } from '@/stores/useCanvasStore'
+import type { CanvasSize, CanvasSizePreset } from '@/stores/useSceneConfigStore'
 import styles from './CanvasSizeSelector.module.css'
 import ui from '@/styles/ui.module.css'
 

@@ -3,15 +3,14 @@
 import { TemplateToolbarButtons } from './panels/TemplatePanel'
 import { EXPORT_FORMAT_OPTIONS } from '@/hooks/ui/useExportScene'
 import { useHistoryStore } from '@/stores/useHistoryStore'
-import { useCanvasStore } from '@/stores/useCanvasStore'
+import { useSceneConfigStore } from '@/stores/useSceneConfigStore'
 import { useSceneStore } from '@/stores/useSceneStore'
 import { useTemplateStore } from '@/stores/useTemplateStore'
+import { undoAction, redoAction } from '@/stores/scene-commands'
 import {
-  undoAction,
-  redoAction,
   saveActiveCustomTemplateAction,
   importTemplateFileAction,
-} from '@/stores/editor-actions'
+} from '@/stores/template-commands'
 import styles from '@/features/editor/styles/editor-page.module.css'
 import ui from '@/styles/ui.module.css'
 
@@ -37,9 +36,9 @@ export function SceneToolbar({
   // ── History Store ──
   const history = useHistoryStore((s) => s.history)
 
-  // ── Canvas Store ──
-  const exportFormat = useCanvasStore((s) => s.exportFormat)
-  const setExportFormat = useCanvasStore((s) => s.setExportFormat)
+  // ── Scene Config Store ──
+  const exportFormat = useSceneConfigStore((s) => s.exportFormat)
+  const setExportFormat = useSceneConfigStore((s) => s.setExportFormat)
 
   // ── Scene Store ──
   const scene = useSceneStore((s) => s.scene)

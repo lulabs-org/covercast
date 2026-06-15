@@ -7,9 +7,12 @@ import { SourcesPanel } from '../panels/SourcesPanel'
 import { TemplatePanel } from '../panels/TemplatePanel'
 import { CanvasSizeSelector } from '../controls/CanvasSizeSelector'
 import { useSceneStore } from '@/stores/useSceneStore'
-import { useCanvasStore } from '@/stores/useCanvasStore'
+import { useSceneConfigStore } from '@/stores/useSceneConfigStore'
+import { useCanvasUIStore } from '@/stores/useCanvasUIStore'
 import { useTemplateStore } from '@/stores/useTemplateStore'
-import { changeSceneWithHistory, applyTemplateAction } from '@/stores/editor-actions'
+import { changeSceneWithHistory } from '@/stores/scene-commands'
+import { applyTemplateAction } from '@/stores/scene-commands'
+import { getAppOrigin } from '@/lib/env/app-origin'
 import { BUILT_IN_TEMPLATES } from '@/lib/templates'
 import styles from '@/features/editor/styles/editor-page.module.css'
 import ui from '@/styles/ui.module.css'
@@ -27,17 +30,18 @@ export function LeftSidebar({ leftPanelRef, leftPanelWidth }: LeftSidebarProps) 
   const selection = useSceneStore((s) => s.selection)
   const setSelection = useSceneStore((s) => s.setSelection)
 
-  // ── Canvas Store ──
-  const canvasSize = useCanvasStore((s) => s.canvasSize)
-  const presets = useCanvasStore((s) => s.presets)
-  const currentPreset = useCanvasStore((s) => s.currentPreset)
-  const isCustomSize = useCanvasStore((s) => s.isCustomSize)
-  const setPresetSize = useCanvasStore((s) => s.setPresetSize)
-  const setCustomSize = useCanvasStore((s) => s.setCustomSize)
-  const collapsedSections = useCanvasStore((s) => s.collapsedSections)
-  const toggleSidebarSection = useCanvasStore((s) => s.toggleSidebarSection)
-  const setStatus = useCanvasStore((s) => s.setStatus)
-  const appOrigin = useCanvasStore((s) => s.appOrigin)
+  // ── Scene Config Store ──
+  const canvasSize = useSceneConfigStore((s) => s.canvasSize)
+  const presets = useSceneConfigStore((s) => s.presets)
+  const currentPreset = useSceneConfigStore((s) => s.currentPreset)
+  const isCustomSize = useSceneConfigStore((s) => s.isCustomSize)
+  const setPresetSize = useSceneConfigStore((s) => s.setPresetSize)
+  const setCustomSize = useSceneConfigStore((s) => s.setCustomSize)
+
+  // ── Canvas UI Store ──
+  const collapsedSections = useCanvasUIStore((s) => s.collapsedSections)
+  const toggleSidebarSection = useCanvasUIStore((s) => s.toggleSidebarSection)
+  const setStatus = useCanvasUIStore((s) => s.setStatus)
 
   // ── Template Store ──
   const customTemplates = useTemplateStore((s) => s.customTemplates)
@@ -83,7 +87,7 @@ export function LeftSidebar({ leftPanelRef, leftPanelWidth }: LeftSidebarProps) 
   }
 
   function handleGetSlotUrl(templateId: string, slotId: string) {
-    return getSlotUrl(templateId, slotId, appOrigin)
+    return getSlotUrl(templateId, slotId, getAppOrigin())
   }
 
   return (

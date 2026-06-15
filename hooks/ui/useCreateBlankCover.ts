@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { cloneScene, type Scene } from '@/lib/domain/scene'
 import { createEmptyScene, createSceneFromTemplate, BUILT_IN_TEMPLATES } from '@/lib/templates'
 import { selectSingle, createSelectionState } from '@/lib/domain/selection'
-import type { CanvasSize, CanvasSizePreset } from '@/stores/useCanvasStore'
+import type { CanvasSize, CanvasSizePreset } from '@/stores/useSceneConfigStore'
 import type { CustomSceneTemplate } from '@/stores/useTemplateStore'
 import { useSceneStore } from '@/stores/useSceneStore'
 

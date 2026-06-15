@@ -3,8 +3,10 @@
 import { useEffect } from 'react'
 import { useSceneLoader } from '@/hooks/editor/useSceneLoader'
 import { useSceneStore } from '@/stores/useSceneStore'
-import { useCanvasStore } from '@/stores/useCanvasStore'
+import { useSceneConfigStore } from '@/stores/useSceneConfigStore'
+import { useCanvasUIStore } from '@/stores/useCanvasUIStore'
 import { useTemplateStore } from '@/stores/useTemplateStore'
+import { setAppOrigin } from '@/lib/env/app-origin'
 
 const CANVAS_PREVIEW_MAX_WIDTH = 560
 const STAGE_VIEWPORT_PADDING = 36
@@ -15,12 +17,12 @@ const STAGE_VIEWPORT_PADDING = 36
  */
 export function useEditorBootstrap(stageViewportRef: React.RefObject<HTMLDivElement | null>) {
   // ── Scene loader ──
-  const setStatus = useCanvasStore((s) => s.setStatus)
+  const setStatus = useCanvasUIStore((s) => s.setStatus)
   const setActiveTemplateId = useTemplateStore((s) => s.setActiveTemplateId)
   useSceneLoader({ setStatus, setActiveTemplateId })
 
   // ── Canvas zoom fit-width bridge (ResizeObserver) ──
-  const canvasSize = useCanvasStore((s) => s.canvasSize)
+  const canvasSize = useSceneConfigStore((s) => s.canvasSize)
 
   useEffect(() => {
     const viewport = stageViewportRef.current
@@ -36,7 +38,7 @@ export function useEditorBootstrap(stageViewportRef: React.RefObject<HTMLDivElem
         availableHeight * canvasAspectRatio,
         CANVAS_PREVIEW_MAX_WIDTH,
       )
-      useCanvasStore.getState().setCanvasFitWidth(Math.max(160, nextFitWidth))
+      useCanvasUIStore.getState().setCanvasFitWidth(Math.max(160, nextFitWidth))
     }
 
     updateFitWidth()
@@ -64,10 +66,7 @@ export function useEditorBootstrap(stageViewportRef: React.RefObject<HTMLDivElem
 
   // ── App origin ──
   useEffect(() => {
-    const timer = window.setTimeout(
-      () => useCanvasStore.getState().setAppOrigin(window.location.origin),
-      0,
-    )
+    const timer = window.setTimeout(() => setAppOrigin(window.location.origin), 0)
     return () => window.clearTimeout(timer)
   }, [])
 }

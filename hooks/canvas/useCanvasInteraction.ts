@@ -7,8 +7,8 @@ import { useDragManager } from './useDragManager'
 import { useMarqueeSelection } from './useMarqueeSelection'
 import { useSceneStore } from '@/stores/useSceneStore'
 import { useHistoryStore } from '@/stores/useHistoryStore'
-import { useCanvasStore } from '@/stores/useCanvasStore'
-import { markSceneEdited } from '@/stores/editor-actions'
+import { useSceneConfigStore } from '@/stores/useSceneConfigStore'
+import { markSceneEdited } from '@/stores/scene-commands'
 
 /**
  * 画布交互：svgRef + 拖拽/框选/交互 handlers + guides/marquee。
@@ -25,8 +25,8 @@ export function useCanvasInteraction() {
   // ── History Store ──
   const pushPast = useHistoryStore((s) => s.pushPast)
 
-  // ── Canvas Store ──
-  const canvasSize = useCanvasStore((s) => s.canvasSize)
+  // ── Scene Config Store ──
+  const canvasSize = useSceneConfigStore((s) => s.canvasSize)
 
   // ── Refs ──
   const svgRef = useRef<SVGSVGElement>(null)

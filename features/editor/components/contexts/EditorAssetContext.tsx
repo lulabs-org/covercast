@@ -6,8 +6,8 @@ import { type SceneElement } from '@/lib/domain/scene'
 import { createAssetManager } from '@/lib/operations/asset-manager'
 import { useLocalAssets } from '@/hooks/editor/useLocalAssets'
 import { useSceneStore } from '@/stores/useSceneStore'
-import { useCanvasStore } from '@/stores/useCanvasStore'
-import { changeSceneWithHistory } from '@/stores/editor-actions'
+import { useCanvasUIStore } from '@/stores/useCanvasUIStore'
+import { changeSceneWithHistory } from '@/stores/scene-commands'
 
 // ── Types ──
 interface EditorAssetValue {
@@ -25,8 +25,8 @@ export function EditorAssetProvider({ children }: { children: ReactNode }) {
   const selection = useSceneStore((s) => s.selection)
   const setSelection = useSceneStore((s) => s.setSelection)
 
-  // ── Canvas Store ──
-  const setStatus = useCanvasStore((s) => s.setStatus)
+  // ── Canvas UI Store ──
+  const setStatus = useCanvasUIStore((s) => s.setStatus)
 
   // ── Local asset blob URL resolution ──
   const { resolveSrc } = useLocalAssets(scene)
