@@ -1,5 +1,5 @@
 // Stores
-export { useSceneStore } from './useSceneStore'
+export { useSceneStore, selectSelectedElement } from './useSceneStore'
 export type { SceneSlice } from './useSceneStore'
 
 export { useHistoryStore } from './useHistoryStore'
@@ -23,6 +23,14 @@ export type { TemplateSlice, CustomSceneTemplate, SceneSlotInfo } from './useTem
 export {
   changeSceneWithHistory,
   markSceneEdited,
+  patchElementWithHistory,
+  toggleElementHiddenWithHistory,
+  toggleElementLockedWithHistory,
+  moveElementLayerWithHistory,
+  addTextElement,
+  addRectElement,
+  addEllipseElement,
+  deleteSelected,
   undoAction,
   redoAction,
   applyTemplateAction,

@@ -30,29 +30,11 @@ export function useCanvasInteraction() {
 
   // ── Refs ──
   const svgRef = useRef<SVGSVGElement>(null)
-  const sceneElementsRef = useRef<SceneElement[]>(scene.elements)
-  const selectedElementRef = useRef<SceneElement | null>(null)
   const [hitTestStrategy] = useState<HitTestStrategy>('intersection')
-
-  // ── Computed ──
-  const selectedElement = useMemo(() => {
-    if (selection.selectedIds.length !== 1) return null
-    return scene.elements.find((element) => element.id === selection.selectedIds[0]) ?? null
-  }, [scene.elements, selection.selectedIds])
-
-  // ── Sync refs ──
-  useEffect(() => {
-    sceneElementsRef.current = scene.elements
-  }, [scene.elements])
-
-  useEffect(() => {
-    selectedElementRef.current = selectedElement
-  }, [selectedElement])
 
   // ── Marquee selection ──
   const { handleCanvasPointerDown } = useMarqueeSelection({
     svgRef,
-    sceneElementsRef,
     hitTestStrategy,
     editingTextId,
   })
@@ -92,7 +74,6 @@ export function useCanvasInteraction() {
     handleGroupResizePointerDown,
     handleTextElementDoubleClick,
     // exposed for shortcuts
-    selectedElementRef,
     spatialIndexRef,
   }
 }

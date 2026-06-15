@@ -12,7 +12,6 @@ import {
   type HitTestStrategy,
 } from '@/lib/algorithms/marquee'
 import { clearSelection, selectMultiple, type SelectionState } from '@/lib/domain/selection'
-import { type SceneElement } from '@/lib/domain/scene'
 import { useSceneStore } from '@/stores/useSceneStore'
 import { useInteractionStore } from '@/stores/useInteractionStore'
 
@@ -32,12 +31,10 @@ function getSvgPoint(svg: SVGSVGElement, clientX: number, clientY: number) {
 
 export function useMarqueeSelection({
   svgRef,
-  sceneElementsRef,
   hitTestStrategy,
   editingTextId,
 }: {
   svgRef: React.RefObject<SVGSVGElement | null>
-  sceneElementsRef: React.MutableRefObject<SceneElement[]>
   hitTestStrategy: HitTestStrategy
   editingTextId: string | null
 }) {
@@ -99,7 +96,11 @@ export function useMarqueeSelection({
 
       if (hasMarqueeSize(prevMarquee, 5)) {
         const rect = getMarqueeRect(prevMarquee)
-        const hitIds = hitTestElements(rect, sceneElementsRef.current, hitTestStrategy)
+        const hitIds = hitTestElements(
+          rect,
+          useSceneStore.getState().scene.elements,
+          hitTestStrategy,
+        )
 
         if (hitIds.length > 0) {
           selectionUpdater = (prevSelection) =>
@@ -128,7 +129,7 @@ export function useMarqueeSelection({
       window.removeEventListener('pointermove', handlePointerMove)
       window.removeEventListener('pointerup', handlePointerUp)
     }
-  }, [marquee, hitTestStrategy, svgRef, sceneElementsRef, setSelection, setMarquee])
+  }, [marquee, hitTestStrategy, svgRef, setSelection, setMarquee])
 
   const handleCanvasPointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {
     const svg = svgRef.current

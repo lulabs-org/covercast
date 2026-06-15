@@ -5,13 +5,28 @@
  * 非 React 上下文可用（内部使用 getState()）。
  */
 
-import { cloneScene, type Scene } from '@/lib/domain/scene'
+import { cloneScene, type Scene, type SceneElement } from '@/lib/domain/scene'
+import { createTextElement, createRectElement, createEllipseElement } from '@/lib/domain/scene'
 import { useSceneStore } from './useSceneStore'
 import { useHistoryStore } from './useHistoryStore'
 import { useCanvasUIStore } from './useCanvasUIStore'
 import { useTemplateStore } from './useTemplateStore'
 import { BUILT_IN_TEMPLATES, createSceneFromTemplate } from '@/lib/templates'
-import { selectSingle, createSelectionState } from '@/lib/domain/selection'
+import { selectSingle, clearSelection, createSelectionState } from '@/lib/domain/selection'
+
+// ── History helpers ──
+
+function pushHistorySnapshot(description: string) {
+  const { scene, selection } = useSceneStore.getState()
+  useHistoryStore.getState().pushPast({
+    scene: cloneScene(scene),
+    selectedIds: selection.selectedIds,
+    description,
+    timestamp: Date.now(),
+  })
+}
+
+// ── Scene-level commands ──
 
 /**
  * 修改场景并记录历史。
@@ -22,13 +37,7 @@ export function changeSceneWithHistory(
   description?: string,
 ) {
   if (description) {
-    const { scene, selection } = useSceneStore.getState()
-    useHistoryStore.getState().pushPast({
-      scene: cloneScene(scene),
-      selectedIds: selection.selectedIds,
-      description,
-      timestamp: Date.now(),
-    })
+    pushHistorySnapshot(description)
   }
 
   if (typeof updater === 'function') {
@@ -51,6 +60,94 @@ export function markSceneEdited() {
     useTemplateStore.setState({ activeTemplateId: '' })
   }
 }
+
+// ── Element-level commands (with history) ──
+
+/** 修改单个元素属性并记录历史 */
+export function patchElementWithHistory(
+  elementId: string,
+  patch: Partial<SceneElement>,
+  description = '修改元素属性',
+) {
+  pushHistorySnapshot(description)
+  useSceneStore.getState().patchElement(elementId, patch)
+  markSceneEdited()
+}
+
+/** 切换元素显示状态并记录历史 */
+export function toggleElementHiddenWithHistory(elementId: string) {
+  pushHistorySnapshot('切换元素显示状态')
+  useSceneStore.getState().toggleElementHidden(elementId)
+  markSceneEdited()
+}
+
+/** 切换元素锁定状态并记录历史 */
+export function toggleElementLockedWithHistory(elementId: string) {
+  pushHistorySnapshot('切换元素锁定状态')
+  useSceneStore.getState().toggleElementLocked(elementId)
+  markSceneEdited()
+}
+
+/** 调整图层顺序并记录历史 */
+export function moveElementLayerWithHistory(elementId: string, direction: 'forward' | 'backward') {
+  pushHistorySnapshot('调整图层顺序')
+  useSceneStore.getState().moveElementLayer(elementId, direction)
+  markSceneEdited()
+}
+
+/** 添加文字元素并记录历史 */
+export function addTextElement() {
+  const element = createTextElement()
+  pushHistorySnapshot('添加文字元素')
+  useSceneStore.getState().insertElement(element)
+  useSceneStore
+    .getState()
+    .setSelection(selectSingle(useSceneStore.getState().selection, element.id))
+  markSceneEdited()
+}
+
+/** 添加矩形元素并记录历史 */
+export function addRectElement() {
+  const element = createRectElement()
+  pushHistorySnapshot('添加矩形元素')
+  useSceneStore.getState().insertElement(element)
+  useSceneStore
+    .getState()
+    .setSelection(selectSingle(useSceneStore.getState().selection, element.id))
+  markSceneEdited()
+}
+
+/** 添加椭圆元素并记录历史 */
+export function addEllipseElement() {
+  const element = createEllipseElement()
+  pushHistorySnapshot('添加椭圆元素')
+  useSceneStore.getState().insertElement(element)
+  useSceneStore
+    .getState()
+    .setSelection(selectSingle(useSceneStore.getState().selection, element.id))
+  markSceneEdited()
+}
+
+/** 删除选中元素并记录历史 */
+export function deleteSelected() {
+  const { selection, scene } = useSceneStore.getState()
+  if (selection.selectedIds.length === 0) return
+
+  pushHistorySnapshot('删除元素')
+  useSceneStore.getState().removeElements(selection.selectedIds)
+
+  const remainingElement = scene.elements.find(
+    (element) => !selection.selectedIds.includes(element.id),
+  )
+  if (remainingElement?.id) {
+    useSceneStore.getState().setSelection(selectSingle(selection, remainingElement.id))
+  } else {
+    useSceneStore.getState().setSelection(clearSelection(selection))
+  }
+  markSceneEdited()
+}
+
+// ── Undo / Redo ──
 
 /**
  * 撤销：从历史栈弹出上一状态，恢复场景和选区。

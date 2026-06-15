@@ -1,21 +1,29 @@
 'use client'
 
-import { createContext, useContext, useMemo, useEffect, useRef } from 'react'
+import { createContext, useContext, useMemo } from 'react'
 import type { ReactNode } from 'react'
 import { type SceneElement } from '@/lib/domain/scene'
-import { createSceneActions } from '@/lib/operations/scene-actions'
 import { useClipboard } from '@/hooks/editor/useClipboard'
 import { useEditorShortcuts } from '@/hooks/editor/useEditorShortcuts'
 import { useSceneStore } from '@/stores/useSceneStore'
 import { useSceneConfigStore } from '@/stores/useSceneConfigStore'
 import { useCanvasUIStore } from '@/stores/useCanvasUIStore'
-import { useInteractionStore } from '@/stores/useInteractionStore'
-import { changeSceneWithHistory, undoAction, redoAction } from '@/stores/scene-commands'
+import {
+  patchElementWithHistory,
+  toggleElementHiddenWithHistory,
+  toggleElementLockedWithHistory,
+  moveElementLayerWithHistory,
+  addTextElement,
+  addRectElement,
+  addEllipseElement,
+  deleteSelected,
+  undoAction,
+  redoAction,
+} from '@/stores/scene-commands'
 import type { SpatialIndex } from '@/lib/algorithms/spatial-index'
 
 // ── Types ──
 interface EditorActionValue {
-  patchSelected: (selectedElement: SceneElement | null, patch: Partial<SceneElement>) => void
   patchElement: (elementId: string, patch: Partial<SceneElement>) => void
   toggleElementHidden: (elementId: string) => void
   toggleElementLocked: (elementId: string) => void
@@ -35,18 +43,15 @@ const EditorActionContext = createContext<EditorActionValue | null>(null)
 // ── Provider ──
 export function EditorActionProvider({
   children,
-  selectedElementRef,
   spatialIndexRef,
 }: {
   children: ReactNode
-  selectedElementRef: React.MutableRefObject<SceneElement | null>
   spatialIndexRef: React.MutableRefObject<SpatialIndex>
 }) {
   // ── Scene Store ──
   const scene = useSceneStore((s) => s.scene)
   const selection = useSceneStore((s) => s.selection)
   const editingTextId = useSceneStore((s) => s.editingTextId)
-  const setSelection = useSceneStore((s) => s.setSelection)
 
   // ── Canvas UI Store ──
   const setStatus = useCanvasUIStore((s) => s.setStatus)
@@ -54,24 +59,7 @@ export function EditorActionProvider({
   // ── Scene Config Store ──
   const canvasSize = useSceneConfigStore((s) => s.canvasSize)
 
-  // ── Scene actions ──
-  const sceneActions = useMemo(
-    () =>
-      createSceneActions({
-        scene,
-        selection,
-        changeScene: changeSceneWithHistory,
-        setSelection,
-      }),
-    [scene, selection, changeSceneWithHistory, setSelection],
-  )
-
   // ── Clipboard ──
-  const sceneElementsRef = useRef(scene.elements)
-  useEffect(() => {
-    sceneElementsRef.current = scene.elements
-  }, [scene.elements])
-
   const {
     canPasteElement,
     copySelectedElements,
@@ -79,11 +67,7 @@ export function EditorActionProvider({
     elementClipboardRef,
     elementsClipboardRef,
   } = useClipboard({
-    selectedElementRef,
-    sceneElementsRef,
     selectedIds: selection.selectedIds,
-    changeScene: changeSceneWithHistory,
-    markSceneEdited: () => {},
     setStatus,
     canvasWidth: canvasSize.width,
     canvasHeight: canvasSize.height,
@@ -98,30 +82,27 @@ export function EditorActionProvider({
     redo: redoAction,
     copySelectedElements,
     pasteCopiedElements,
-    deleteSelected: sceneActions.deleteSelected,
-    selectedElementRef,
+    deleteSelected,
     elementClipboardRef,
     elementsClipboardRef,
     spatialIndexRef,
-    markSceneEdited: () => {},
   })
 
   const value = useMemo<EditorActionValue>(
     () => ({
-      patchSelected: sceneActions.patchSelected,
-      patchElement: sceneActions.patchElement,
-      toggleElementHidden: sceneActions.toggleElementHidden,
-      toggleElementLocked: sceneActions.toggleElementLocked,
-      moveElementLayer: sceneActions.moveElementLayer,
-      addTextElement: sceneActions.addTextElement,
-      addRectElement: sceneActions.addRectElement,
-      addEllipseElement: sceneActions.addEllipseElement,
-      deleteSelected: sceneActions.deleteSelected,
+      patchElement: patchElementWithHistory,
+      toggleElementHidden: toggleElementHiddenWithHistory,
+      toggleElementLocked: toggleElementLockedWithHistory,
+      moveElementLayer: moveElementLayerWithHistory,
+      addTextElement,
+      addRectElement,
+      addEllipseElement,
+      deleteSelected,
       canPasteElement,
       copySelectedElements,
       pasteCopiedElements,
     }),
-    [sceneActions, canPasteElement, copySelectedElements, pasteCopiedElements],
+    [canPasteElement, copySelectedElements, pasteCopiedElements],
   )
 
   return <EditorActionContext.Provider value={value}>{children}</EditorActionContext.Provider>

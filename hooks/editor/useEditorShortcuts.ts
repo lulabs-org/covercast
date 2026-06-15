@@ -37,11 +37,9 @@ type UseEditorShortcutsOptions = {
   copySelectedElements: () => void
   pasteCopiedElements: () => void
   deleteSelected: () => void
-  selectedElementRef: React.MutableRefObject<SceneElement | null>
   elementClipboardRef: React.MutableRefObject<SceneElement | null>
   elementsClipboardRef: React.MutableRefObject<SceneElement[] | null>
   spatialIndexRef: React.MutableRefObject<SpatialIndex>
-  markSceneEdited: () => void
 }
 
 export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
@@ -57,7 +55,6 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
     elementClipboardRef,
     elementsClipboardRef,
     spatialIndexRef,
-    markSceneEdited,
   } = options
 
   // ── Store setters ──
@@ -189,7 +186,6 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
             elements: updatedElements,
           }
         })
-        markSceneEdited()
         return
       }
 
@@ -229,7 +225,6 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
     selection.selectedIds,
     editingTextId,
     scene.elements,
-    markSceneEdited,
     elementClipboardRef,
     elementsClipboardRef,
     spatialIndexRef,

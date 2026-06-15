@@ -7,6 +7,7 @@ import {
 } from '@/lib/domain/scene'
 import { selectSingle, selectMultiple } from '@/lib/domain/selection'
 import { useSceneStore } from '@/stores/useSceneStore'
+import { changeSceneWithHistory } from '@/stores/scene-commands'
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max)
@@ -56,11 +57,7 @@ function createPastedSceneElement(
 }
 
 type UseClipboardOptions = {
-  selectedElementRef: React.MutableRefObject<SceneElement | null>
-  sceneElementsRef: React.MutableRefObject<SceneElement[]>
   selectedIds: string[]
-  changeScene: (updater: (currentScene: Scene) => Scene, description?: string) => void
-  markSceneEdited: () => void
   setStatus: (status: string) => void
   canvasWidth?: number
   canvasHeight?: number
@@ -68,11 +65,7 @@ type UseClipboardOptions = {
 
 export function useClipboard(options: UseClipboardOptions) {
   const {
-    selectedElementRef,
-    sceneElementsRef,
     selectedIds,
-    changeScene,
-    markSceneEdited,
     setStatus,
     canvasWidth = DEFAULT_CANVAS_WIDTH,
     canvasHeight = DEFAULT_CANVAS_HEIGHT,
@@ -94,7 +87,7 @@ export function useClipboard(options: UseClipboardOptions) {
       return
     }
 
-    const elements = sceneElementsRef.current
+    const elements = useSceneStore.getState().scene.elements
     const selectedElements = elements.filter((el) => selectedIds.includes(el.id))
 
     if (selectedElements.length === 0) {
@@ -115,7 +108,7 @@ export function useClipboard(options: UseClipboardOptions) {
       setCanPasteElement(true)
       setStatus(`已复制 ${selectedElements.length} 个组件`)
     }
-  }, [selectedIds, sceneElementsRef, setStatus])
+  }, [selectedIds, setStatus])
 
   const pasteCopiedElements = useCallback(() => {
     const sourceElements = elementsClipboardRef.current
@@ -127,7 +120,7 @@ export function useClipboard(options: UseClipboardOptions) {
     }
 
     const offset = 24 * pasteOffsetRef.current
-    const currentElements = sceneElementsRef.current
+    const currentElements = useSceneStore.getState().scene.elements
 
     if (sourceElement) {
       const pastedElement = createPastedSceneElement(
@@ -139,10 +132,8 @@ export function useClipboard(options: UseClipboardOptions) {
         canvasHeight,
       )
       pasteOffsetRef.current += 1
-      sceneElementsRef.current = [...currentElements, pastedElement]
-      selectedElementRef.current = pastedElement
 
-      changeScene(
+      changeSceneWithHistory(
         (currentScene) => ({
           ...currentScene,
           elements: [...currentScene.elements, pastedElement],
@@ -150,7 +141,6 @@ export function useClipboard(options: UseClipboardOptions) {
         `粘贴元素「${pastedElement.name}」`,
       )
       setSelection((prev) => selectSingle(prev, pastedElement.id))
-      markSceneEdited()
       setStatus(`已粘贴「${pastedElement.name}」`)
     } else if (sourceElements && sourceElements.length > 0) {
       const pastedElements: SceneElement[] = []
@@ -170,10 +160,9 @@ export function useClipboard(options: UseClipboardOptions) {
       }
 
       pasteOffsetRef.current += 1
-      sceneElementsRef.current = updatedElements
       const pastedIds = pastedElements.map((el) => el.id)
 
-      changeScene(
+      changeSceneWithHistory(
         (currentScene) => ({
           ...currentScene,
           elements: [...currentScene.elements, ...pastedElements],
@@ -181,19 +170,9 @@ export function useClipboard(options: UseClipboardOptions) {
         `粘贴 ${pastedElements.length} 个元素`,
       )
       setSelection((prev) => selectMultiple(prev, pastedIds, false))
-      markSceneEdited()
       setStatus(`已粘贴 ${pastedElements.length} 个组件`)
     }
-  }, [
-    sceneElementsRef,
-    selectedElementRef,
-    changeScene,
-    setSelection,
-    markSceneEdited,
-    setStatus,
-    canvasWidth,
-    canvasHeight,
-  ])
+  }, [setSelection, setStatus, canvasWidth, canvasHeight])
 
   return {
     elementClipboardRef,
