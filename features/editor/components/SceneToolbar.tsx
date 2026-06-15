@@ -1,6 +1,6 @@
 'use client'
 
-import { TemplateToolbarButtons } from '../panels/TemplatePanel'
+import { TemplateToolbarButtons } from './panels/TemplatePanel'
 import { EXPORT_FORMAT_OPTIONS } from '@/hooks/ui/useExportScene'
 import { useHistoryStore } from '@/stores/useHistoryStore'
 import { useCanvasStore } from '@/stores/useCanvasStore'

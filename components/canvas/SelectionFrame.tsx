@@ -1,7 +1,7 @@
 import { type PointerEvent } from 'react'
 import { type SceneElement } from '@/lib/domain/scene'
 import { elementBounds } from '@/lib/rendering/scene-helpers'
-import styles from '../editor/stage.module.css'
+import styles from './canvas.module.css'
 
 export function SelectionFrame({
   element,

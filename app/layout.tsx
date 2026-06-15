@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import '../styles/fonts.css'
-import JsonLd from '@/components/seo/JsonLd'
+import JsonLd from '@/lib/seo/JsonLd'
 import { SITE_CONFIG, OPEN_GRAPH, TWITTER_CARD, PAGE_METADATA } from '@/lib/config/seo'
 
 export const metadata: Metadata = {

@@ -118,18 +118,6 @@
   box-shadow: 0 18px 50px rgba(15, 23, 42, 0.26);
 }
 
-.sceneElement {
-  cursor: move;
-}
-
-.sceneElement.locked {
-  cursor: default;
-}
-
-.selectionHandle {
-  cursor: nwse-resize;
-}
-
 /* ─── Responsive ─── */
 @media (max-width: 1180px) {
   .stagePanel {

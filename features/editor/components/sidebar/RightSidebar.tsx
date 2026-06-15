@@ -3,7 +3,7 @@
 import { useEditorActions } from '../contexts/EditorActionContext'
 import { useEditorAsset } from '../contexts/EditorAssetContext'
 import { useEditorFont } from '../contexts/EditorFontContext'
-import { ElementInspector } from '../../panels/ElementInspector'
+import { ElementInspector } from '../panels/ElementInspector'
 import { useSceneStore } from '@/stores/useSceneStore'
 import styles from '@/features/editor/styles/editor-page.module.css'
 import ui from '@/styles/ui.module.css'

@@ -3,7 +3,7 @@ import { type SceneElement } from '@/lib/domain/scene'
 import { ShapeElementView } from './ShapeElementView'
 import { TextElementView } from './TextElementView'
 import { ImageElementView } from './ImageElementView'
-import styles from '../../editor/stage.module.css'
+import styles from '../canvas.module.css'
 
 export function ElementView({
   element,

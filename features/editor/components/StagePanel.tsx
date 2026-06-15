@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import SceneCanvas from '../SceneCanvas'
+import SceneCanvas from '@/components/SceneCanvas'
 import { useEditorCanvas } from './contexts/EditorCanvasContext'
 import { useEditorAsset } from './contexts/EditorAssetContext'
 import { useSceneStore } from '@/stores/useSceneStore'
