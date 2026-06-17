@@ -1,5 +1,5 @@
 import { cn } from '@/shared/lib'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Input } from './Input'
 
 function isHexColor(value: string): boolean {
@@ -13,25 +13,25 @@ export interface ColorPickerProps {
 }
 
 export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
-  // 内部维护 draft textValue
-  const [textValue, setTextValue] = useState(value)
+  // 内部维护 draft textValue，用于用户输入非法值时的临时显示
+  const [draftValue, setDraftValue] = useState<string | null>(null)
 
-  // value 变化时同步 textValue
-  useEffect(() => {
-    setTextValue(value)
-  }, [value])
+  // 渲染时计算显示值：用户正在编辑时用 draft，否则用外部 value
+  const displayValue = draftValue ?? value
 
-  // color input 改变 → 立即 onChange
+  // color input 改变 → 立即 onChange，清除 draft
   const handleColorChange = (color: string) => {
-    setTextValue(color)
+    setDraftValue(null)
     onChange(color)
   }
 
-  // text input 改变 → 合法 HEX 时 onChange，非法时仅更新本地显示
+  // text input 改变 → 合法 HEX 时 onChange 并清除 draft，非法时仅更新 draft
   const handleTextChange = (text: string) => {
-    setTextValue(text)
     if (isHexColor(text)) {
+      setDraftValue(null)
       onChange(text)
+    } else {
+      setDraftValue(text)
     }
   }
 
@@ -44,10 +44,10 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
         onChange={(e) => handleColorChange(e.currentTarget.value)}
         className="p-[3px] border border-[#cfd8e8] rounded-[6px] bg-white cursor-pointer"
       />
-      {/* text input 绑定 draft textValue */}
+      {/* text input 绑定 displayValue */}
       <Input
         type="text"
-        value={textValue}
+        value={displayValue}
         onChange={(e) => handleTextChange(e.currentTarget.value)}
         placeholder="#ffffff"
         className="font-mono"
