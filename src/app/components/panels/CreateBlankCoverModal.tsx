@@ -3,6 +3,8 @@
 import { useState, useCallback, type ChangeEvent } from 'react'
 import { createPortal } from 'react-dom'
 import type { BlankCoverConfig } from '../../hooks/useCreateBlankCover'
+import { ColorPicker, Slider, Button } from '@/shared/components/ui'
+import { clamp } from '@/shared/lib'
 
 type TemplateOption = {
   id: string
@@ -26,14 +28,6 @@ type CreateBlankCoverModalProps = {
   onCancel: () => void
   onConfirm: () => void
   onUpdateConfig: (updates: Partial<BlankCoverConfig>) => void
-}
-
-function isHexColor(value: string): boolean {
-  return /^#[0-9A-Fa-f]{6}$/.test(value)
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value))
 }
 
 export function CreateBlankCoverModal({
@@ -99,18 +93,15 @@ export function CreateBlankCoverModal({
   )
 
   const handleColorChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      onUpdateConfig({ backgroundColor: e.target.value })
+    (color: string) => {
+      onUpdateConfig({ backgroundColor: color })
     },
     [onUpdateConfig],
   )
 
   const handleOpacityChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      const opacity = parseFloat(e.target.value)
-      if (!isNaN(opacity)) {
-        onUpdateConfig({ backgroundOpacity: clamp(opacity, 0, 1) })
-      }
+    (opacity: number) => {
+      onUpdateConfig({ backgroundOpacity: clamp(opacity, 0, 1) })
     },
     [onUpdateConfig],
   )
@@ -127,7 +118,6 @@ export function CreateBlankCoverModal({
   }
 
   const selectedSizeValue = isCustomSize ? 'custom' : currentPresetId
-  const colorValue = isHexColor(config.backgroundColor) ? config.backgroundColor : '#1e293b'
   const opacity = clamp(config.backgroundOpacity, 0, 1)
 
   const modalContent = (
@@ -210,25 +200,16 @@ export function CreateBlankCoverModal({
             <h3>背景设置</h3>
             <label className="field">
               <span>背景颜色</span>
-              <div className="color-input-wrapper">
-                <input type="color" value={colorValue} onChange={handleColorChange} />
-                <input
-                  type="text"
-                  value={config.backgroundColor}
-                  onChange={handleColorChange}
-                  placeholder="#1e293b"
-                />
-              </div>
+              <ColorPicker value={config.backgroundColor} onChange={handleColorChange} />
             </label>
             <label className="field">
               <span>不透明度</span>
-              <input
-                type="range"
+              <Slider
                 min={0}
                 max={1}
                 step={0.01}
                 value={opacity}
-                onChange={handleOpacityChange}
+                onValueChange={handleOpacityChange}
               />
               <span className="opacity-value">{Math.round(opacity * 100)}%</span>
             </label>
@@ -236,12 +217,12 @@ export function CreateBlankCoverModal({
         </div>
 
         <footer className="modal-footer">
-          <button type="button" className="secondary-button" onClick={onCancel}>
+          <Button variant="secondary" onClick={onCancel}>
             取消
-          </button>
-          <button type="button" className="primary-button" onClick={onConfirm}>
+          </Button>
+          <Button variant="primary" onClick={onConfirm}>
             创建
-          </button>
+          </Button>
         </footer>
       </section>
     </div>

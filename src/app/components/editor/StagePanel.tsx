@@ -6,6 +6,7 @@ import type { Scene } from '../../lib/scene'
 import type { GuideLine, MeasurementGuide, ResizeLabel } from '../../lib/smart-guide'
 import type { HitTestStrategy, MarqueeState } from '../../lib/marquee'
 import type { ResizeHandleType } from '../../lib/group-drag'
+import { Slider } from '@/shared/components/ui'
 
 type StagePanelProps = {
   // Status
@@ -105,13 +106,12 @@ export function StagePanel({
             </button>
             <label className="zoom-slider-label">
               <span>{canvasZoomPercent}%</span>
-              <input
-                type="range"
+              <Slider
                 min={CANVAS_ZOOM_MIN}
                 max={CANVAS_ZOOM_MAX}
                 step={CANVAS_ZOOM_STEP}
                 value={canvasZoom}
-                onChange={(event) => setCanvasZoomLevel(Number(event.currentTarget.value))}
+                onValueChange={setCanvasZoomLevel}
                 title="调整画布缩放"
               />
             </label>
