@@ -1,5 +1,5 @@
 import { DEFAULT_FONT_FAMILY } from '../fonts'
-import type { Scene, SceneTemplate } from '../scene'
+import type { Scene, SceneTemplate } from './types'
 
 const emptyScene: Scene = {
   version: 1,
