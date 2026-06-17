@@ -5,8 +5,10 @@ import {
   cloneScene,
   BUILT_IN_TEMPLATES,
   type Scene,
-} from '../lib/scene'
-import { selectSingle, createSelectionState, type SelectionState } from '../lib/selection'
+  selectSingle,
+  createSelectionState,
+  type SelectionState,
+} from '@/domain'
 import type { CanvasSizePreset, CanvasSize } from './useCanvasSize'
 import type { CustomSceneTemplate } from './useTemplateManager'
 

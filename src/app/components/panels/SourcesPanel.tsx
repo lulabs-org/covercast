@@ -1,7 +1,7 @@
 'use client'
 
 import { type ReactNode, useState } from 'react'
-import { BUILT_IN_TEMPLATES } from '../../lib/scene'
+import { BUILT_IN_TEMPLATES } from '@/domain'
 import { type CustomSceneTemplate, type SceneSlotInfo } from '../../hooks/useTemplateManager'
 
 function SidebarSection({

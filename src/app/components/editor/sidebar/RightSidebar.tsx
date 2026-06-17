@@ -2,7 +2,7 @@
 
 import type { Ref } from 'react'
 import { ElementInspector } from '../../panels/ElementInspector'
-import type { SceneElement } from '../../../lib/scene'
+import type { SceneElement } from '@/domain'
 import type { useLocalFonts } from '../../../hooks/useLocalFonts'
 
 type LocalFontManager = ReturnType<typeof useLocalFonts>

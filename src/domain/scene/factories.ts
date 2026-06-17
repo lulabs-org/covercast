@@ -1,4 +1,4 @@
-import { DEFAULT_FONT_FAMILY } from '../fonts'
+import { DEFAULT_FONT_FAMILY } from '@/app/lib/fonts'
 import type { TextElement, ShapeElement, ImageElement } from './types'
 
 export function createTextElement(): TextElement {

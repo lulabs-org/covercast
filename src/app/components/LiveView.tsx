@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { createDefaultScene, isImageElement, type Scene } from '../lib/scene'
+import { createDefaultScene, isImageElement, type Scene } from '@/domain'
 import { isLocalAssetSrc, parseLocalAssetId, getLocalAssetBlobUrl } from '../lib/localAssetStorage'
 import SceneCanvas from './SceneCanvas'
 

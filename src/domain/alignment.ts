@@ -1,4 +1,5 @@
 import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH } from './scene'
+import { SpatialIndex } from './spatial-index'
 
 export type GuideMode = 'drag' | 'keyboard'
 
@@ -882,13 +883,11 @@ export function computeResizeSnap(
   canvasWidth = DEFAULT_CANVAS_WIDTH,
   canvasHeight = DEFAULT_CANVAS_HEIGHT,
 ): ResizeSnapResult {
-  const nextSnap: ResizeSnapState = { w: null, h: null }
   let snapDw = 0
   let snapDh = 0
+  const nextSnap: ResizeSnapState = { w: null, h: null }
 
-  const dCenterH = rawRect.x + rawRect.width / 2
   const dRight = rawRect.x + rawRect.width
-  const dCenterV = rawRect.y + rawRect.height / 2
   const dBottom = rawRect.y + rawRect.height
 
   const wCandidates: SnapCandidate[] = []
@@ -901,45 +900,33 @@ export function computeResizeSnap(
     wCandidates.push({ delta: canvasWidth - dRight, type: 'right' })
   }
 
-  if (Math.abs(dCenterH - canvasCx) < threshold) {
-    wCandidates.push({ delta: 2 * (canvasCx - dCenterH), type: 'center-h' })
+  if (Math.abs(rawRect.x + rawRect.width / 2 - canvasCx) < threshold) {
+    wCandidates.push({ delta: canvasCx * 2 - rawRect.x - rawRect.width, type: 'center-h' })
   }
 
   if (Math.abs(dBottom - canvasHeight) < threshold) {
     hCandidates.push({ delta: canvasHeight - dBottom, type: 'bottom' })
   }
 
-  if (Math.abs(dCenterV - canvasCy) < threshold) {
-    hCandidates.push({ delta: 2 * (canvasCy - dCenterV), type: 'center-v' })
+  if (Math.abs(rawRect.y + rawRect.height / 2 - canvasCy) < threshold) {
+    hCandidates.push({ delta: canvasCy * 2 - rawRect.y - rawRect.height, type: 'center-v' })
   }
 
   for (const other of others) {
     const oLeft = other.x
-    const oCenterH = other.x + other.width / 2
     const oRight = other.x + other.width
     const oTop = other.y
-    const oCenterV = other.y + other.height / 2
     const oBottom = other.y + other.height
 
-    const dwLo = oLeft - dRight
-    const dwRo = oRight - dRight
-    const dwCo = oCenterH - dRight
-    const dwCc = oCenterH - dCenterH
+    const dwRoRo = oRight - dRight
+    const dwRoLo = oLeft - dRight
+    const dhBoBo = oBottom - dBottom
+    const dhBoTo = oTop - dBottom
 
-    const dhTo = oTop - dBottom
-    const dhBo = oBottom - dBottom
-    const dhCv = oCenterV - dBottom
-    const dhCvc = oCenterV - dCenterV
-
-    if (Math.abs(dwLo) < threshold) wCandidates.push({ delta: dwLo, type: 'left' })
-    if (Math.abs(dwRo) < threshold) wCandidates.push({ delta: dwRo, type: 'right' })
-    if (Math.abs(dwCo) < threshold) wCandidates.push({ delta: dwCo, type: 'center-h' })
-    if (Math.abs(dwCc) < threshold) wCandidates.push({ delta: 2 * dwCc, type: 'center-h' })
-
-    if (Math.abs(dhTo) < threshold) hCandidates.push({ delta: dhTo, type: 'top' })
-    if (Math.abs(dhBo) < threshold) hCandidates.push({ delta: dhBo, type: 'bottom' })
-    if (Math.abs(dhCv) < threshold) hCandidates.push({ delta: dhCv, type: 'center-v' })
-    if (Math.abs(dhCvc) < threshold) hCandidates.push({ delta: 2 * dhCvc, type: 'center-v' })
+    if (Math.abs(dwRoRo) < threshold) wCandidates.push({ delta: dwRoRo, type: 'right' })
+    if (Math.abs(dwRoLo) < threshold) wCandidates.push({ delta: dwRoLo, type: 'right' })
+    if (Math.abs(dhBoBo) < threshold) hCandidates.push({ delta: dhBoBo, type: 'bottom' })
+    if (Math.abs(dhBoTo) < threshold) hCandidates.push({ delta: dhBoTo, type: 'bottom' })
   }
 
   const prevW = prevSnap?.w ?? null
@@ -983,33 +970,17 @@ export function computeResizeSnap(
   }
 }
 
-import { SpatialIndex } from './spatial-index'
-
 const GUIDE_QUERY_RANGE = 200
 
 export function computeGuidesOptimized(
   dragged: Rect,
   spatialIndex: SpatialIndex,
   threshold = DEFAULT_THRESHOLD,
-  context?: GuideContext,
   canvasWidth = DEFAULT_CANVAS_WIDTH,
   canvasHeight = DEFAULT_CANVAS_HEIGHT,
 ): GuideLine[] {
-  const nearbyElements = spatialIndex.queryNearby(dragged, GUIDE_QUERY_RANGE)
-  const effectiveThreshold = context?.mode === 'keyboard' ? 1 : threshold
-  const guides = computeGuides(
-    dragged,
-    nearbyElements,
-    effectiveThreshold,
-    canvasWidth,
-    canvasHeight,
-  )
-
-  if (context?.mode) {
-    return guides.map((guide) => ({ ...guide, mode: context.mode }))
-  }
-
-  return guides
+  const nearbyRects = spatialIndex.queryNearby(dragged, GUIDE_QUERY_RANGE)
+  return computeGuides(dragged, nearbyRects, threshold, canvasWidth, canvasHeight)
 }
 
 export function computeSnapOptimized(
@@ -1018,45 +989,28 @@ export function computeSnapOptimized(
   prevSnap: SnapState | null = null,
   threshold = SNAP_THRESHOLD,
   hysteresis = SNAP_HYSTERESIS,
-  context?: GuideContext,
   canvasWidth = DEFAULT_CANVAS_WIDTH,
   canvasHeight = DEFAULT_CANVAS_HEIGHT,
 ): SnapResult {
-  const nearbyElements = spatialIndex.queryNearby(rawRect, GUIDE_QUERY_RANGE)
-  const result = computeSnap(
+  const nearbyRects = spatialIndex.queryNearby(rawRect, GUIDE_QUERY_RANGE)
+  return computeSnap(
     rawRect,
-    nearbyElements,
+    nearbyRects,
     prevSnap,
     threshold,
     hysteresis,
     canvasWidth,
     canvasHeight,
   )
-
-  if (context?.mode) {
-    return {
-      ...result,
-      guides: result.guides.map((guide) => ({ ...guide, mode: context.mode })),
-    }
-  }
-
-  return result
 }
 
 export function computeSpacingGuidesOptimized(
   dragged: Rect,
   spatialIndex: SpatialIndex,
-  context?: GuideContext,
+  alignThreshold = SPACING_ALIGN_THRESHOLD,
 ): MeasurementGuide[] {
-  const nearbyElements = spatialIndex.queryNearby(dragged, GUIDE_QUERY_RANGE)
-  const alignThreshold = context?.mode === 'keyboard' ? 1 : SPACING_ALIGN_THRESHOLD
-  const spacingGuides = computeSpacingGuides(dragged, nearbyElements, alignThreshold)
-
-  if (context?.mode) {
-    return spacingGuides.map((guide) => ({ ...guide, mode: context.mode }))
-  }
-
-  return spacingGuides
+  const nearbyRects = spatialIndex.queryNearby(dragged, GUIDE_QUERY_RANGE)
+  return computeSpacingGuides(dragged, nearbyRects, alignThreshold)
 }
 
 export function computeResizeSnapOptimized(
@@ -1068,10 +1022,10 @@ export function computeResizeSnapOptimized(
   canvasWidth = DEFAULT_CANVAS_WIDTH,
   canvasHeight = DEFAULT_CANVAS_HEIGHT,
 ): ResizeSnapResult {
-  const nearbyElements = spatialIndex.queryNearby(rawRect, GUIDE_QUERY_RANGE)
+  const nearbyRects = spatialIndex.queryNearby(rawRect, GUIDE_QUERY_RANGE)
   return computeResizeSnap(
     rawRect,
-    nearbyElements,
+    nearbyRects,
     prevSnap,
     threshold,
     hysteresis,

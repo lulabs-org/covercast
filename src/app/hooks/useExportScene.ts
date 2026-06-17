@@ -6,8 +6,8 @@ import {
   isImageElement,
   type ImageElement,
   type Scene,
-} from '../lib/scene'
-import { sceneToSvgMarkup } from '../lib/scene-svg'
+  sceneToSvgMarkup,
+} from '@/domain'
 import { isLocalAssetSrc, parseLocalAssetId, getLocalAssetDataUrl } from '../lib/localAssetStorage'
 
 export type ExportFormat = 'png' | 'jpeg' | 'svg' | 'json'

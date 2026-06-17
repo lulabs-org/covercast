@@ -1,4 +1,4 @@
-import { Rect } from './smart-guide'
+import { Rect } from './alignment'
 
 const CELL_SIZE = 100
 

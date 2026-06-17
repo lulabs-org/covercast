@@ -12,7 +12,7 @@ import {
   type ShapeFillMode,
   type TextAlign,
   type TextElement,
-} from '../../lib/scene'
+} from '@/domain'
 import { FontFamilyField } from '../FontFamilyField'
 import type { useLocalFonts } from '../../hooks/useLocalFonts'
 import { TextArea, ColorPicker, Button } from '@/shared/components/ui'

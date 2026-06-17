@@ -4,25 +4,25 @@ import {
   DEFAULT_CANVAS_HEIGHT,
   type Scene,
   type SceneElement,
-} from '../lib/scene'
-import type { GuideLine, MeasurementGuide, ResizeLabel } from '../lib/smart-guide'
-import {
+  type GuideLine,
+  type MeasurementGuide,
+  type ResizeLabel,
   getMarqueeRect,
   hasMarqueeSize,
   hitTestElements,
   isMarqueeActive,
   type HitTestStrategy,
   type MarqueeState,
-} from '../lib/marquee'
+  type ResizeHandleType,
+} from '@/domain'
+import { SceneDefs, backgroundMaskId, hasBackgroundCutouts } from './canvas/SceneDefs'
+import { ElementView } from './canvas/elements/ElementView'
+import { SelectionFrame } from './canvas/SelectionFrame'
+import { GroupSelectionFrame } from './canvas/GroupSelectionFrame'
 import { MarqueeOverlay } from './canvas/MarqueeOverlay'
 import { SmartGuideOverlay } from './canvas/SmartGuideOverlay'
 import { ResizeLabelOverlay } from './canvas/ResizeLabelOverlay'
 import { SpacingGuideOverlay } from './canvas/SpacingGuideOverlay'
-import { SelectionFrame } from './canvas/SelectionFrame'
-import { GroupSelectionFrame } from './canvas/GroupSelectionFrame'
-import { ElementView } from './canvas/elements/ElementView'
-import { SceneDefs, backgroundMaskId, hasBackgroundCutouts } from './canvas/SceneDefs'
-import { type ResizeHandleType } from '../lib/group-drag'
 
 type SceneCanvasProps = {
   scene: Scene

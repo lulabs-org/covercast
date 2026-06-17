@@ -4,8 +4,10 @@ import {
   DEFAULT_CANVAS_HEIGHT,
   type Scene,
   type SceneElement,
-} from '../lib/scene'
-import { selectSingle, selectMultiple, type SelectionState } from '../lib/selection'
+  selectSingle,
+  selectMultiple,
+  type SelectionState,
+} from '@/domain'
 import { clamp } from '@/shared/lib'
 
 function cloneSceneElement(element: SceneElement): SceneElement {

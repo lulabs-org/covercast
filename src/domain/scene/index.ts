@@ -40,4 +40,4 @@ export {
 } from './defaults'
 
 // Font family (re-export for convenience)
-export { DEFAULT_FONT_FAMILY } from '../fonts'
+export { DEFAULT_FONT_FAMILY } from '@/app/lib/fonts'
