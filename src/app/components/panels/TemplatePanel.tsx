@@ -4,6 +4,7 @@ import { type ReactNode } from 'react'
 import { BUILT_IN_TEMPLATES } from '../../lib/scene'
 import { type CustomSceneTemplate } from '../../hooks/useTemplateManager'
 import { CustomTemplateCard } from './CustomTemplateCard'
+import { Button } from '@/shared/components/ui'
 
 function SidebarSection({
   title,
@@ -156,13 +157,13 @@ export function TemplateToolbarButtons({
 }) {
   return (
     <>
-      <button
-        type="button"
-        className="secondary-button toolbar-template-button"
+      <Button
+        variant="secondary"
+        className="toolbar-template-button"
         onClick={onOpenSaveTemplateDialog}
       >
         {activeCustomTemplate ? '另存为模板' : '保存为模板'}
-      </button>
+      </Button>
       <label className="secondary-button file-button">
         导入
         <input

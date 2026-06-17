@@ -3,6 +3,7 @@
 import { TemplateToolbarButtons } from '../panels/TemplatePanel'
 import type { ExportFormat, EXPORT_FORMAT_OPTIONS } from '../../hooks/useExportScene'
 import type { CustomSceneTemplate } from '../../hooks/useTemplateManager'
+import { Button } from '@/shared/components/ui'
 
 type SceneToolbarProps = {
   // History
@@ -61,41 +62,29 @@ export function SceneToolbar({
         <h1>封面编辑器</h1>
       </div>
       <div className="toolbar-actions">
-        <button
-          type="button"
-          className="secondary-button"
-          onClick={undo}
-          disabled={!canUndo}
-          title="撤销 (Ctrl+Z)"
-        >
+        <Button variant="secondary" onClick={undo} disabled={!canUndo} title="撤销 (Ctrl+Z)">
           ↶
-        </button>
-        <button
-          type="button"
-          className="secondary-button"
+        </Button>
+        <Button
+          variant="secondary"
           onClick={redo}
           disabled={!canRedo}
           title="重做 (Ctrl+Shift+Z 或 Ctrl+Y)"
         >
           ↷
-        </button>
-        <button
-          type="button"
-          className="primary-button"
-          onClick={onCreateBlankCover}
-          title="新建封面"
-        >
+        </Button>
+        <Button variant="primary" onClick={onCreateBlankCover} title="新建封面">
           新建封面
-        </button>
-        <button type="button" className="secondary-button" onClick={addTextElement}>
+        </Button>
+        <Button variant="secondary" onClick={addTextElement}>
           添加文字
-        </button>
-        <button type="button" className="secondary-button" onClick={addRectElement}>
+        </Button>
+        <Button variant="secondary" onClick={addRectElement}>
           添加矩形
-        </button>
-        <button type="button" className="secondary-button" onClick={addEllipseElement}>
+        </Button>
+        <Button variant="secondary" onClick={addEllipseElement}>
           添加椭圆
-        </button>
+        </Button>
         <label className="secondary-button file-button">
           添加图片
           <input
@@ -105,9 +94,8 @@ export function SceneToolbar({
           />
         </label>
         {activeCustomTemplate ? (
-          <button
-            type="button"
-            className="primary-button"
+          <Button
+            variant="primary"
             onClick={saveActiveCustomTemplate}
             disabled={!hasUnsavedCustomTemplateChanges}
             title={
@@ -115,7 +103,7 @@ export function SceneToolbar({
             }
           >
             保存模板
-          </button>
+          </Button>
         ) : null}
         <TemplateToolbarButtons
           activeCustomTemplate={activeCustomTemplate}

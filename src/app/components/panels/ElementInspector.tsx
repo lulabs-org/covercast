@@ -15,6 +15,7 @@ import {
 } from '../../lib/scene'
 import { FontFamilyField } from '../FontFamilyField'
 import type { useLocalFonts } from '../../hooks/useLocalFonts'
+import { TextArea, ColorPicker, Button } from '@/shared/components/ui'
 
 type LocalFontManager = ReturnType<typeof useLocalFonts>
 
@@ -85,7 +86,7 @@ function TextAreaField({
   return (
     <label className="field">
       <span>{label}</span>
-      <textarea value={value} rows={5} onChange={(event) => onChange(event.currentTarget.value)} />
+      <TextArea value={value} rows={5} onChange={(event) => onChange(event.currentTarget.value)} />
     </label>
   )
 }
@@ -136,24 +137,10 @@ function ColorField({
   value: string
   onChange: (value: string) => void
 }) {
-  const colorValue = isHexColor(value) ? value : '#ffffff'
-
   return (
     <label className="field color-field">
       <span>{label}</span>
-      <div>
-        <input
-          type="color"
-          value={colorValue}
-          onChange={(event) => onChange(event.currentTarget.value)}
-        />
-        <input
-          type="text"
-          value={value}
-          onChange={(event) => onChange(event.currentTarget.value)}
-          placeholder="#ffffff"
-        />
-      </div>
+      <ColorPicker value={value} onChange={onChange} />
     </label>
   )
 }
@@ -490,17 +477,17 @@ export function ElementInspector({
       ) : null}
 
       <div className="inspector-action-row">
-        <button type="button" className="secondary-button" onClick={onCopy}>
+        <Button variant="secondary" onClick={onCopy}>
           复制元素
-        </button>
-        <button type="button" className="secondary-button" onClick={onPaste} disabled={!canPaste}>
+        </Button>
+        <Button variant="secondary" onClick={onPaste} disabled={!canPaste}>
           粘贴副本
-        </button>
+        </Button>
       </div>
 
-      <button type="button" className="danger-button" onClick={onDelete}>
+      <Button variant="danger" onClick={onDelete}>
         删除当前元素
-      </button>
+      </Button>
     </div>
   )
 }

@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { Button, Input } from '@/shared/components/ui'
+import { Dialog } from '@/shared/components/overlay'
 
 export function SaveTemplateDialog({
   show,
@@ -28,22 +30,6 @@ export function SaveTemplateDialog({
     }
   }, [show])
 
-  useEffect(() => {
-    if (show) {
-      const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === 'Escape') {
-          onCancel()
-        }
-      }
-      window.addEventListener('keydown', handleKeyDown)
-      return () => window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [show, onCancel])
-
-  if (!show) {
-    return null
-  }
-
   const handleSave = () => {
     if (nameError) {
       return
@@ -51,55 +37,34 @@ export function SaveTemplateDialog({
     onSave()
   }
 
-  const handleBackdropClick = (event: React.MouseEvent) => {
-    if (event.target === event.currentTarget) {
-      onCancel()
-    }
-  }
-
   return (
-    <div
-      className="dialog-backdrop"
-      onClick={handleBackdropClick}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="save-template-dialog-title"
-    >
-      <div className="dialog-content">
-        <h3 id="save-template-dialog-title" className="dialog-title">
-          {title}
-        </h3>
-        <label className={`field${nameError ? ' field-error' : ''}`}>
-          <span>模板名称</span>
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder="未命名模板"
-            value={templateName}
-            onChange={(event) => onSetName(event.currentTarget.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.preventDefault()
-                handleSave()
-              }
-            }}
-          />
-          {nameError ? <span className="field-error-message">{nameError}</span> : null}
-        </label>
-        <div className="dialog-actions">
-          <button type="button" className="secondary-button" onClick={onCancel}>
-            取消
-          </button>
-          <button
-            type="button"
-            className="primary-button"
-            onClick={handleSave}
-            disabled={!!nameError}
-          >
-            确认保存
-          </button>
-        </div>
+    <Dialog open={show} onClose={onCancel}>
+      <h3 className="text-[18px] font-black text-[var(--foreground)]">{title}</h3>
+      <label className={`field${nameError ? ' field-error' : ''}`}>
+        <span>模板名称</span>
+        <Input
+          ref={inputRef}
+          type="text"
+          placeholder="未命名模板"
+          value={templateName}
+          onChange={(event) => onSetName(event.currentTarget.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault()
+              handleSave()
+            }
+          }}
+        />
+        {nameError ? <span className="field-error-message">{nameError}</span> : null}
+      </label>
+      <div className="flex items-center justify-end gap-[10px]">
+        <Button variant="secondary" onClick={onCancel}>
+          取消
+        </Button>
+        <Button variant="primary" onClick={handleSave} disabled={!!nameError}>
+          确认保存
+        </Button>
       </div>
-    </div>
+    </Dialog>
   )
 }

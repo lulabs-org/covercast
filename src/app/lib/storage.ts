@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto'
 import { mkdir, readFile, readdir, stat, unlink, writeFile } from 'fs/promises'
 import path from 'path'
+import { clamp } from '@/shared/lib'
 import { createDefaultScene, type Scene } from './scene'
 
 const DATA_DIR = path.join(process.cwd(), '.covercast')
@@ -195,12 +196,4 @@ function normalizeElement(element: unknown) {
 
 function isSafeAssetId(id: string) {
   return /^[a-f0-9-]+\.(png|jpg|jpeg|webp)$/i.test(id)
-}
-
-function clamp(value: number, min: number, max: number) {
-  if (!Number.isFinite(value)) {
-    return min
-  }
-
-  return Math.min(Math.max(value, min), max)
 }

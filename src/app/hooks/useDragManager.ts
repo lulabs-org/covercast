@@ -38,6 +38,7 @@ import {
   type GroupResizeState,
   type ResizeHandleType,
 } from '../lib/group-drag'
+import { clamp } from '@/shared/lib'
 
 type SingleDragState = {
   id: string
@@ -85,10 +86,6 @@ function minimumHeight(element: SceneElement) {
   }
 
   return 28
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max)
 }
 
 export function useDragManager({

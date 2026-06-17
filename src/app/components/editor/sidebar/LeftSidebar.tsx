@@ -9,6 +9,8 @@ import type { Scene } from '../../../lib/scene'
 import type { SelectionState } from '../../../lib/selection'
 import type { CustomSceneTemplate, SceneSlotInfo } from '../../../hooks/useTemplateManager'
 import type { CanvasSize, CanvasSizePreset } from '../../../hooks/useCanvasSize'
+import { ColorPicker, Slider } from '@/shared/components/ui'
+import { clamp } from '@/shared/lib'
 
 type SidebarSectionId = 'scene' | 'sources' | 'templates' | 'layers'
 
@@ -236,14 +238,6 @@ function SidebarSection({
   )
 }
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max)
-}
-
-function isHexColor(value: string): boolean {
-  return /^#[0-9A-Fa-f]{6}$/.test(value)
-}
-
 function ColorField({
   label,
   value,
@@ -253,24 +247,10 @@ function ColorField({
   value: string
   onChange: (value: string) => void
 }) {
-  const colorValue = isHexColor(value) ? value : '#ffffff'
-
   return (
     <label className="field color-field">
       <span>{label}</span>
-      <div>
-        <input
-          type="color"
-          value={colorValue}
-          onChange={(event) => onChange(event.currentTarget.value)}
-        />
-        <input
-          type="text"
-          value={value}
-          onChange={(event) => onChange(event.currentTarget.value)}
-          placeholder="#ffffff"
-        />
-      </div>
+      <ColorPicker value={value} onChange={onChange} />
     </label>
   )
 }
@@ -290,14 +270,7 @@ function OpacityField({
     <label className="field opacity-field">
       <span>{label}</span>
       <div>
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={opacity}
-          onChange={(event) => onChange(Number(event.currentTarget.value))}
-        />
+        <Slider min={0} max={1} step={0.01} value={opacity} onValueChange={onChange} />
         <input
           type="number"
           min={0}
