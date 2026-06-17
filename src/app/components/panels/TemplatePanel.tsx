@@ -1,6 +1,7 @@
 'use client'
 
-import { BUILT_IN_TEMPLATES } from '../../lib/scene'
+import { type ReactNode } from 'react'
+import { BUILT_IN_TEMPLATES } from '@/domain'
 import { type CustomSceneTemplate } from '../../hooks/useTemplateManager'
 import { CustomTemplateCard } from './CustomTemplateCard'
 import { Button } from '@/shared/components'

@@ -1,7 +1,7 @@
 'use client'
 
-import { type SceneElement } from '../../lib/scene'
-import { isSelected, selectSingle, type SelectionState } from '../../lib/selection'
+import { type ReactNode } from 'react'
+import { type SceneElement, isSelected, selectSingle, type SelectionState } from '@/domain'
 import { cn } from '@/shared/lib'
 import { SidebarSection } from '../editor/sidebar/SidebarSection'
 import styles from './LayerPanel.module.css'

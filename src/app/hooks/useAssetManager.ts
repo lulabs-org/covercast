@@ -5,8 +5,9 @@ import {
   type ImageElement,
   type Scene,
   type SceneElement,
-} from '../lib/scene'
-import { selectSingle, type SelectionState } from '../lib/selection'
+  selectSingle,
+  type SelectionState,
+} from '@/domain'
 import {
   buildLocalAssetSrc,
   isSupportedImageType,

@@ -3,8 +3,8 @@ import {
   DEFAULT_CANVAS_HEIGHT,
   type SceneElement,
   type ShapeElement,
-} from '../../lib/scene'
-import { gradientVector } from '../../lib/scene-svg'
+  gradientVector,
+} from '@/domain'
 
 type VisibleElement = SceneElement
 

@@ -12,9 +12,11 @@ import {
   updateMarquee,
   type HitTestStrategy,
   type MarqueeState,
-} from '../lib/marquee'
-import { clearSelection, selectMultiple, type SelectionState } from '../lib/selection'
-import { type SceneElement } from '../lib/scene'
+  clearSelection,
+  selectMultiple,
+  type SelectionState,
+  type SceneElement,
+} from '@/domain'
 
 function getSvgPoint(svg: SVGSVGElement, clientX: number, clientY: number) {
   const point = svg.createSVGPoint()

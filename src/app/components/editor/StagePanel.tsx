@@ -2,11 +2,16 @@
 
 import type { Ref, WheelEvent as ReactWheelEvent, PointerEvent } from 'react'
 import SceneCanvas from '../SceneCanvas'
-import type { Scene } from '../../lib/scene'
-import type { GuideLine, MeasurementGuide, ResizeLabel } from '../../lib/smart-guide'
-import type { HitTestStrategy, MarqueeState } from '../../lib/marquee'
-import type { ResizeHandleType } from '../../lib/group-drag'
-import { Slider } from '@/shared/components'
+import type {
+  Scene,
+  GuideLine,
+  MeasurementGuide,
+  ResizeLabel,
+  HitTestStrategy,
+  MarqueeState,
+  ResizeHandleType,
+} from '@/domain'
+import { Slider } from '@/shared/components/ui'
 import styles from './editor.module.css'
 
 type StagePanelProps = {

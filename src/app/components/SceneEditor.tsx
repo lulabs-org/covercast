@@ -1,11 +1,17 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { cloneScene, createDefaultScene, type Scene, type SceneElement } from '../lib/scene'
+import {
+  cloneScene,
+  createDefaultScene,
+  type Scene,
+  type SceneElement,
+  createSelectionState,
+  selectSingle,
+  type SelectionState,
+  type HitTestStrategy,
+} from '@/domain'
 import editorStyles from './editor/editor.module.css'
-
-import { createSelectionState, selectSingle, type SelectionState } from '../lib/selection'
-import { type HitTestStrategy } from '../lib/marquee'
 import { useScrollVisibility } from '../lib/use-scroll-visibility'
 import { usePanelResize } from '../lib/use-panel-resize'
 import { useHistory } from '../hooks/useHistory'

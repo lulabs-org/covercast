@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { BUILT_IN_TEMPLATES, createDefaultScene } from '../lib/scene'
+import { BUILT_IN_TEMPLATES, createDefaultScene } from '@/domain'
 import { type SceneSlotInfo, type CustomSceneTemplate } from './useTemplateManager'
 
 const SLOT_NAMES_STORAGE_KEY = 'covercast.slotNames.v1'
