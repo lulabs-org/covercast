@@ -1,4 +1,4 @@
-import { DEFAULT_FONT_FAMILY } from '@/app/lib/fonts'
+import { DEFAULT_FONT_FAMILY } from '@/config/fonts'
 import type { Scene, SceneTemplate } from './types'
 
 const emptyScene: Scene = {
