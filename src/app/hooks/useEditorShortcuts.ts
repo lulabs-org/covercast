@@ -6,7 +6,6 @@ import {
   computeSpacingGuidesOptimized,
   type GuideLine,
   type MeasurementGuide,
-  type GuideContext,
   SpatialIndex,
   buildSpatialIndex,
   computeBoundingBox,
@@ -152,8 +151,6 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
         )
         spatialIndexRef.current = buildSpatialIndex(otherElements)
 
-        const keyboardContext: GuideContext = { mode: 'keyboard' }
-
         setScene((currentScene) => {
           const updatedElements = currentScene.elements.map((element) => {
             if (!selection.selectedIds.includes(element.id) || element.locked) {
@@ -242,8 +239,6 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
           (el) => !selection.selectedIds.includes(el.id) && !el.locked && el.hidden !== true,
         )
         spatialIndexRef.current = buildSpatialIndex(otherElements)
-
-        const keyboardContext: GuideContext = { mode: 'keyboard' }
 
         setScene((currentScene) => {
           const updatedElements = currentScene.elements.map((element) => {
