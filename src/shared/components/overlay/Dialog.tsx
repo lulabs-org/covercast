@@ -1,15 +1,10 @@
+'use client'
+
+import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { cn } from '@/shared/lib'
-import React, { useEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
+import React from 'react'
 
 export type DialogSize = 'sm' | 'md' | 'lg'
-
-export interface DialogProps {
-  open: boolean
-  onClose: () => void
-  size?: DialogSize
-  children: React.ReactNode
-}
 
 const sizeStyles: Record<DialogSize, string> = {
   sm: 'min-w-[320px] max-w-[360px]',
@@ -17,52 +12,121 @@ const sizeStyles: Record<DialogSize, string> = {
   lg: 'min-w-[480px] max-w-[560px]',
 }
 
-export function Dialog({ open, onClose, size = 'md', children }: DialogProps) {
-  const dialogRef = useRef<HTMLDivElement>(null)
+const Dialog = DialogPrimitive.Root
+const DialogTrigger = DialogPrimitive.Trigger
+const DialogPortal = DialogPrimitive.Portal
+const DialogClose = DialogPrimitive.Close
 
-  // Escape 键关闭
-  useEffect(() => {
-    if (!open) return
+const DialogOverlay = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Overlay>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Overlay
+    ref={ref}
+    className={cn(
+      'fixed inset-0 z-[100] bg-[rgba(15,23,42,0.45)]',
+      'data-[state=open]:animate-[fadeInBackdrop_0.15s_ease]',
+      className,
+    )}
+    {...props}
+  />
+))
+DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose()
-      }
-    }
+interface DialogContentProps extends React.ComponentPropsWithoutRef<
+  typeof DialogPrimitive.Content
+> {
+  size?: DialogSize
+}
 
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [open, onClose])
-
-  // 点击遮罩关闭
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose()
-    }
-  }
-
-  if (!open) return null
-
-  return createPortal(
-    <div
-      className="fixed inset-0 flex items-center justify-center bg-[rgba(15,23,42,0.45)] z-[100] animate-[fadeInBackdrop_0.15s_ease]"
-      onClick={handleBackdropClick}
+const DialogContent = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Content>,
+  DialogContentProps
+>(({ className, children, size = 'md', ...props }, ref) => (
+  <DialogPortal>
+    <DialogOverlay />
+    <DialogPrimitive.Content
+      ref={ref}
+      className={cn(
+        'fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[100]',
+        'flex flex-col max-h-[90vh] w-full',
+        'bg-[var(--panel)] border border-[var(--panel-border)] rounded-xl',
+        'shadow-[0_8px_24px_rgba(15,23,42,0.2)]',
+        'data-[state=open]:animate-[slideInDialog_0.2s_ease]',
+        sizeStyles[size],
+        className,
+      )}
+      {...props}
     >
-      <div
-        ref={dialogRef}
-        className={cn(
-          // base styles from overlay.css .dialog-content
-          'flex flex-col gap-4 p-5 px-6',
-          'bg-[var(--panel)] border border-[var(--panel-border)] rounded-xl',
-          'shadow-[0_8px_24px_rgba(15,23,42,0.2)]',
-          'animate-[slideInDialog_0.2s_ease]',
-          // size styles
-          sizeStyles[size],
-        )}
-      >
-        {children}
-      </div>
-    </div>,
-    document.body,
+      {children}
+    </DialogPrimitive.Content>
+  </DialogPortal>
+))
+DialogContent.displayName = DialogPrimitive.Content.displayName
+
+function DialogHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn(
+        'flex items-center justify-between px-5 py-4 border-b border-[var(--panel-border)]',
+        className,
+      )}
+      {...props}
+    />
   )
+}
+
+function DialogBody({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn('flex-1 overflow-y-auto p-5', className)} {...props} />
+}
+
+function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn(
+        'flex items-center justify-end gap-2.5 px-5 py-4 border-t border-[var(--panel-border)]',
+        className,
+      )}
+      {...props}
+    />
+  )
+}
+
+const DialogTitle = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Title>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Title
+    ref={ref}
+    className={cn('text-[18px] font-black text-[var(--foreground)]', className)}
+    {...props}
+  />
+))
+DialogTitle.displayName = DialogPrimitive.Title.displayName
+
+const DialogDescription = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Description>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Description
+    ref={ref}
+    className={cn('text-sm text-[var(--muted)]', className)}
+    {...props}
+  />
+))
+DialogDescription.displayName = DialogPrimitive.Description.displayName
+
+export {
+  Dialog,
+  DialogTrigger,
+  DialogPortal,
+  DialogClose,
+  DialogOverlay,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+  type DialogContentProps,
 }

@@ -9,6 +9,17 @@
   --accent: #2764f6;
   --accent-strong: #174ac6;
   --danger: #d92d20;
+
+  /* shadcn variable mappings — existing variables are source of truth */
+  --primary: var(--accent);
+  --primary-foreground: #ffffff;
+  --destructive: var(--danger);
+  --destructive-foreground: #ffffff;
+  --muted-foreground: var(--muted);
+  --border: #cfd8e8;
+  --input: #cfd8e8;
+  --ring: rgba(39, 100, 246, 0.14);
+  --radius: 6px;
 }
 
 @theme inline {
@@ -57,28 +68,24 @@ body {
 .right-panel:hover::-webkit-scrollbar-thumb,
 .stage-viewport:hover::-webkit-scrollbar-thumb,
 .sidebar-scrollable:hover::-webkit-scrollbar-thumb,
-.modal-scrollable:hover::-webkit-scrollbar-thumb,
 .left-panel.scrolling::-webkit-scrollbar-thumb,
 .right-panel.scrolling::-webkit-scrollbar-thumb,
 .stage-viewport.scrolling::-webkit-scrollbar-thumb,
-.sidebar-scrollable.scrolling::-webkit-scrollbar-thumb,
-.modal-scrollable.scrolling::-webkit-scrollbar-thumb {
+.sidebar-scrollable.scrolling::-webkit-scrollbar-thumb {
   background: rgba(100, 116, 139, 0.25);
 }
 
 .left-panel::-webkit-scrollbar-thumb:hover,
 .right-panel::-webkit-scrollbar-thumb:hover,
 .stage-viewport::-webkit-scrollbar-thumb:hover,
-.sidebar-scrollable::-webkit-scrollbar-thumb:hover,
-.modal-scrollable::-webkit-scrollbar-thumb:hover {
+.sidebar-scrollable::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 0.45);
 }
 
 .left-panel,
 .right-panel,
 .stage-viewport,
-.sidebar-scrollable,
-.modal-scrollable {
+.sidebar-scrollable {
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
 }
@@ -87,12 +94,10 @@ body {
 .right-panel:hover,
 .stage-viewport:hover,
 .sidebar-scrollable:hover,
-.modal-scrollable:hover,
 .left-panel.scrolling,
 .right-panel.scrolling,
 .stage-viewport.scrolling,
-.sidebar-scrollable.scrolling,
-.modal-scrollable.scrolling {
+.sidebar-scrollable.scrolling {
   scrollbar-color: rgba(100, 116, 139, 0.25) transparent;
 }
 
