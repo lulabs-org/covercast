@@ -50,7 +50,7 @@ const DialogContent = React.forwardRef<
       className={cn(
         'fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[100]',
         'flex flex-col max-h-[90vh] w-full',
-        'bg-[var(--panel)] border border-[var(--panel-border)] rounded-xl',
+        'bg-[var(--card)] border border-[var(--border)] rounded-xl',
         'shadow-[0_8px_24px_rgba(15,23,42,0.2)]',
         'data-[state=open]:animate-[slideInDialog_0.2s_ease]',
         sizeStyles[size],
@@ -68,7 +68,7 @@ function DialogHeader({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
   return (
     <div
       className={cn(
-        'flex items-center justify-between px-5 py-4 border-b border-[var(--panel-border)]',
+        'flex items-center justify-between px-5 py-4 border-b border-[var(--border)]',
         className,
       )}
       {...props}
@@ -84,7 +84,7 @@ function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
   return (
     <div
       className={cn(
-        'flex items-center justify-end gap-2.5 px-5 py-4 border-t border-[var(--panel-border)]',
+        'flex items-center justify-end gap-2.5 px-5 py-4 border-t border-[var(--border)]',
         className,
       )}
       {...props}

@@ -22,7 +22,7 @@
   .right-panel {
     order: 3;
     width: 100% !important;
-    border-top: 1px solid var(--panel-border);
+    border-top: 1px solid var(--border);
   }
 }
 
@@ -54,7 +54,7 @@
   .stage-panel {
     width: 100% !important;
     border-right: 0;
-    border-bottom: 1px solid var(--panel-border);
+    border-bottom: 1px solid var(--border);
   }
 
   .panel-resizer {
