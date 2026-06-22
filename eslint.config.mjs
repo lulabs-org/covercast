@@ -24,9 +24,6 @@ const eslintConfig = defineConfig([
   //   - @/app/** (app layer: components, hooks, api, pages)
   //   - @/shared/components/** (UI components)
   //   - DOM globals (window, document, localStorage, ...)
-  //
-  // Temporary exception:
-  //   - @/app/lib/fonts  (will move to @/config/fonts after branch merge)
   // ──────────────────────────────────────────────
   {
     files: ['src/domain/**/*'],
