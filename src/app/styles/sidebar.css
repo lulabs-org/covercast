@@ -161,7 +161,7 @@
 }
 
 .element-row.active {
-  border-color: var(--accent);
+  border-color: var(--primary);
   background: #eaf1ff;
 }
 

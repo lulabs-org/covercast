@@ -11,10 +11,10 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    'text-white bg-[var(--accent)] hover:bg-[var(--accent-strong)] disabled:bg-[#9aa9c0] disabled:cursor-not-allowed',
+    'text-white bg-[var(--primary)] hover:bg-[var(--accent-strong)] disabled:bg-[#9aa9c0] disabled:cursor-not-allowed',
   secondary:
     'text-[#1c2a3d] bg-[#eef3fb] border border-[#d4deef] hover:bg-[#e4ecf8] disabled:text-[#8a96aa] disabled:bg-[#eef2f7] disabled:border-[#dbe3f0] disabled:cursor-not-allowed',
-  danger: 'w-full text-white bg-[var(--danger)]',
+  danger: 'w-full text-white bg-[var(--destructive)]',
 }
 
 const sizeStyles: Record<ButtonSize, string> = {

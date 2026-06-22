@@ -52,8 +52,8 @@
 
 .zoom-button:hover:not(:disabled),
 .zoom-fit-button:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--primary);
+  color: var(--primary);
   background: #f0f4ff;
 }
 

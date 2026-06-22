@@ -20,7 +20,7 @@
 
 .primary-button {
   color: #ffffff;
-  background: var(--accent);
+  background: var(--primary);
 }
 
 .primary-button:hover {
@@ -54,15 +54,15 @@
 }
 
 .toolbar-template-button.active {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--primary);
+  color: var(--primary);
   background: #eaf1ff;
 }
 
 .danger-button {
   width: 100%;
   color: #ffffff;
-  background: var(--danger);
+  background: var(--destructive);
 }
 
 .file-button {

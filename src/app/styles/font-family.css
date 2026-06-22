@@ -26,7 +26,7 @@
 }
 
 .font-trigger-open {
-  border-color: var(--accent);
+  border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(39, 100, 246, 0.15);
 }
 
@@ -111,7 +111,7 @@
   bottom: 4px;
   width: 3px;
   border-radius: 0 2px 2px 0;
-  background: var(--accent);
+  background: var(--primary);
 }
 
 .font-option-preview {
@@ -207,7 +207,7 @@
   cursor: pointer;
   font-size: 12px;
   font-weight: 500;
-  color: var(--accent);
+  color: var(--primary);
   transition:
     background 0.15s,
     border-color 0.15s;
@@ -216,7 +216,7 @@
 
 .font-import-btn:hover {
   background: #f0f4ff;
-  border-color: var(--accent);
+  border-color: var(--primary);
 }
 
 .font-preview-row {

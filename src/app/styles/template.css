@@ -56,9 +56,9 @@
 }
 
 .template-card.active {
-  border-color: var(--accent);
+  border-color: var(--primary);
   background: #eaf1ff;
-  box-shadow: 0 0 0 1px var(--accent);
+  box-shadow: 0 0 0 1px var(--primary);
 }
 
 .template-card.dirty {
@@ -125,7 +125,7 @@
   padding: 0 8px;
   font-size: 11px;
   font-weight: 900;
-  color: var(--accent);
+  color: var(--primary);
   background: #edf4ff;
   white-space: nowrap;
 }
@@ -133,7 +133,7 @@
 .template-card-rename-input {
   width: 100%;
   min-width: 0;
-  border: 1px solid var(--accent);
+  border: 1px solid var(--primary);
   border-radius: 4px;
   padding: 2px 6px;
   font-size: 14px;
@@ -146,7 +146,7 @@
 }
 
 .template-card-rename-input.error {
-  border-color: var(--danger);
+  border-color: var(--destructive);
   box-shadow: 0 0 0 2px rgba(217, 45, 32, 0.2);
 }
 
@@ -157,7 +157,7 @@
 }
 
 .template-card-rename-error {
-  color: var(--danger);
+  color: var(--destructive);
   font-size: 11px;
   font-weight: 700;
 }
@@ -182,7 +182,7 @@
 
 .template-card-more:hover {
   background: rgba(39, 100, 246, 0.1);
-  color: var(--accent);
+  color: var(--primary);
 }
 
 .template-card-menu {
@@ -215,7 +215,7 @@
 }
 
 .template-card-menu-item-danger {
-  color: var(--danger);
+  color: var(--destructive);
 }
 
 .template-card-menu-item-danger:hover {

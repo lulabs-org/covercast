@@ -28,11 +28,11 @@ export const Slider = React.forwardRef<React.ElementRef<typeof SliderPrimitive.R
       {...props}
     >
       <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden rounded-full bg-[#cfd8e8]">
-        <SliderPrimitive.Range className="absolute h-full bg-[var(--accent)]" />
+        <SliderPrimitive.Range className="absolute h-full bg-[var(--primary)]" />
       </SliderPrimitive.Track>
       <SliderPrimitive.Thumb
         className={cn(
-          'relative block h-3 w-3 rounded-full bg-[var(--accent)] border-2 border-white',
+          'relative block h-3 w-3 rounded-full bg-[var(--primary)] border-2 border-white',
           'shadow-[0_1px_3px_rgba(15,23,42,0.2)] transition-transform hover:scale-110',
           'focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(39,100,246,0.14)]',
           'disabled:pointer-events-none disabled:opacity-50',
