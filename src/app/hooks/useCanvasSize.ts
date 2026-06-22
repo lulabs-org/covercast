@@ -1,17 +1,30 @@
-import { useState, useCallback, useMemo, useEffect } from 'react'
-import {
-  type CanvasSizePreset,
-  CANVAS_SIZE_PRESETS,
-  DEFAULT_CANVAS_PRESET,
-} from '@/config/canvasPresets'
-
-// 重新导出 CanvasSizePreset，保持现有导入路径兼容
-export type { CanvasSizePreset } from '@/config/canvasPresets'
+import { useState, useCallback, useMemo } from 'react'
 
 export type CanvasSize = {
   width: number
   height: number
 }
+
+export type CanvasSizePreset = {
+  id: string
+  label: string
+  width: number
+  height: number
+  ratio: string
+}
+
+export const DEFAULT_CANVAS_WIDTH = 941
+export const DEFAULT_CANVAS_HEIGHT = 1672
+
+export const CANVAS_SIZE_PRESETS: CanvasSizePreset[] = [
+  { id: 'default', label: '941 × 1672', width: 941, height: 1672, ratio: '默认' },
+  { id: '9:16', label: '1080 × 1920', width: 1080, height: 1920, ratio: '9:16' },
+  { id: '3:4', label: '1080 × 1440', width: 1080, height: 1440, ratio: '3:4' },
+  { id: '1:1', label: '1080 × 1080', width: 1080, height: 1080, ratio: '1:1' },
+  { id: '4:3', label: '1440 × 1080', width: 1440, height: 1080, ratio: '4:3' },
+  { id: '16:9', label: '1920 × 1080', width: 1920, height: 1080, ratio: '16:9' },
+  { id: '2.35:1', label: '1080 × 460', width: 1080, height: 460, ratio: '2.35:1' },
+]
 
 const STORAGE_KEY = 'covercast.canvasSize.v1'
 
@@ -58,30 +71,25 @@ export type UseCanvasSizeOptions = {
 }
 
 export function useCanvasSize(options: UseCanvasSizeOptions = {}) {
-  const {
-    defaultWidth = DEFAULT_CANVAS_PRESET.width,
-    defaultHeight = DEFAULT_CANVAS_PRESET.height,
-  } = options
+  const { defaultWidth = DEFAULT_CANVAS_WIDTH, defaultHeight = DEFAULT_CANVAS_HEIGHT } = options
 
-  // SSR 和首次客户端渲染使用默认值，避免 hydration mismatch
-  const [canvasSize, setCanvasSizeState] = useState<CanvasSize>({
-    width: defaultWidth,
-    height: defaultHeight,
-  })
-
-  const [isCustomSize, setIsCustomSize] = useState(false)
-
-  // 客户端挂载后从 localStorage 恢复
-  useEffect(() => {
+  const [canvasSize, setCanvasSizeState] = useState<CanvasSize>(() => {
     const saved = loadSavedCanvasSize()
     if (saved) {
-      setCanvasSizeState(saved)
-      const isPreset = CANVAS_SIZE_PRESETS.some(
-        (preset) => preset.width === saved.width && preset.height === saved.height,
-      )
-      setIsCustomSize(!isPreset)
+      return saved
     }
-  }, [])
+    return { width: defaultWidth, height: defaultHeight }
+  })
+
+  const [isCustomSize, setIsCustomSize] = useState(() => {
+    const saved = loadSavedCanvasSize()
+    if (!saved) {
+      return false
+    }
+    return !CANVAS_SIZE_PRESETS.some(
+      (preset) => preset.width === saved.width && preset.height === saved.height,
+    )
+  })
 
   const setCanvasSize = useCallback((size: CanvasSize) => {
     setCanvasSizeState(size)
@@ -111,7 +119,7 @@ export function useCanvasSize(options: UseCanvasSizeOptions = {}) {
   }, [])
 
   const resetToDefault = useCallback(() => {
-    const size = { width: DEFAULT_CANVAS_PRESET.width, height: DEFAULT_CANVAS_PRESET.height }
+    const size = { width: DEFAULT_CANVAS_WIDTH, height: DEFAULT_CANVAS_HEIGHT }
     setCanvasSizeState(size)
     saveCanvasSize(size)
     setIsCustomSize(false)
