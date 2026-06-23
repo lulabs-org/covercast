@@ -3,7 +3,7 @@
 import { TemplateToolbarButtons } from '../panels/TemplatePanel'
 import type { ExportFormat, EXPORT_FORMAT_OPTIONS } from '../../hooks/useExportScene'
 import type { CustomSceneTemplate } from '../../hooks/useTemplateManager'
-import { Button } from '@/shared/components/ui'
+import { Button } from '@/shared/components'
 
 type SceneToolbarProps = {
   // History

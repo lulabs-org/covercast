@@ -2,16 +2,17 @@
 
 import { useState, useCallback, type ChangeEvent } from 'react'
 import type { BlankCoverConfig } from '../../hooks/useCreateBlankCover'
-import { ColorPicker, Slider, Button } from '@/shared/components/ui'
 import {
+  ColorPicker,
+  Slider,
+  Button,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogClose,
   DialogBody,
   DialogFooter,
-} from '@/shared/components/overlay'
+} from '@/shared/components'
 import { clamp } from '@/shared/lib'
 
 type TemplateOption = {
@@ -129,15 +130,6 @@ export function CreateBlankCoverModal({
       <DialogContent size="lg">
         <DialogHeader>
           <DialogTitle>新建封面</DialogTitle>
-          <DialogClose asChild>
-            <button
-              type="button"
-              className="w-8 h-8 flex items-center justify-center border-0 rounded-[6px] bg-transparent text-[var(--muted)] text-2xl cursor-pointer hover:bg-black/5 hover:text-[var(--foreground)] outline-none focus-visible:shadow-[0_0_0_3px_rgba(39,100,246,0.14)]"
-              aria-label="关闭"
-            >
-              ×
-            </button>
-          </DialogClose>
         </DialogHeader>
 
         <DialogBody>

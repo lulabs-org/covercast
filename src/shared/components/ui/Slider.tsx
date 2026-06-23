@@ -1,15 +1,16 @@
 'use client'
 
-import * as SliderPrimitive from '@radix-ui/react-slider'
-import { cn } from '@/shared/lib'
-import React from 'react'
+import * as React from 'react'
+import { Slider as SliderPrimitive } from 'radix-ui'
+
+import { cn } from '@/shared/lib/index'
 
 /**
- * Backward-compatible API: accepts single-number value / onValueChange,
- * internally bridges to Radix's array-based API.
+ * Single-value Slider API wrapper.
+ * Converts single-number value/onValueChange to Radix's array-based API.
  */
-export interface SliderProps extends Omit<
-  React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>,
+export interface SingleSliderProps extends Omit<
+  React.ComponentProps<typeof SliderPrimitive.Root>,
   'value' | 'defaultValue' | 'onValueChange'
 > {
   value?: number
@@ -17,31 +18,59 @@ export interface SliderProps extends Omit<
   onValueChange?: (value: number) => void
 }
 
-export const Slider = React.forwardRef<React.ElementRef<typeof SliderPrimitive.Root>, SliderProps>(
-  ({ className, value, defaultValue, onValueChange, ...props }, ref) => (
+function Slider({
+  className,
+  defaultValue,
+  value,
+  min = 0,
+  max = 100,
+  onValueChange,
+  ...props
+}: SingleSliderProps) {
+  // Convert single value to array for Radix
+  const _values = React.useMemo(
+    () =>
+      value !== undefined ? [value] : defaultValue !== undefined ? [defaultValue] : [min, max],
+    [value, defaultValue, min, max],
+  )
+
+  // Handle value change - convert array back to single value
+  const handleValueChange = React.useCallback(
+    (arr: number[]) => {
+      onValueChange?.(arr[0])
+    },
+    [onValueChange],
+  )
+
+  return (
     <SliderPrimitive.Root
-      ref={ref}
-      className={cn('relative flex w-full touch-none select-none items-center', className)}
-      value={value !== undefined ? [value] : undefined}
+      data-slot="slider"
       defaultValue={defaultValue !== undefined ? [defaultValue] : undefined}
-      onValueChange={(arr) => onValueChange?.(arr[0])}
+      value={value !== undefined ? [value] : undefined}
+      min={min}
+      max={max}
+      onValueChange={handleValueChange}
+      className={cn(
+        'relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-vertical:h-full data-vertical:min-h-40 data-vertical:w-auto data-vertical:flex-col',
+        className,
+      )}
       {...props}
     >
-      <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden rounded-full bg-[#cfd8e8]">
-        <SliderPrimitive.Range className="absolute h-full bg-[var(--primary)]" />
+      <SliderPrimitive.Track
+        data-slot="slider-track"
+        className="relative grow overflow-hidden rounded-full bg-muted data-horizontal:h-1 data-horizontal:w-full data-vertical:h-full data-vertical:w-1"
+      >
+        <SliderPrimitive.Range
+          data-slot="slider-range"
+          className="absolute bg-primary select-none data-horizontal:h-full data-vertical:w-full"
+        />
       </SliderPrimitive.Track>
       <SliderPrimitive.Thumb
-        className={cn(
-          'relative block h-3 w-3 rounded-full bg-[var(--primary)] border-2 border-white',
-          'shadow-[0_1px_3px_rgba(15,23,42,0.2)] transition-transform hover:scale-110',
-          'focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgba(39,100,246,0.14)]',
-          'disabled:pointer-events-none disabled:opacity-50',
-          // Expand hit area for easier dragging
-          'before:absolute before:inset-[-8px] before:content-[""]',
-        )}
+        data-slot="slider-thumb"
+        className="relative block size-3 shrink-0 rounded-full border border-ring bg-white ring-ring/50 transition-[color,box-shadow] select-none after:absolute after:-inset-2 hover:ring-3 focus-visible:ring-3 focus-visible:outline-hidden active:ring-3 disabled:pointer-events-none disabled:opacity-50"
       />
     </SliderPrimitive.Root>
-  ),
-)
+  )
+}
 
-Slider.displayName = 'Slider'
+export { Slider }

@@ -1,15 +1,16 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { Button, Input } from '@/shared/components/ui'
 import {
+  Button,
+  Input,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogBody,
   DialogFooter,
-} from '@/shared/components/overlay'
+} from '@/shared/components'
 
 export function SaveTemplateDialog({
   show,

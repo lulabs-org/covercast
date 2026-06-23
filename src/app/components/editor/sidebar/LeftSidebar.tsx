@@ -9,7 +9,7 @@ import type { Scene } from '../../../lib/scene'
 import type { SelectionState } from '../../../lib/selection'
 import type { CustomSceneTemplate, SceneSlotInfo } from '../../../hooks/useTemplateManager'
 import type { CanvasSize, CanvasSizePreset } from '../../../hooks/useCanvasSize'
-import { ColorPicker, Slider } from '@/shared/components/ui'
+import { ColorPicker, Slider } from '@/shared/components'
 import { clamp } from '@/shared/lib'
 
 type SidebarSectionId = 'scene' | 'sources' | 'templates' | 'layers'
