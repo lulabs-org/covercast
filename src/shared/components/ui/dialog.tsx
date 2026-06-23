@@ -4,7 +4,7 @@ import * as React from 'react'
 import { Dialog as DialogPrimitive } from 'radix-ui'
 
 import { cn } from '@/shared/lib/index'
-import { Button } from '@/shared/components/ui/button'
+import { Button } from './button'
 import { XIcon } from 'lucide-react'
 
 // Dialog size variants

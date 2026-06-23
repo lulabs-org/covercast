@@ -3,11 +3,10 @@ export { Input, type InputProps } from './Input'
 export { TextArea, type TextAreaProps } from './TextArea'
 export { ColorPicker, type ColorPickerProps } from './ColorPicker'
 
-// Button：已合并到 shadcn ui/button.tsx，这里重导出保持调用方兼容
-export { Button, buttonVariants } from '../ui/button'
-
-// 基于 shadcn 的适配组件
+// 基于 shadcn 的组件（统一从 ui/index.ts 导入）
 export {
+  Button,
+  buttonVariants,
   Dialog,
   DialogTrigger,
   DialogPortal,
@@ -19,9 +18,7 @@ export {
   DialogFooter,
   DialogTitle,
   DialogDescription,
-} from '../ui/dialog'
+  Slider,
+} from '../ui'
 
-export type { DialogSize } from '../ui/dialog'
-
-export { Slider } from '../ui/slider'
-export type { SingleSliderProps as SliderProps } from '../ui/slider'
+export type { DialogSize, SingleSliderProps as SliderProps } from '../ui'
