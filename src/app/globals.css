@@ -1,5 +1,168 @@
-/* globals.css - 样式入口，按职责边界组织 */
+/* globals.css - 样式入口 */
 
-@import './styles/theme.css';
-@import './styles/fonts.css';
-@import './styles/animations.css';
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import './fonts.css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* shadcn standard variables — single source of truth */
+  --background: #f3f5f9;
+  --foreground: #152033;
+  --card: #ffffff;
+  --card-foreground: #152033;
+  --popover: #ffffff;
+  --popover-foreground: #152033;
+  --primary: #2764f6;
+  --primary-foreground: #ffffff;
+  --secondary: #f3f5f9;
+  --secondary-foreground: #152033;
+  --muted: #65728a;
+  --muted-foreground: #65728a;
+  --accent: #2764f6;
+  --accent-foreground: #152033;
+  --destructive: #d92d20;
+  --destructive-foreground: #ffffff;
+  --border: #cfd8e8;
+  --input: #cfd8e8;
+  --ring: rgba(39, 100, 246, 0.14);
+  --radius: 6px;
+
+  /* Chart colors */
+  --chart-1: #f3f5f9;
+  --chart-2: #65728a;
+  --chart-3: #4a5568;
+  --chart-4: #3d4a5c;
+  --chart-5: #2d3748;
+
+  /* Sidebar colors */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #152033;
+  --sidebar-primary: #2764f6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f3f5f9;
+  --sidebar-accent-foreground: #152033;
+  --sidebar-border: #d9e0ee;
+  --sidebar-ring: rgba(39, 100, 246, 0.14);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-heading: var(--font-sans);
+  --font-sans: var(--font-sans);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* 项目自定义：浮动动画 utility */
+  --animate-float: float 5s ease-in-out infinite;
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
+    }
+  }
+}
+
+.dark {
+  --background: #152033;
+  --foreground: #f3f5f9;
+  --card: #1a2744;
+  --card-foreground: #f3f5f9;
+  --popover: #1a2744;
+  --popover-foreground: #f3f5f9;
+  --primary: #5a8aff;
+  --primary-foreground: #152033;
+  --secondary: #1a2744;
+  --secondary-foreground: #f3f5f9;
+  --muted: #1a2744;
+  --muted-foreground: #a0aec0;
+  --accent: #1a2744;
+  --accent-foreground: #f3f5f9;
+  --destructive: #ef4444;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: rgba(90, 138, 255, 0.2);
+  --chart-1: #f3f5f9;
+  --chart-2: #a0aec0;
+  --chart-3: #718096;
+  --chart-4: #4a5568;
+  --chart-5: #2d3748;
+  --sidebar: #1a2744;
+  --sidebar-foreground: #f3f5f9;
+  --sidebar-primary: #5a8aff;
+  --sidebar-primary-foreground: #152033;
+  --sidebar-accent: #1a2744;
+  --sidebar-accent-foreground: #f3f5f9;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: rgba(90, 138, 255, 0.2);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html,
+  body {
+    height: 100%;
+    min-height: 100%;
+  }
+  body {
+    @apply bg-background text-foreground;
+    /* 项目自定义：中文 fallback 字体栈 */
+    font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', Arial, Helvetica, sans-serif;
+  }
+  html {
+    @apply font-sans;
+  }
+
+  /* 项目自定义：以下为业务侧基础样式 */
+  button {
+    user-select: none;
+  }
+  h1 {
+    font-size: 24px;
+    line-height: 1.2;
+  }
+}

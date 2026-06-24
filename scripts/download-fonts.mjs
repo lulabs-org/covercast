@@ -2,7 +2,7 @@
  * 字体下载脚本
  *
  * 从 Google Fonts 下载 woff2 字体到 public/fonts/，
- * 并生成 app/styles/fonts.css 包含所有 @font-face 声明。
+ * 并生成 src/app/fonts.css 包含所有 @font-face 声明。
  *
  * 中文字体：从 GitHub releases 下载完整 woff2 文件（不分片）
  * 英文字体：从 Google Fonts CSS API 下载
@@ -19,7 +19,7 @@ import { EnvHttpProxyAgent, setGlobalDispatcher } from 'undici'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const FONTS_DIR = join(__dirname, '..', 'public', 'fonts')
-const CSS_PATH = join(__dirname, '..', 'app', 'styles', 'fonts.css')
+const CSS_PATH = join(__dirname, '..', 'src', 'app', 'fonts.css')
 
 // ─── 代理支持 ────────────────────────────────────────────
 const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY
