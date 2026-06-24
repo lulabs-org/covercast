@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react'
 import { type CustomSceneTemplate } from '../../hooks/useTemplateManager'
 import { useTemplateCardMenu } from '../../hooks/useTemplateCardMenu'
 import { TemplateCardMenu } from './TemplateCardMenu'
+import { cn } from '@/shared/lib'
+import styles from './TemplatePanel.module.css'
 
 function formatTemplateDate(value: string, prefix = '保存于') {
   const date = new Date(value)
@@ -94,19 +96,16 @@ export function CustomTemplateCard({
 
   return (
     <div
-      className={[
-        'template-card',
-        active ? 'active' : '',
-        dirty ? 'dirty' : '',
-        renameError ? 'rename-error' : '',
-      ]
-        .filter(Boolean)
-        .join(' ')}
+      className={cn(
+        styles.templateCard,
+        active && styles.templateCardActive,
+        dirty && styles.templateCardDirty,
+      )}
     >
-      <button type="button" className="template-card-button" onClick={onApply}>
-        <div className="template-card-content">
+      <button type="button" className={styles.templateCardButton} onClick={onApply}>
+        <div className={styles.templateCardContent}>
           {isRenaming ? (
-            <div className="template-card-rename-wrapper">
+            <div className={styles.templateCardRenameWrapper}>
               <input
                 ref={renameInputRef}
                 type="text"
@@ -114,23 +113,26 @@ export function CustomTemplateCard({
                 onChange={(e) => setRenameValue(e.currentTarget.value)}
                 onKeyDown={handleRenameKeyDown}
                 onBlur={handleRenameSubmit}
-                className={`template-card-rename-input${renameError ? ' error' : ''}`}
+                className={cn(
+                  styles.templateCardRenameInput,
+                  renameError && styles.templateCardRenameInputError,
+                )}
               />
               {renameError ? (
-                <span className="template-card-rename-error">{renameError}</span>
+                <span className={styles.templateCardRenameError}>{renameError}</span>
               ) : null}
             </div>
           ) : (
-            <span className="template-card-name">{template.name}</span>
+            <span className={styles.templateCardName}>{template.name}</span>
           )}
-          <small className="template-card-desc">{description}</small>
+          <small className={styles.templateCardDesc}>{description}</small>
         </div>
-        <span className="template-card-badge">{badge}</span>
+        <span className={styles.templateCardBadge}>{badge}</span>
       </button>
       <button
         ref={triggerRef}
         type="button"
-        className="template-card-more"
+        className={styles.templateCardMore}
         aria-label={`更多操作 ${template.name}`}
         onClick={openMenu}
         title="更多操作"

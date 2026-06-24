@@ -16,6 +16,7 @@ import {
 import { FontFamilyField } from '../FontFamilyField'
 import type { useLocalFonts } from '../../hooks/useLocalFonts'
 import { TextArea, ColorPicker, Button } from '@/shared/components'
+import styles from './ElementInspector.module.css'
 
 type LocalFontManager = ReturnType<typeof useLocalFonts>
 
@@ -433,7 +434,7 @@ export function ElementInspector({
   }
 
   return (
-    <div className="inspector">
+    <div className={styles.inspector}>
       <TextField
         label="图层名称"
         value={pendingName}
@@ -476,7 +477,7 @@ export function ElementInspector({
         <ImageInspector element={element} onPatch={onPatch} onReplaceImage={onReplaceImage} />
       ) : null}
 
-      <div className="inspector-action-row">
+      <div className={styles.inspectorActionRow}>
         <Button variant="secondary" onClick={onCopy}>
           复制元素
         </Button>

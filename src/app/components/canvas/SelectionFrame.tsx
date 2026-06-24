@@ -26,7 +26,7 @@ export function SelectionFrame({
         pointerEvents="none"
       />
       <rect
-        className="selection-handle"
+        className="cursor-nwse-resize"
         x={bounds.x + bounds.width - handleSize / 2}
         y={bounds.y + bounds.height - handleSize / 2}
         width={handleSize}

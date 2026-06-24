@@ -1,40 +1,12 @@
 'use client'
 
-import { type ReactNode } from 'react'
 import { BUILT_IN_TEMPLATES } from '../../lib/scene'
 import { type CustomSceneTemplate } from '../../hooks/useTemplateManager'
 import { CustomTemplateCard } from './CustomTemplateCard'
 import { Button } from '@/shared/components'
-
-function SidebarSection({
-  title,
-  caption,
-  collapsed,
-  onToggle,
-  children,
-}: {
-  title: string
-  caption: string
-  collapsed: boolean
-  onToggle: () => void
-  children: ReactNode
-}) {
-  return (
-    <section className="sidebar-section">
-      <button
-        type="button"
-        className="sidebar-section-header"
-        onClick={onToggle}
-        aria-expanded={!collapsed}
-      >
-        <span>{title}</span>
-        <small>{caption}</small>
-        <b>{collapsed ? '＋' : '－'}</b>
-      </button>
-      {collapsed ? null : <div className="sidebar-section-body">{children}</div>}
-    </section>
-  )
-}
+import { cn } from '@/shared/lib'
+import { SidebarSection } from '../editor/sidebar/SidebarSection'
+import styles from './TemplatePanel.module.css'
 
 function TemplateCard({
   name,
@@ -53,16 +25,18 @@ function TemplateCard({
 }) {
   return (
     <div
-      className={['template-card', active ? 'active' : '', dirty ? 'dirty' : '']
-        .filter(Boolean)
-        .join(' ')}
+      className={cn(
+        styles.templateCard,
+        active && styles.templateCardActive,
+        dirty && styles.templateCardDirty,
+      )}
     >
-      <button type="button" className="template-card-button" onClick={onApply}>
-        <div className="template-card-content">
-          <span className="template-card-name">{name}</span>
-          <small className="template-card-desc">{description}</small>
+      <button type="button" className={styles.templateCardButton} onClick={onApply}>
+        <div className={styles.templateCardContent}>
+          <span className={styles.templateCardName}>{name}</span>
+          <small className={styles.templateCardDesc}>{description}</small>
         </div>
-        <span className="template-card-badge">{badge}</span>
+        <span className={styles.templateCardBadge}>{badge}</span>
       </button>
     </div>
   )
@@ -98,13 +72,13 @@ export function TemplatePanel({
       collapsed={collapsed}
       onToggle={onToggle}
     >
-      <div className="template-library">
-        <div className="template-section">
-          <div className="template-section-header">
-            <span className="template-section-title">内置模板</span>
-            <span className="template-section-count">{BUILT_IN_TEMPLATES.length} 个</span>
+      <div className={styles.templateLibrary}>
+        <div className={styles.templateSection}>
+          <div className={styles.templateSectionHeader}>
+            <span className={styles.templateSectionTitle}>内置模板</span>
+            <span className={styles.templateSectionCount}>{BUILT_IN_TEMPLATES.length} 个</span>
           </div>
-          <div className="template-list">
+          <div className={styles.templateList}>
             {BUILT_IN_TEMPLATES.map((template) => (
               <TemplateCard
                 key={template.id}
@@ -119,12 +93,12 @@ export function TemplatePanel({
         </div>
 
         {customTemplates.length > 0 && (
-          <div className="template-section">
-            <div className="template-section-header">
-              <span className="template-section-title">自定义模板</span>
-              <span className="template-section-count">{customTemplates.length} 个</span>
+          <div className={styles.templateSection}>
+            <div className={styles.templateSectionHeader}>
+              <span className={styles.templateSectionTitle}>自定义模板</span>
+              <span className={styles.templateSectionCount}>{customTemplates.length} 个</span>
             </div>
-            <div className="template-list">
+            <div className={styles.templateList}>
               {customTemplates.map((template) => (
                 <CustomTemplateCard
                   key={template.id}
@@ -157,27 +131,26 @@ export function TemplateToolbarButtons({
 }) {
   return (
     <>
-      <Button
-        variant="secondary"
-        className="toolbar-template-button"
-        onClick={onOpenSaveTemplateDialog}
-      >
+      <Button variant="secondary" onClick={onOpenSaveTemplateDialog}>
         {activeCustomTemplate ? '另存为模板' : '保存为模板'}
       </Button>
-      <label className="secondary-button file-button">
-        导入
-        <input
-          type="file"
-          accept="application/json,.json"
-          onChange={(event) => {
-            const file = event.currentTarget.files?.[0]
-            event.currentTarget.value = ''
-            if (file) {
-              onImport(file)
-            }
-          }}
-        />
-      </label>
+      <Button variant="secondary" asChild>
+        <label className="relative overflow-hidden cursor-pointer">
+          导入
+          <input
+            type="file"
+            accept="application/json,.json"
+            className="absolute inset-[-10px] opacity-0 cursor-inherit"
+            onChange={(event) => {
+              const file = event.currentTarget.files?.[0]
+              event.currentTarget.value = ''
+              if (file) {
+                onImport(file)
+              }
+            }}
+          />
+        </label>
+      </Button>
     </>
   )
 }

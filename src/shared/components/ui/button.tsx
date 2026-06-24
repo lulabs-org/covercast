@@ -20,11 +20,12 @@ const buttonVariants = cva(
         link: 'text-primary underline-offset-4 hover:underline',
         // --- 项目自研变体（从 custom/Button.tsx 合并） ---
         primary:
-          'border-0 rounded-[6px] font-extrabold text-white bg-[var(--primary)] hover:bg-[var(--accent-strong)] disabled:bg-[#9aa9c0] disabled:cursor-not-allowed disabled:opacity-100',
+          'border-0 rounded-[6px] font-extrabold text-white bg-[var(--primary)] hover:bg-[#174ac6] disabled:bg-[#9aa9c0] disabled:cursor-not-allowed disabled:opacity-100',
         secondary:
           'rounded-[6px] font-extrabold text-[#1c2a3d] bg-[#eef3fb] border-[#d4deef] hover:bg-[#e4ecf8] disabled:text-[#8a96aa] disabled:bg-[#eef2f7] disabled:border-[#dbe3f0] disabled:cursor-not-allowed disabled:opacity-100',
         danger:
           'border-0 rounded-[6px] font-extrabold w-full text-white bg-[var(--destructive)] disabled:opacity-100',
+        dark: 'border-0 rounded-[6px] font-extrabold bg-[var(--foreground)] text-[var(--background)] hover:bg-[var(--foreground)]/85 disabled:opacity-50 disabled:cursor-not-allowed',
       },
       size: {
         // --- shadcn 原生尺寸 ---

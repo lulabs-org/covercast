@@ -1,10 +1,10 @@
-.layer-list {
+.layerList {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.layer-row {
+.layerRow {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
@@ -15,21 +15,21 @@
   background: #f8fafc;
 }
 
-.layer-row.active {
+.active {
   border-color: var(--primary);
   background: #eaf1ff;
   box-shadow: 0 0 0 1px rgba(39, 100, 246, 0.35);
 }
 
-.layer-row.muted {
+.muted {
   opacity: 0.58;
 }
 
-.layer-row.locked .layer-name {
+.locked .layerName {
   color: #43516a;
 }
 
-.layer-main {
+.layerMain {
   min-width: 0;
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr) auto;
@@ -43,7 +43,7 @@
   text-align: left;
 }
 
-.layer-type {
+.layerType {
   width: 24px;
   height: 24px;
   display: inline-flex;
@@ -56,7 +56,7 @@
   font-weight: 900;
 }
 
-.layer-name {
+.layerName {
   overflow: hidden;
   font-size: 13px;
   font-weight: 900;
@@ -64,20 +64,20 @@
   white-space: nowrap;
 }
 
-.layer-main small {
+.layerMain small {
   color: var(--muted);
   font-size: 11px;
   font-weight: 800;
   white-space: nowrap;
 }
 
-.layer-actions {
+.layerActions {
   display: flex;
   align-items: center;
   gap: 3px;
 }
 
-.layer-action {
+.layerAction {
   width: 24px;
   height: 24px;
   display: inline-flex;
@@ -93,14 +93,14 @@
   line-height: 1;
 }
 
-.layer-action:hover:not(:disabled),
-.layer-action.active {
+.layerAction:hover:not(:disabled),
+.layerActionActive {
   border-color: var(--primary);
   color: var(--primary);
   background: #f0f4ff;
 }
 
-.layer-action:disabled {
+.layerAction:disabled {
   cursor: default;
   opacity: 0.38;
 }

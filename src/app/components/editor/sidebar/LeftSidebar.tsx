@@ -1,16 +1,18 @@
 'use client'
 
-import type { Ref, ReactNode } from 'react'
+import type { Ref } from 'react'
 import { LayerPanel } from '../../panels/LayerPanel'
 import { SourcesPanel } from '../../panels/SourcesPanel'
 import { TemplatePanel } from '../../panels/TemplatePanel'
 import { CanvasSizeSelector } from '../../controls/CanvasSizeSelector'
+import { SidebarSection } from './SidebarSection'
 import type { Scene } from '../../../lib/scene'
 import type { SelectionState } from '../../../lib/selection'
 import type { CustomSceneTemplate, SceneSlotInfo } from '../../../hooks/useTemplateManager'
 import type { CanvasSize, CanvasSizePreset } from '../../../hooks/useCanvasSize'
 import { ColorPicker, Slider } from '@/shared/components'
 import { clamp } from '@/shared/lib'
+import styles from './LeftSidebar.module.css'
 
 type SidebarSectionId = 'scene' | 'sources' | 'templates' | 'layers'
 
@@ -113,11 +115,13 @@ export function LeftSidebar({
       aria-label="Scene settings"
       style={{ width: `${leftPanelWidth}px` }}
     >
-      <div className="sidebar-context">
-        <span className="context-label">当前编辑</span>
+      <div className={styles.sidebarContext}>
+        <span className={styles.contextLabel}>当前编辑</span>
         <strong>
           {activeTemplate?.name ?? '自定义场景'}
-          {hasUnsavedCustomTemplateChanges ? <span className="unsaved-pill">未保存</span> : null}
+          {hasUnsavedCustomTemplateChanges ? (
+            <span className={styles.unsavedPill}>未保存</span>
+          ) : null}
         </strong>
         <small>{editingContextCaption}</small>
       </div>
@@ -205,36 +209,6 @@ export function LeftSidebar({
         onMoveLayer={moveElementLayer}
       />
     </aside>
-  )
-}
-
-function SidebarSection({
-  title,
-  caption,
-  collapsed,
-  onToggle,
-  children,
-}: {
-  title: string
-  caption: string
-  collapsed: boolean
-  onToggle: () => void
-  children: ReactNode
-}) {
-  return (
-    <section className="sidebar-section">
-      <button
-        type="button"
-        className="sidebar-section-header"
-        onClick={onToggle}
-        aria-expanded={!collapsed}
-      >
-        <span>{title}</span>
-        <small>{caption}</small>
-        <b>{collapsed ? '＋' : '－'}</b>
-      </button>
-      {collapsed ? null : <div className="sidebar-section-body">{children}</div>}
-    </section>
   )
 }
 

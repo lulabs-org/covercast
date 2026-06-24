@@ -115,10 +115,10 @@ export default function LiveView({ templateId, slotId }: LiveViewProps) {
   return (
     <>
       <style>{`html, body { background: transparent !important; }`}</style>
-      <main className="live-shell">
+      <main className="w-screen h-screen grid place-items-center overflow-hidden">
         <SceneCanvas
           scene={scene}
-          className="live-canvas"
+          className="w-screen h-screen block"
           idPrefix="live"
           resolveSrc={resolveSrc}
         />

@@ -43,10 +43,6 @@
   --sidebar-accent-foreground: #152033;
   --sidebar-border: #d9e0ee;
   --sidebar-ring: rgba(39, 100, 246, 0.14);
-
-  /* Legacy aliases for gradual migration */
-  --accent-strong: #174ac6;
-  --danger: var(--destructive);
 }
 
 @theme inline {
@@ -93,102 +89,6 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-* {
-  box-sizing: border-box;
-}
-
-html,
-body {
-  height: 100%;
-  min-height: 100%;
-}
-
-body {
-  margin: 0;
-  background: transparent;
-  font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', Arial, Helvetica, sans-serif;
-}
-
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: transparent;
-  border-radius: 3px;
-  border: 0;
-  transition: background 0.2s ease;
-}
-
-::-webkit-scrollbar-corner {
-  background: transparent;
-}
-
-.left-panel:hover::-webkit-scrollbar-thumb,
-.right-panel:hover::-webkit-scrollbar-thumb,
-.stage-viewport:hover::-webkit-scrollbar-thumb,
-.sidebar-scrollable:hover::-webkit-scrollbar-thumb,
-.left-panel.scrolling::-webkit-scrollbar-thumb,
-.right-panel.scrolling::-webkit-scrollbar-thumb,
-.stage-viewport.scrolling::-webkit-scrollbar-thumb,
-.sidebar-scrollable.scrolling::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.25);
-}
-
-.left-panel::-webkit-scrollbar-thumb:hover,
-.right-panel::-webkit-scrollbar-thumb:hover,
-.stage-viewport::-webkit-scrollbar-thumb:hover,
-.sidebar-scrollable::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.45);
-}
-
-.left-panel,
-.right-panel,
-.stage-viewport,
-.sidebar-scrollable {
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
-}
-
-.left-panel:hover,
-.right-panel:hover,
-.stage-viewport:hover,
-.sidebar-scrollable:hover,
-.left-panel.scrolling,
-.right-panel.scrolling,
-.stage-viewport.scrolling,
-.sidebar-scrollable.scrolling {
-  scrollbar-color: rgba(100, 116, 139, 0.25) transparent;
-}
-
-button,
-input,
-textarea,
-select {
-  font: inherit;
-}
-
-button,
-label.file-button {
-  user-select: none;
-}
-
-h1,
-h2,
-p {
-  margin: 0;
-}
-
-h1 {
-  font-size: 24px;
-  line-height: 1.2;
-}
-
 .dark {
   --background: #152033;
   --foreground: #f3f5f9;
@@ -226,11 +126,38 @@ h1 {
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    box-sizing: border-box;
+  }
+  html,
+  body {
+    height: 100%;
+    min-height: 100%;
   }
   body {
     @apply bg-background text-foreground;
+    margin: 0;
+    background: transparent;
+    font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', Arial, Helvetica, sans-serif;
   }
   html {
     @apply font-sans;
+  }
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+  button {
+    user-select: none;
+  }
+  h1,
+  h2,
+  p {
+    margin: 0;
+  }
+  h1 {
+    font-size: 24px;
+    line-height: 1.2;
   }
 }

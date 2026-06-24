@@ -67,7 +67,9 @@ export function RightSidebar({
           localFontManager={localFontManager}
         />
       ) : (
-        <p className="empty-state">选择文字、视频框或图片素材后，可在这里调整位置、大小和样式。</p>
+        <p className="text-[var(--muted)] text-sm leading-relaxed">
+          选择文字、视频框或图片素材后，可在这里调整位置、大小和样式。
+        </p>
       )}
     </aside>
   )

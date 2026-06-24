@@ -85,14 +85,17 @@ export function SceneToolbar({
         <Button variant="secondary" onClick={addEllipseElement}>
           添加椭圆
         </Button>
-        <label className="secondary-button file-button">
-          添加图片
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            onChange={(event) => handleAssetInput(event, 'add')}
-          />
-        </label>
+        <Button variant="secondary" asChild>
+          <label className="relative overflow-hidden cursor-pointer">
+            添加图片
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="absolute inset-[-10px] opacity-0 cursor-inherit"
+              onChange={(event) => handleAssetInput(event, 'add')}
+            />
+          </label>
+        </Button>
         {activeCustomTemplate ? (
           <Button
             variant="primary"
@@ -123,13 +126,13 @@ export function SceneToolbar({
               </option>
             ))}
           </select>
-          <button
-            type="button"
-            className="primary-button muted"
+          <Button
+            variant="dark"
+            className="rounded-l-none"
             onClick={() => void exportScene(exportFormat)}
           >
             导出
-          </button>
+          </Button>
         </div>
       </div>
     </section>
