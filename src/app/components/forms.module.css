@@ -1,0 +1,110 @@
+/*
+ * forms.module.css — 表单基元
+ *
+ * 跨组件复用的表单样式基元：.field / .colorField / .opacityField /
+ * .checkboxField / .fieldGrid / .fieldHelp / .fieldError。
+ *
+ * 被 ElementInspector / SaveTemplateDialog / CreateBlankCoverModal /
+ * CanvasSizeSelector / FontFamilyField / LeftSidebar 共享使用。
+ */
+
+.field,
+.colorField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field span {
+  color: #39485f;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid #cfd8e8;
+  border-radius: 6px;
+  padding: 8px 9px;
+  color: #142033;
+  background: #ffffff;
+  outline: none;
+}
+
+.field textarea {
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(39, 100, 246, 0.14);
+}
+
+.field.fieldError input {
+  border-color: var(--destructive);
+}
+
+.field.fieldError input:focus {
+  border-color: var(--destructive);
+  box-shadow: 0 0 0 3px rgba(217, 45, 32, 0.14);
+}
+
+.field.fieldError .fieldErrorMessage {
+  color: var(--destructive);
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.checkboxField {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkboxField input {
+  width: 20px;
+  min-height: 20px;
+}
+
+.fieldHelp {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.colorField > div {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 8px;
+}
+
+.colorField input[type='color'] {
+  padding: 3px;
+}
+
+.opacityField > div {
+  display: grid;
+  grid-template-columns: 1fr 72px;
+  align-items: center;
+  gap: 8px;
+}
+
+.opacityValue {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}

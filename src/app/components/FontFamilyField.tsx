@@ -6,6 +6,7 @@ import { useFontLoader } from '../hooks/useFontLoader'
 import type { useLocalFonts } from '../hooks/useLocalFonts'
 import { cn } from '@/shared/lib'
 import styles from './FontFamilyField.module.css'
+import formStyles from './forms.module.css'
 
 // 扩展 FontFaceSet 类型声明
 declare global {
@@ -179,7 +180,7 @@ export function FontFamilyField({
 
   return (
     <div className={styles.fontFamilyField}>
-      <label className="field">
+      <label className={formStyles.field}>
         <span>字体</span>
         <button
           ref={triggerRef}

@@ -14,6 +14,7 @@ import {
   DialogFooter,
 } from '@/shared/components'
 import { clamp } from '@/shared/lib'
+import formStyles from '../forms.module.css'
 
 type TemplateOption = {
   id: string
@@ -135,7 +136,7 @@ export function CreateBlankCoverModal({
         <DialogBody>
           <div className="mb-5 last:mb-0">
             <h3 className="mb-3 text-sm font-bold text-[var(--muted)]">基本信息</h3>
-            <label className="field">
+            <label className={formStyles.field}>
               <span>封面名称</span>
               <input
                 type="text"
@@ -148,7 +149,7 @@ export function CreateBlankCoverModal({
 
           <div className="mb-5 last:mb-0">
             <h3 className="mb-3 text-sm font-bold text-[var(--muted)]">引用模板</h3>
-            <label className="field">
+            <label className={formStyles.field}>
               <span>选择模板</span>
               <select value={config.templateId} onChange={handleTemplateChange}>
                 {templateOptions.map((template) => (
@@ -162,7 +163,7 @@ export function CreateBlankCoverModal({
 
           <div className="mb-5 last:mb-0">
             <h3 className="mb-3 text-sm font-bold text-[var(--muted)]">封面尺寸</h3>
-            <label className="field">
+            <label className={formStyles.field}>
               <span>预设尺寸</span>
               <select value={selectedSizeValue} onChange={handlePresetChange}>
                 {presetOptions.map((preset) => (
@@ -176,7 +177,7 @@ export function CreateBlankCoverModal({
 
             {isCustomSize && (
               <div className="grid grid-cols-2 gap-2.5 mt-2.5">
-                <label className="field">
+                <label className={formStyles.field}>
                   <span>宽度</span>
                   <input
                     type="number"
@@ -185,7 +186,7 @@ export function CreateBlankCoverModal({
                     min={1}
                   />
                 </label>
-                <label className="field">
+                <label className={formStyles.field}>
                   <span>高度</span>
                   <input
                     type="number"
@@ -200,11 +201,11 @@ export function CreateBlankCoverModal({
 
           <div className="mb-5 last:mb-0">
             <h3 className="mb-3 text-sm font-bold text-[var(--muted)]">背景设置</h3>
-            <label className="field">
+            <label className={formStyles.field}>
               <span>背景颜色</span>
               <ColorPicker value={config.backgroundColor} onChange={handleColorChange} />
             </label>
-            <label className="field">
+            <label className={formStyles.field}>
               <span>不透明度</span>
               <Slider
                 min={0}
@@ -213,7 +214,7 @@ export function CreateBlankCoverModal({
                 value={opacity}
                 onValueChange={handleOpacityChange}
               />
-              <span className="opacity-value">{Math.round(opacity * 100)}%</span>
+              <span className={formStyles.opacityValue}>{Math.round(opacity * 100)}%</span>
             </label>
           </div>
         </DialogBody>

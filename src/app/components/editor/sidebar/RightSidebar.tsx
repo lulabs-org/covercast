@@ -4,6 +4,7 @@ import type { Ref } from 'react'
 import { ElementInspector } from '../../panels/ElementInspector'
 import type { SceneElement } from '../../../lib/scene'
 import type { useLocalFonts } from '../../../hooks/useLocalFonts'
+import editorStyles from '../editor.module.css'
 
 type LocalFontManager = ReturnType<typeof useLocalFonts>
 
@@ -44,7 +45,7 @@ export function RightSidebar({
   return (
     <aside
       ref={rightPanelRef}
-      className="right-panel"
+      className={editorStyles.rightPanel}
       aria-label="Selected element settings"
       style={{ width: `${rightPanelWidth}px` }}
     >
@@ -77,7 +78,7 @@ export function RightSidebar({
 
 function PanelTitle({ title, caption }: { title: string; caption: string }) {
   return (
-    <div className="panel-title">
+    <div className={editorStyles.panelTitle}>
       <h2>{title}</h2>
       <span>{caption}</span>
     </div>

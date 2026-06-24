@@ -13,6 +13,8 @@ import type { CanvasSize, CanvasSizePreset } from '../../../hooks/useCanvasSize'
 import { ColorPicker, Slider } from '@/shared/components'
 import { clamp } from '@/shared/lib'
 import styles from './LeftSidebar.module.css'
+import editorStyles from '../editor.module.css'
+import formStyles from '../../forms.module.css'
 
 type SidebarSectionId = 'scene' | 'sources' | 'templates' | 'layers'
 
@@ -111,7 +113,7 @@ export function LeftSidebar({
   return (
     <aside
       ref={leftPanelRef}
-      className="left-panel"
+      className={editorStyles.leftPanel}
       aria-label="Scene settings"
       style={{ width: `${leftPanelWidth}px` }}
     >
@@ -222,7 +224,7 @@ function ColorField({
   onChange: (value: string) => void
 }) {
   return (
-    <label className="field color-field">
+    <label className={`${formStyles.field} ${formStyles.colorField}`}>
       <span>{label}</span>
       <ColorPicker value={value} onChange={onChange} />
     </label>
@@ -241,7 +243,7 @@ function OpacityField({
   const opacity = clamp(value, 0, 1)
 
   return (
-    <label className="field opacity-field">
+    <label className={`${formStyles.field} ${formStyles.opacityField}`}>
       <span>{label}</span>
       <div>
         <Slider min={0} max={1} step={0.01} value={opacity} onValueChange={onChange} />

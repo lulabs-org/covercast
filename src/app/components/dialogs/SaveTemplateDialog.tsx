@@ -11,6 +11,7 @@ import {
   DialogBody,
   DialogFooter,
 } from '@/shared/components'
+import formStyles from '../forms.module.css'
 
 export function SaveTemplateDialog({
   show,
@@ -52,7 +53,7 @@ export function SaveTemplateDialog({
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <DialogBody>
-          <label className={`field${nameError ? ' field-error' : ''}`}>
+          <label className={`${formStyles.field}${nameError ? ` ${formStyles.fieldError}` : ''}`}>
             <span>模板名称</span>
             <Input
               ref={inputRef}
@@ -67,7 +68,7 @@ export function SaveTemplateDialog({
                 }
               }}
             />
-            {nameError ? <span className="field-error-message">{nameError}</span> : null}
+            {nameError ? <span className={formStyles.fieldErrorMessage}>{nameError}</span> : null}
           </label>
         </DialogBody>
         <DialogFooter>

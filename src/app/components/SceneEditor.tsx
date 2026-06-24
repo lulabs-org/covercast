@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { cloneScene, createDefaultScene, type Scene, type SceneElement } from '../lib/scene'
+import editorStyles from './editor/editor.module.css'
 
 import { createSelectionState, selectSingle, type SelectionState } from '../lib/selection'
 import { type HitTestStrategy } from '../lib/marquee'
@@ -369,7 +370,7 @@ export default function SceneEditor() {
         onUpdateConfig={updateCreateBlankCoverConfig}
       />
 
-      <main className="editor-shell">
+      <main className={editorStyles.editorShell}>
         <SceneToolbar
           undo={undo}
           redo={redo}
@@ -401,7 +402,7 @@ export default function SceneEditor() {
           onCancel={saveTemplateDialog.closeDialog}
         />
 
-        <section className="editor-grid">
+        <section className={editorStyles.editorGrid}>
           <LeftSidebar
             leftPanelRef={leftPanelRef}
             leftPanelWidth={panelWidths.leftPanel}
@@ -443,7 +444,7 @@ export default function SceneEditor() {
 
           <div
             ref={resizerLeftRef}
-            className="panel-resizer"
+            className={editorStyles.panelResizer}
             onMouseDown={(e) => handleMouseDown('left', e)}
           />
 
@@ -485,7 +486,7 @@ export default function SceneEditor() {
 
           <div
             ref={resizerRightRef}
-            className="panel-resizer"
+            className={editorStyles.panelResizer}
             onMouseDown={(e) => handleMouseDown('right', e)}
           />
 

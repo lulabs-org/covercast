@@ -7,6 +7,7 @@ import type { GuideLine, MeasurementGuide, ResizeLabel } from '../../lib/smart-g
 import type { HitTestStrategy, MarqueeState } from '../../lib/marquee'
 import type { ResizeHandleType } from '../../lib/group-drag'
 import { Slider } from '@/shared/components'
+import styles from './editor.module.css'
 
 type StagePanelProps = {
   // Status
@@ -85,26 +86,26 @@ export function StagePanel({
   onTextElementDoubleClick,
 }: StagePanelProps) {
   return (
-    <section className="stage-panel" aria-label="Canvas preview">
-      <div className="stage-header">
-        <span className="stage-status">{status}</span>
-        <div className="stage-header-tools">
+    <section className={styles.stagePanel} aria-label="Canvas preview">
+      <div className={styles.stageHeader}>
+        <span className={styles.stageStatus}>{status}</span>
+        <div className={styles.stageHeaderTools}>
           <span>拖拽移动，右下角黄点缩放</span>
           <div
-            className="canvas-zoom-controls"
+            className={styles.canvasZoomControls}
             aria-label="画布缩放"
             onWheel={handleZoomSliderWheel}
           >
             <button
               type="button"
-              className="zoom-button"
+              className={styles.zoomButton}
               onClick={zoomCanvasOut}
               disabled={canvasZoom <= CANVAS_ZOOM_MIN}
               title="缩小画布"
             >
               -
             </button>
-            <label className="zoom-slider-label">
+            <label className={styles.zoomSliderLabel}>
               <span>{canvasZoomPercent}%</span>
               <Slider
                 min={CANVAS_ZOOM_MIN}
@@ -117,7 +118,7 @@ export function StagePanel({
             </label>
             <button
               type="button"
-              className="zoom-button"
+              className={styles.zoomButton}
               onClick={zoomCanvasIn}
               disabled={canvasZoom >= CANVAS_ZOOM_MAX}
               title="放大画布"
@@ -126,7 +127,7 @@ export function StagePanel({
             </button>
             <button
               type="button"
-              className="zoom-fit-button"
+              className={styles.zoomFitButton}
               onClick={resetCanvasZoom}
               disabled={canvasZoom === 1}
               title="恢复适配视图"
@@ -136,10 +137,10 @@ export function StagePanel({
           </div>
         </div>
       </div>
-      <div className="stage-viewport" ref={stageViewportRef} onWheel={handleStageWheel}>
-        <div className="stage-viewport-inner">
+      <div className={styles.stageViewport} ref={stageViewportRef} onWheel={handleStageWheel}>
+        <div className={styles.stageViewportInner}>
           <div
-            className="scene-preview-frame"
+            className={styles.scenePreviewFrame}
             style={{
               width: canvasPreviewWidth,
               aspectRatio: `${canvasWidth} / ${canvasHeight}`,
@@ -147,7 +148,7 @@ export function StagePanel({
           >
             <SceneCanvas
               scene={scene}
-              className="scene-preview"
+              className={styles.scenePreview}
               style={{ aspectRatio: `${canvasWidth} / ${canvasHeight}` }}
               idPrefix="editor"
               interactive

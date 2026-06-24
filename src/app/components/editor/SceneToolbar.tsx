@@ -4,6 +4,7 @@ import { TemplateToolbarButtons } from '../panels/TemplatePanel'
 import type { ExportFormat, EXPORT_FORMAT_OPTIONS } from '../../hooks/useExportScene'
 import type { CustomSceneTemplate } from '../../hooks/useTemplateManager'
 import { Button } from '@/shared/components'
+import styles from './editor.module.css'
 
 type SceneToolbarProps = {
   // History
@@ -56,12 +57,12 @@ export function SceneToolbar({
   EXPORT_FORMAT_OPTIONS,
 }: SceneToolbarProps) {
   return (
-    <section className="editor-toolbar" aria-label="Covercast editor controls">
+    <section className={styles.editorToolbar} aria-label="Covercast editor controls">
       <div>
-        <p className="eyebrow">Covercast</p>
+        <p className={styles.eyebrow}>Covercast</p>
         <h1>封面编辑器</h1>
       </div>
-      <div className="toolbar-actions">
+      <div className={styles.toolbarActions}>
         <Button variant="secondary" onClick={undo} disabled={!canUndo} title="撤销 (Ctrl+Z)">
           ↶
         </Button>
@@ -113,9 +114,9 @@ export function SceneToolbar({
           onOpenSaveTemplateDialog={onOpenSaveTemplateDialog}
           onImport={(file) => void importTemplateFile(file)}
         />
-        <div className="export-control" aria-label="导出场景">
+        <div className={styles.exportControl} aria-label="导出场景">
           <select
-            className="export-format-select"
+            className={styles.exportFormatSelect}
             value={exportFormat}
             onChange={(event) => setExportFormat(event.currentTarget.value as ExportFormat)}
             title="选择导出格式"

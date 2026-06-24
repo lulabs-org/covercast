@@ -17,6 +17,7 @@ import { FontFamilyField } from '../FontFamilyField'
 import type { useLocalFonts } from '../../hooks/useLocalFonts'
 import { TextArea, ColorPicker, Button } from '@/shared/components'
 import styles from './ElementInspector.module.css'
+import formStyles from '../forms.module.css'
 
 type LocalFontManager = ReturnType<typeof useLocalFonts>
 
@@ -62,7 +63,7 @@ function TextField({
   error?: string
 }) {
   return (
-    <label className={`field${error ? ' field-error' : ''}`}>
+    <label className={`${formStyles.field}${error ? ` ${formStyles.fieldError}` : ''}`}>
       <span>{label}</span>
       <input
         type="text"
@@ -70,7 +71,7 @@ function TextField({
         placeholder={placeholder}
         onChange={(event) => onChange(event.currentTarget.value)}
       />
-      {error ? <span className="field-error-message">{error}</span> : null}
+      {error ? <span className={formStyles.fieldErrorMessage}>{error}</span> : null}
     </label>
   )
 }
@@ -85,7 +86,7 @@ function TextAreaField({
   onChange: (value: string) => void
 }) {
   return (
-    <label className="field">
+    <label className={formStyles.field}>
       <span>{label}</span>
       <TextArea value={value} rows={5} onChange={(event) => onChange(event.currentTarget.value)} />
     </label>
@@ -110,7 +111,7 @@ function NumberField({
   precision?: number
 }) {
   return (
-    <label className="field">
+    <label className={formStyles.field}>
       <span>{label}</span>
       <input
         type="number"
@@ -139,7 +140,7 @@ function ColorField({
   onChange: (value: string) => void
 }) {
   return (
-    <label className="field color-field">
+    <label className={`${formStyles.field} ${formStyles.colorField}`}>
       <span>{label}</span>
       <ColorPicker value={value} onChange={onChange} />
     </label>
@@ -181,7 +182,7 @@ function TextInspector({
         onChange={(value) => onPatch({ fontFamily: value } as Partial<TextElement>)}
         localFontManager={localFontManager}
       />
-      <div className="field-grid">
+      <div className={formStyles.fieldGrid}>
         <NumberField
           label="字号"
           value={element.fontSize}
@@ -205,7 +206,7 @@ function TextInspector({
           precision={2}
           onChange={(value) => onPatch({ lineHeight: value } as Partial<TextElement>)}
         />
-        <label className="field">
+        <label className={formStyles.field}>
           <span>对齐</span>
           <select
             value={element.align}
@@ -235,7 +236,7 @@ function ShapeInspector({
 
   return (
     <>
-      <label className="field checkbox-field">
+      <label className={`${formStyles.field} ${formStyles.checkboxField}`}>
         <span>背景穿透</span>
         <input
           type="checkbox"
@@ -247,7 +248,7 @@ function ShapeInspector({
           }
         />
       </label>
-      <label className="field">
+      <label className={formStyles.field}>
         <span>填充类型</span>
         <select
           disabled={element.backgroundCutout === true}
@@ -266,7 +267,9 @@ function ShapeInspector({
       </label>
 
       {element.backgroundCutout === true ? (
-        <p className="field-help">已挖空封面背景，OBS 中可透出后方画面；可继续保留描边。</p>
+        <p className={formStyles.fieldHelp}>
+          已挖空封面背景，OBS 中可透出后方画面；可继续保留描边。
+        </p>
       ) : fillMode === 'gradient' ? (
         <>
           <ColorField
@@ -290,7 +293,7 @@ function ShapeInspector({
               } as Partial<ShapeElement>)
             }
           />
-          <label className="field">
+          <label className={formStyles.field}>
             <span>渐变方向</span>
             <select
               value={gradient.direction}
@@ -323,7 +326,7 @@ function ShapeInspector({
         value={element.stroke ?? '#ffffff'}
         onChange={(value) => onPatch({ stroke: value } as Partial<ShapeElement>)}
       />
-      <div className="field-grid">
+      <div className={formStyles.fieldGrid}>
         <NumberField
           label="描边宽"
           value={element.strokeWidth ?? 0}
@@ -354,11 +357,11 @@ function ImageInspector({
 }) {
   return (
     <>
-      <label className="field">
+      <label className={formStyles.field}>
         <span>素材替换</span>
         <input type="file" accept="image/png,image/jpeg,image/webp" onChange={onReplaceImage} />
       </label>
-      <label className="field">
+      <label className={formStyles.field}>
         <span>显示方式</span>
         <select
           value={element.fit}
@@ -372,7 +375,7 @@ function ImageInspector({
           <option value="contain">完整显示</option>
         </select>
       </label>
-      <label className="field">
+      <label className={formStyles.field}>
         <span>形状</span>
         <select
           value={element.shape}
@@ -441,7 +444,7 @@ export function ElementInspector({
         onChange={handleNameChange}
         error={nameError}
       />
-      <div className="field-grid">
+      <div className={formStyles.fieldGrid}>
         <NumberField label="X" value={element.x} onChange={(value) => onPatch({ x: value })} />
         <NumberField label="Y" value={element.y} onChange={(value) => onPatch({ y: value })} />
         <NumberField
