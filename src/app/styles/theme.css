@@ -126,7 +126,6 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    box-sizing: border-box;
   }
   html,
   body {
@@ -135,26 +134,13 @@
   }
   body {
     @apply bg-background text-foreground;
-    margin: 0;
-    background: transparent;
     font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', Arial, Helvetica, sans-serif;
   }
   html {
     @apply font-sans;
   }
-  button,
-  input,
-  textarea,
-  select {
-    font: inherit;
-  }
   button {
     user-select: none;
-  }
-  h1,
-  h2,
-  p {
-    margin: 0;
   }
   h1 {
     font-size: 24px;
