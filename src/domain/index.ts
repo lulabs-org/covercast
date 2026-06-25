@@ -16,6 +16,21 @@ export {
   redoHistory,
 } from './history'
 
+// Custom template (类型 / 校验器 / 工厂 / 去重命名)
+export {
+  type CustomSceneTemplate,
+  type TemplateExportPayload,
+  TEMPLATE_EXPORT_FORMAT,
+  uniqueName,
+  uniqueTemplateName,
+  createCustomTemplateId,
+  createTemplateExportPayload,
+  scenesMatch,
+  isScene,
+  normalizeCustomTemplate,
+  normalizeTemplateExportPayload,
+} from './template'
+
 // Alignment (smart-guide)
 export {
   type GuideMode,

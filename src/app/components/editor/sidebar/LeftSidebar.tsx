@@ -6,8 +6,14 @@ import { SourcesPanel } from '../../panels/SourcesPanel'
 import { TemplatePanel } from '../../panels/TemplatePanel'
 import { CanvasSizeSelector } from '../../controls/CanvasSizeSelector'
 import { SidebarSection } from './SidebarSection'
-import type { Scene, SelectionState, CanvasSize, CanvasSizePreset } from '@/domain'
-import type { CustomSceneTemplate, SceneSlotInfo } from '../../../hooks/useTemplateManager'
+import type {
+  Scene,
+  SelectionState,
+  CanvasSize,
+  CanvasSizePreset,
+  CustomSceneTemplate,
+} from '@/domain'
+import type { SceneSlotInfo } from '../../../hooks/useTemplateManager'
 import { ColorPicker, Slider } from '@/shared/components'
 import { clamp } from '@/shared/lib'
 import styles from './LeftSidebar.module.css'
