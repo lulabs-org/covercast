@@ -1,7 +1,6 @@
 'use client'
 
-import { BUILT_IN_TEMPLATES } from '@/domain'
-import { type CustomSceneTemplate } from '../../hooks/useTemplateManager'
+import { BUILT_IN_TEMPLATES, type CustomSceneTemplate } from '@/domain'
 import { CustomTemplateCard } from './CustomTemplateCard'
 import { Button } from '@/shared/components'
 import { cn } from '@/shared/lib'

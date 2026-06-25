@@ -10,9 +10,9 @@ import {
   type SelectionState,
   type CanvasSizePreset,
   type CanvasSize,
+  type CustomSceneTemplate,
   createDefaultCanvasSize,
 } from '@/domain'
-import type { CustomSceneTemplate } from './useTemplateManager'
 
 export type BlankCoverConfig = {
   coverName: string

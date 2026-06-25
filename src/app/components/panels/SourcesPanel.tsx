@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { BUILT_IN_TEMPLATES } from '@/domain'
-import { type CustomSceneTemplate, type SceneSlotInfo } from '../../hooks/useTemplateManager'
+import { BUILT_IN_TEMPLATES, type CustomSceneTemplate } from '@/domain'
+import type { SceneSlotInfo } from '../../hooks/useTemplateManager'
 import { cn } from '@/shared/lib'
 import { SidebarSection } from '../editor/sidebar/SidebarSection'
 import styles from './SourcesPanel.module.css'

@@ -7,51 +7,9 @@ import {
   selectSingle,
   selectMultiple,
   type SelectionState,
+  cloneSceneElement,
+  createPastedSceneElement,
 } from '@/domain'
-import { clamp } from '@/shared/lib'
-
-function cloneSceneElement(element: SceneElement): SceneElement {
-  return JSON.parse(JSON.stringify(element)) as SceneElement
-}
-
-function createSceneElementId(type: SceneElement['type']) {
-  return `${type}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-}
-
-function uniqueSceneElementName(name: string, elements: SceneElement[]) {
-  const existingNames = new Set(elements.map((element) => element.name))
-
-  if (!existingNames.has(name)) {
-    return name
-  }
-
-  let suffix = 2
-  let candidate = `${name} ${suffix}`
-
-  while (existingNames.has(candidate)) {
-    suffix += 1
-    candidate = `${name} ${suffix}`
-  }
-
-  return candidate
-}
-
-function createPastedSceneElement(
-  element: SceneElement,
-  elements: SceneElement[],
-  offsetX: number,
-  offsetY: number,
-  canvasWidth: number,
-  canvasHeight: number,
-): SceneElement {
-  return {
-    ...cloneSceneElement(element),
-    id: createSceneElementId(element.type),
-    name: uniqueSceneElementName(`${element.name} 副本`, elements),
-    x: clamp(element.x + offsetX, -element.width + 24, canvasWidth - 24),
-    y: clamp(element.y + offsetY, -element.height + 24, canvasHeight - 24),
-  } as SceneElement
-}
 
 type UseClipboardOptions = {
   selectedElementRef: React.MutableRefObject<SceneElement | null>
@@ -65,6 +23,10 @@ type UseClipboardOptions = {
   canvasHeight?: number
 }
 
+/**
+ * 剪贴板 hook:把 domain/scene/clipboard 的纯变换与副作用(changeScene / setSelection / setStatus)编排起来。
+ * 纯变换见 domain/scene/clipboard.ts。
+ */
 export function useClipboard(options: UseClipboardOptions) {
   const {
     selectedElementRef,

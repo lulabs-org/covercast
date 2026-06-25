@@ -3,101 +3,30 @@ import {
   BUILT_IN_TEMPLATES,
   DEFAULT_TEMPLATE_ID,
   cloneScene,
-  type Scene,
-  type SceneElement,
   selectSingle,
+  type Scene,
   type SelectionState,
+  type CustomSceneTemplate,
+  createCustomTemplateId,
+  createTemplateExportPayload,
+  normalizeCustomTemplate,
+  normalizeTemplateExportPayload,
+  scenesMatch,
+  uniqueTemplateName,
 } from '@/domain'
 
-const TEMPLATE_EXPORT_FORMAT = 'covercast.template'
-const CUSTOM_TEMPLATE_STORAGE_KEY = 'covercast.customTemplates.v1'
-
-type CustomSceneTemplate = {
-  id: string
-  name: string
-  createdAt: string
-  updatedAt?: string
-  scene: Scene
-}
-
-type TemplateExportPayload = {
-  format: typeof TEMPLATE_EXPORT_FORMAT
-  version: 1
-  template: CustomSceneTemplate
-}
-
-type SceneSlotInfo = {
+// SceneSlotInfo 是 React UI 概念(模板与面板槽位的映射),与 scene/template 领域无关,留在此处。
+export type SceneSlotInfo = {
   templateId: string
   slotId: string
   name: string
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object'
-}
+// 向后兼容:旧调用方可能从本 hook 导入类型。
+// 新代码请直接从 @/domain 导入。
+export type { CustomSceneTemplate }
 
-function isScene(value: unknown): value is Scene {
-  if (!isRecord(value)) {
-    return false
-  }
-
-  return (
-    value.version === 1 &&
-    typeof value.backgroundColor === 'string' &&
-    typeof value.backgroundOpacity === 'number' &&
-    Array.isArray(value.elements) &&
-    value.elements.every(isStoredSceneElement)
-  )
-}
-
-function isStoredSceneElement(value: unknown): value is SceneElement {
-  if (!isRecord(value)) {
-    return false
-  }
-
-  const hasBounds =
-    typeof value.id === 'string' &&
-    typeof value.name === 'string' &&
-    typeof value.x === 'number' &&
-    typeof value.y === 'number' &&
-    typeof value.width === 'number' &&
-    typeof value.height === 'number'
-
-  if (!hasBounds) {
-    return false
-  }
-
-  if (value.type === 'text') {
-    return (
-      typeof value.text === 'string' &&
-      typeof value.fill === 'string' &&
-      typeof value.fontSize === 'number' &&
-      typeof value.fontFamily === 'string' &&
-      typeof value.fontWeight === 'number' &&
-      (value.align === 'left' || value.align === 'center' || value.align === 'right') &&
-      typeof value.lineHeight === 'number'
-    )
-  }
-
-  if (value.type === 'image') {
-    return (
-      typeof value.src === 'string' &&
-      typeof value.alt === 'string' &&
-      (value.fit === 'cover' || value.fit === 'contain') &&
-      (value.shape === 'rect' || value.shape === 'circle')
-    )
-  }
-
-  if (value.type === 'rect' || value.type === 'ellipse') {
-    return typeof value.fill === 'string'
-  }
-
-  return false
-}
-
-function scenesMatch(left: Scene, right: Scene) {
-  return JSON.stringify(left) === JSON.stringify(right)
-}
+const CUSTOM_TEMPLATE_STORAGE_KEY = 'covercast.customTemplates.v1'
 
 function readCustomTemplatesFromStorage(): CustomSceneTemplate[] {
   try {
@@ -123,75 +52,6 @@ function writeCustomTemplatesToStorage(templates: CustomSceneTemplate[]) {
   window.localStorage.setItem(CUSTOM_TEMPLATE_STORAGE_KEY, JSON.stringify(templates))
 }
 
-function normalizeCustomTemplate(value: unknown): CustomSceneTemplate | null {
-  if (!isRecord(value) || !isScene(value.scene)) {
-    return null
-  }
-
-  if (
-    typeof value.id !== 'string' ||
-    typeof value.name !== 'string' ||
-    typeof value.createdAt !== 'string'
-  ) {
-    return null
-  }
-
-  return {
-    id: value.id,
-    name: value.name,
-    createdAt: value.createdAt,
-    updatedAt: typeof value.updatedAt === 'string' ? value.updatedAt : undefined,
-    scene: cloneScene(value.scene),
-  }
-}
-
-function normalizeTemplateExportPayload(value: unknown): CustomSceneTemplate | null {
-  if (!isRecord(value) || value.format !== TEMPLATE_EXPORT_FORMAT || value.version !== 1) {
-    return null
-  }
-
-  return normalizeCustomTemplate(value.template)
-}
-
-function createCustomTemplateId() {
-  return `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-}
-
-function uniqueTemplateName(name: string, templates: CustomSceneTemplate[]) {
-  const baseName = name.trim() || '导入模板'
-  const existingNames = new Set(templates.map((template) => template.name))
-
-  if (!existingNames.has(baseName)) {
-    return baseName
-  }
-
-  let suffix = 2
-  let candidate = `${baseName} ${suffix}`
-
-  while (existingNames.has(candidate)) {
-    suffix += 1
-    candidate = `${baseName} ${suffix}`
-  }
-
-  return candidate
-}
-
-function createTemplateExportPayload(name: string, scene: Scene): TemplateExportPayload {
-  const timestamp = new Date().toISOString()
-
-  return {
-    format: TEMPLATE_EXPORT_FORMAT,
-    version: 1,
-    template: {
-      id: createCustomTemplateId(),
-      name: name.trim() || '自定义场景',
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      scene: cloneScene(scene),
-    },
-  }
-}
-
 function downloadBlob(blob: Blob, filename: string) {
   const objectUrl = URL.createObjectURL(blob)
   const download = document.createElement('a')
@@ -213,6 +73,10 @@ type UseTemplateManagerOptions = {
   setActiveSlotId: (slotId: string) => void
 }
 
+/**
+ * 模板管理 hook:把 domain/template 的纯逻辑与副作用(React state / localStorage / DOM 下载)编排起来。
+ * 纯逻辑(类型 / 校验 / 工厂 / 去重命名)见 domain/template.ts。
+ */
 export function useTemplateManager(options: UseTemplateManagerOptions) {
   const { scene, selection, setScene, setSelection, setStatus, templateSlots, setActiveSlotId } =
     options
@@ -507,5 +371,3 @@ export function useTemplateManager(options: UseTemplateManagerOptions) {
     importTemplateFile,
   }
 }
-
-export type { CustomSceneTemplate, SceneSlotInfo }

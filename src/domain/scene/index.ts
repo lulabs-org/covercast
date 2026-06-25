@@ -47,5 +47,13 @@ export {
   deleteElementsByIds,
 } from './operations'
 
+// Clipboard (粘贴元素纯变换)
+export {
+  cloneSceneElement,
+  createSceneElementId,
+  uniqueSceneElementName,
+  createPastedSceneElement,
+} from './clipboard'
+
 // Font family (re-export for convenience)
 export { DEFAULT_FONT_FAMILY } from '@/config/fonts'
