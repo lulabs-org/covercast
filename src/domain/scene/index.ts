@@ -37,5 +37,15 @@ export {
   createEmptyScene,
 } from './defaults'
 
+// Operations (scene 纯变换)
+export {
+  patchElementById,
+  toggleElementHidden,
+  toggleElementLocked,
+  moveElementLayer,
+  addElement,
+  deleteElementsByIds,
+} from './operations'
+
 // Font family (re-export for convenience)
 export { DEFAULT_FONT_FAMILY } from '@/config/fonts'
