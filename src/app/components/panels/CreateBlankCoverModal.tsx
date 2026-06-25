@@ -1,8 +1,20 @@
 'use client'
 
 import { useState, useCallback, type ChangeEvent } from 'react'
-import { createPortal } from 'react-dom'
 import type { BlankCoverConfig } from '../../hooks/useCreateBlankCover'
+import {
+  ColorPicker,
+  Slider,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogFooter,
+} from '@/shared/components'
+import { clamp } from '@/shared/lib'
+import formStyles from '../forms.module.css'
 
 type TemplateOption = {
   id: string
@@ -26,14 +38,6 @@ type CreateBlankCoverModalProps = {
   onCancel: () => void
   onConfirm: () => void
   onUpdateConfig: (updates: Partial<BlankCoverConfig>) => void
-}
-
-function isHexColor(value: string): boolean {
-  return /^#[0-9A-Fa-f]{6}$/.test(value)
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value))
 }
 
 export function CreateBlankCoverModal({
@@ -99,18 +103,15 @@ export function CreateBlankCoverModal({
   )
 
   const handleColorChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      onUpdateConfig({ backgroundColor: e.target.value })
+    (color: string) => {
+      onUpdateConfig({ backgroundColor: color })
     },
     [onUpdateConfig],
   )
 
   const handleOpacityChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      const opacity = parseFloat(e.target.value)
-      if (!isNaN(opacity)) {
-        onUpdateConfig({ backgroundOpacity: clamp(opacity, 0, 1) })
-      }
+    (opacity: number) => {
+      onUpdateConfig({ backgroundOpacity: clamp(opacity, 0, 1) })
     },
     [onUpdateConfig],
   )
@@ -122,28 +123,20 @@ export function CreateBlankCoverModal({
     [onUpdateConfig],
   )
 
-  if (!isOpen) {
-    return null
-  }
-
   const selectedSizeValue = isCustomSize ? 'custom' : currentPresetId
-  const colorValue = isHexColor(config.backgroundColor) ? config.backgroundColor : '#1e293b'
   const opacity = clamp(config.backgroundOpacity, 0, 1)
 
-  const modalContent = (
-    <div className="modal-overlay" onClick={onCancel}>
-      <section className="modal-content" onClick={(e) => e.stopPropagation()} aria-label="新建封面">
-        <header className="modal-header">
-          <h2>新建封面</h2>
-          <button type="button" className="modal-close-button" onClick={onCancel} aria-label="关闭">
-            ×
-          </button>
-        </header>
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
+      <DialogContent size="lg">
+        <DialogHeader>
+          <DialogTitle>新建封面</DialogTitle>
+        </DialogHeader>
 
-        <div className="modal-body">
-          <div className="modal-section">
-            <h3>基本信息</h3>
-            <label className="field">
+        <DialogBody>
+          <div className="mb-5 last:mb-0">
+            <h3 className="mb-3 text-sm font-bold text-[var(--muted)]">基本信息</h3>
+            <label className={formStyles.field}>
               <span>封面名称</span>
               <input
                 type="text"
@@ -154,9 +147,9 @@ export function CreateBlankCoverModal({
             </label>
           </div>
 
-          <div className="modal-section">
-            <h3>引用模板</h3>
-            <label className="field">
+          <div className="mb-5 last:mb-0">
+            <h3 className="mb-3 text-sm font-bold text-[var(--muted)]">引用模板</h3>
+            <label className={formStyles.field}>
               <span>选择模板</span>
               <select value={config.templateId} onChange={handleTemplateChange}>
                 {templateOptions.map((template) => (
@@ -168,9 +161,9 @@ export function CreateBlankCoverModal({
             </label>
           </div>
 
-          <div className="modal-section">
-            <h3>封面尺寸</h3>
-            <label className="field">
+          <div className="mb-5 last:mb-0">
+            <h3 className="mb-3 text-sm font-bold text-[var(--muted)]">封面尺寸</h3>
+            <label className={formStyles.field}>
               <span>预设尺寸</span>
               <select value={selectedSizeValue} onChange={handlePresetChange}>
                 {presetOptions.map((preset) => (
@@ -183,8 +176,8 @@ export function CreateBlankCoverModal({
             </label>
 
             {isCustomSize && (
-              <div className="custom-size-fields">
-                <label className="field">
+              <div className="grid grid-cols-2 gap-2.5 mt-2.5">
+                <label className={formStyles.field}>
                   <span>宽度</span>
                   <input
                     type="number"
@@ -193,7 +186,7 @@ export function CreateBlankCoverModal({
                     min={1}
                   />
                 </label>
-                <label className="field">
+                <label className={formStyles.field}>
                   <span>高度</span>
                   <input
                     type="number"
@@ -206,46 +199,35 @@ export function CreateBlankCoverModal({
             )}
           </div>
 
-          <div className="modal-section">
-            <h3>背景设置</h3>
-            <label className="field">
+          <div className="mb-5 last:mb-0">
+            <h3 className="mb-3 text-sm font-bold text-[var(--muted)]">背景设置</h3>
+            <label className={formStyles.field}>
               <span>背景颜色</span>
-              <div className="color-input-wrapper">
-                <input type="color" value={colorValue} onChange={handleColorChange} />
-                <input
-                  type="text"
-                  value={config.backgroundColor}
-                  onChange={handleColorChange}
-                  placeholder="#1e293b"
-                />
-              </div>
+              <ColorPicker value={config.backgroundColor} onChange={handleColorChange} />
             </label>
-            <label className="field">
+            <label className={formStyles.field}>
               <span>不透明度</span>
-              <input
-                type="range"
+              <Slider
                 min={0}
                 max={1}
                 step={0.01}
                 value={opacity}
-                onChange={handleOpacityChange}
+                onValueChange={handleOpacityChange}
               />
-              <span className="opacity-value">{Math.round(opacity * 100)}%</span>
+              <span className={formStyles.opacityValue}>{Math.round(opacity * 100)}%</span>
             </label>
           </div>
-        </div>
+        </DialogBody>
 
-        <footer className="modal-footer">
-          <button type="button" className="secondary-button" onClick={onCancel}>
+        <DialogFooter>
+          <Button variant="secondary" onClick={onCancel}>
             取消
-          </button>
-          <button type="button" className="primary-button" onClick={onConfirm}>
+          </Button>
+          <Button variant="primary" onClick={onConfirm}>
             创建
-          </button>
-        </footer>
-      </section>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
-
-  return createPortal(modalContent, document.body)
 }

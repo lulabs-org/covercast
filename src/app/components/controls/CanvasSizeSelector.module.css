@@ -18,7 +18,7 @@
 }
 
 .sizeInput:focus {
-  border-color: var(--accent);
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(39, 100, 246, 0.14);
 }
 
@@ -44,7 +44,7 @@
   font-size: 12px;
   font-weight: 600;
   color: #ffffff;
-  background: var(--accent);
+  background: var(--primary);
   border: none;
   border-radius: 6px;
   cursor: pointer;

@@ -1,14 +1,20 @@
 'use client'
 
-import type { Ref, ReactNode } from 'react'
+import type { Ref } from 'react'
 import { LayerPanel } from '../../panels/LayerPanel'
 import { SourcesPanel } from '../../panels/SourcesPanel'
 import { TemplatePanel } from '../../panels/TemplatePanel'
 import { CanvasSizeSelector } from '../../controls/CanvasSizeSelector'
+import { SidebarSection } from './SidebarSection'
 import type { Scene } from '../../../lib/scene'
 import type { SelectionState } from '../../../lib/selection'
 import type { CustomSceneTemplate, SceneSlotInfo } from '../../../hooks/useTemplateManager'
 import type { CanvasSize, CanvasSizePreset } from '../../../hooks/useCanvasSize'
+import { ColorPicker, Slider } from '@/shared/components'
+import { clamp } from '@/shared/lib'
+import styles from './LeftSidebar.module.css'
+import editorStyles from '../editor.module.css'
+import formStyles from '../../forms.module.css'
 
 type SidebarSectionId = 'scene' | 'sources' | 'templates' | 'layers'
 
@@ -107,15 +113,17 @@ export function LeftSidebar({
   return (
     <aside
       ref={leftPanelRef}
-      className="left-panel"
+      className={editorStyles.leftPanel}
       aria-label="Scene settings"
       style={{ width: `${leftPanelWidth}px` }}
     >
-      <div className="sidebar-context">
-        <span className="context-label">当前编辑</span>
+      <div className={styles.sidebarContext}>
+        <span className={styles.contextLabel}>当前编辑</span>
         <strong>
           {activeTemplate?.name ?? '自定义场景'}
-          {hasUnsavedCustomTemplateChanges ? <span className="unsaved-pill">未保存</span> : null}
+          {hasUnsavedCustomTemplateChanges ? (
+            <span className={styles.unsavedPill}>未保存</span>
+          ) : null}
         </strong>
         <small>{editingContextCaption}</small>
       </div>
@@ -206,44 +214,6 @@ export function LeftSidebar({
   )
 }
 
-function SidebarSection({
-  title,
-  caption,
-  collapsed,
-  onToggle,
-  children,
-}: {
-  title: string
-  caption: string
-  collapsed: boolean
-  onToggle: () => void
-  children: ReactNode
-}) {
-  return (
-    <section className="sidebar-section">
-      <button
-        type="button"
-        className="sidebar-section-header"
-        onClick={onToggle}
-        aria-expanded={!collapsed}
-      >
-        <span>{title}</span>
-        <small>{caption}</small>
-        <b>{collapsed ? '＋' : '－'}</b>
-      </button>
-      {collapsed ? null : <div className="sidebar-section-body">{children}</div>}
-    </section>
-  )
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max)
-}
-
-function isHexColor(value: string): boolean {
-  return /^#[0-9A-Fa-f]{6}$/.test(value)
-}
-
 function ColorField({
   label,
   value,
@@ -253,24 +223,10 @@ function ColorField({
   value: string
   onChange: (value: string) => void
 }) {
-  const colorValue = isHexColor(value) ? value : '#ffffff'
-
   return (
-    <label className="field color-field">
+    <label className={`${formStyles.field} ${formStyles.colorField}`}>
       <span>{label}</span>
-      <div>
-        <input
-          type="color"
-          value={colorValue}
-          onChange={(event) => onChange(event.currentTarget.value)}
-        />
-        <input
-          type="text"
-          value={value}
-          onChange={(event) => onChange(event.currentTarget.value)}
-          placeholder="#ffffff"
-        />
-      </div>
+      <ColorPicker value={value} onChange={onChange} />
     </label>
   )
 }
@@ -287,17 +243,10 @@ function OpacityField({
   const opacity = clamp(value, 0, 1)
 
   return (
-    <label className="field opacity-field">
+    <label className={`${formStyles.field} ${formStyles.opacityField}`}>
       <span>{label}</span>
       <div>
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={opacity}
-          onChange={(event) => onChange(Number(event.currentTarget.value))}
-        />
+        <Slider min={0} max={1} step={0.01} value={opacity} onValueChange={onChange} />
         <input
           type="number"
           min={0}

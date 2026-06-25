@@ -1,24 +1,17 @@
-.live-url-section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 14px 0 22px;
-}
-
-.live-url-header {
-  display: flex;
+.sourceCreateRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
 }
 
-.live-url-header span {
+.sourceCreateRow span {
   color: #39485f;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 900;
 }
 
-.template-select-dropdown {
+.templateSelectDropdown {
   flex: 1;
   max-width: 280px;
   height: 32px;
@@ -39,16 +32,16 @@
   padding-right: 32px;
 }
 
-.template-select-dropdown:hover {
-  border-color: var(--accent);
+.templateSelectDropdown:hover {
+  border-color: var(--primary);
 }
 
-.template-select-dropdown:focus {
-  border-color: var(--accent);
+.templateSelectDropdown:focus {
+  border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(78, 114, 255, 0.15);
 }
 
-.live-url-empty {
+.liveUrlEmpty {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -59,20 +52,20 @@
   text-align: center;
 }
 
-.live-url-empty p {
+.liveUrlEmpty p {
   color: var(--muted);
   font-size: 12px;
   font-weight: 700;
   margin: 0;
 }
 
-.slot-list {
+.slotList {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.slot-item {
+.slotItem {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -85,27 +78,27 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-.slot-item:hover {
+.slotItem:hover {
   border-color: #c7d2e2;
   background: #ffffff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transform: translateY(-1px);
 }
 
-.slot-item.active {
-  border-color: var(--accent);
+.slotItemActive {
+  border-color: var(--primary);
   background: #eaf1ff;
   box-shadow: 0 0 0 2px rgba(78, 114, 255, 0.15);
 }
 
-.slot-item-header {
+.slotItemHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 6px;
 }
 
-.slot-title-group {
+.slotTitleGroup {
   min-width: 0;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -113,19 +106,7 @@
   gap: 6px;
 }
 
-.slot-edit-icon {
-  flex-shrink: 0;
-  color: var(--muted);
-  transition: color 0.15s;
-  opacity: 0.6;
-}
-
-.slot-item:hover .slot-edit-icon {
-  color: var(--accent);
-  opacity: 1;
-}
-
-.slot-name {
+.slotName {
   color: #243247;
   font-size: 12px;
   font-weight: 800;
@@ -141,16 +122,16 @@
   min-width: 0;
 }
 
-.slot-name:hover {
-  border-bottom-color: var(--accent);
-  color: var(--accent);
+.slotName:hover {
+  border-bottom-color: var(--primary);
+  color: var(--primary);
 }
 
-.slot-name-input {
+.slotNameInput {
   font-size: 12px;
   font-weight: 800;
   color: #243247;
-  border: 1px solid var(--accent);
+  border: 1px solid var(--primary);
   border-radius: 4px;
   padding: 2px 6px;
   background: #ffffff;
@@ -160,7 +141,7 @@
   box-sizing: border-box;
 }
 
-.slot-delete-button {
+.slotDeleteButton {
   width: 20px;
   height: 20px;
   display: flex;
@@ -178,12 +159,12 @@
   flex-shrink: 0;
 }
 
-.slot-delete-button:hover {
+.slotDeleteButton:hover {
   background: #fee2e2;
   color: #dc2626;
 }
 
-.slot-item-url {
+.slotItemUrl {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -194,16 +175,16 @@
   transition: background 0.15s;
 }
 
-.slot-item-url:hover {
+.slotItemUrl:hover {
   background: #f0f4ff;
 }
 
-.slot-item-url:active {
+.slotItemUrl:active {
   background: #e8eeff;
 }
 
-.slot-item-url code {
-  color: var(--accent);
+.slotItemUrl code {
+  color: var(--primary);
   font-size: 11px;
   font-weight: 800;
   overflow: hidden;
@@ -212,7 +193,7 @@
   min-width: 0;
 }
 
-.slot-copy-button {
+.slotCopyButton {
   flex-shrink: 0;
   border: 1px solid #d9e0ee;
   border-radius: 4px;
@@ -226,21 +207,21 @@
   transition: all 0.15s;
 }
 
-.slot-copy-button:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+.slotCopyButton:hover {
+  border-color: var(--primary);
+  color: var(--primary);
   background: #f0f4ff;
 }
 
-.slot-copy-button:active {
+.slotCopyButton:active {
   transform: scale(0.95);
 }
 
-.slot-template-badge {
+.slotTemplateBadge {
   flex-shrink: 0;
   font-size: 10px;
   font-weight: 800;
-  color: var(--accent);
+  color: var(--primary);
   background: #e8eeff;
   padding: 2px 6px;
   border-radius: 3px;

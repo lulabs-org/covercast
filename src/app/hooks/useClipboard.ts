@@ -6,10 +6,7 @@ import {
   type SceneElement,
 } from '../lib/scene'
 import { selectSingle, selectMultiple, type SelectionState } from '../lib/selection'
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max)
-}
+import { clamp } from '@/shared/lib'
 
 function cloneSceneElement(element: SceneElement): SceneElement {
   return JSON.parse(JSON.stringify(element)) as SceneElement

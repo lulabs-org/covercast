@@ -4,6 +4,9 @@ import { useState, useEffect, useRef, useCallback, type ChangeEvent } from 'reac
 import { FONT_GROUPS, findFontOption, type FontOption } from '../lib/fonts'
 import { useFontLoader } from '../hooks/useFontLoader'
 import type { useLocalFonts } from '../hooks/useLocalFonts'
+import { cn } from '@/shared/lib'
+import styles from './FontFamilyField.module.css'
+import formStyles from './forms.module.css'
 
 // 扩展 FontFaceSet 类型声明
 declare global {
@@ -28,6 +31,7 @@ export function FontFamilyField({
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({})
   const { loadFont, isLoading, isFailed } = useFontLoader()
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -81,7 +85,7 @@ export function FontFamilyField({
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement
       if (triggerRef.current?.contains(target)) return
-      if (target.closest('.font-dropdown')) return
+      if (dropdownRef.current?.contains(target)) return
       setOpen(false)
       setSearch('')
     }
@@ -175,16 +179,16 @@ export function FontFamilyField({
     })()
 
   return (
-    <div className="font-family-field">
-      <label className="field">
+    <div className={styles.fontFamilyField}>
+      <label className={formStyles.field}>
         <span>字体</span>
         <button
           ref={triggerRef}
           type="button"
-          className={`font-trigger${open ? ' font-trigger-open' : ''}`}
+          className={cn(styles.fontTrigger, open && styles.fontTriggerOpen)}
           onClick={handleToggle}
         >
-          <span className="font-trigger-name" style={{ fontFamily: value }}>
+          <span className={styles.fontTriggerName} style={{ fontFamily: value }}>
             {displayLabel}
           </span>
           <svg
@@ -192,7 +196,7 @@ export function FontFamilyField({
             height="12"
             viewBox="0 0 12 12"
             fill="none"
-            className="font-trigger-arrow"
+            className={styles.fontTriggerArrow}
           >
             <path
               d="M7.5 3L4.5 6L7.5 9"
@@ -206,24 +210,27 @@ export function FontFamilyField({
       </label>
 
       {open && (
-        <div className="font-dropdown" style={dropdownStyle}>
-          <div className="font-dropdown-list">
+        <div ref={dropdownRef} className={styles.fontDropdown} style={dropdownStyle}>
+          <div className={styles.fontDropdownList}>
             {filteredGroups.map((group) => (
               <div key={group.label}>
-                <div className="font-group-label">{group.label}</div>
+                <div className={styles.fontGroupLabel}>{group.label}</div>
                 {group.options.map((option) => {
                   const isActive = matchedOption?.value === option.value
                   return (
                     <button
                       key={option.value}
                       type="button"
-                      className={`font-option${isActive ? ' font-option-active' : ''}`}
+                      className={cn(styles.fontOption, isActive && styles.fontOptionActive)}
                       onClick={() => handleSelect(option)}
                     >
-                      <span className="font-option-preview" style={{ fontFamily: option.value }}>
+                      <span
+                        className={styles.fontOptionPreview}
+                        style={{ fontFamily: option.value }}
+                      >
                         {option.label}
                       </span>
-                      <span className="font-badge" data-license={option.license}>
+                      <span className={styles.fontBadge} data-license={option.license}>
                         {option.license}
                       </span>
                     </button>
@@ -232,14 +239,14 @@ export function FontFamilyField({
               </div>
             ))}
           </div>
-          <div className="font-dropdown-footer">
-            <div className="font-dropdown-search">
+          <div className={styles.fontDropdownFooter}>
+            <div className={styles.fontDropdownSearch}>
               <svg
                 width="14"
                 height="14"
                 viewBox="0 0 14 14"
                 fill="none"
-                className="font-search-icon"
+                className={styles.fontSearchIcon}
               >
                 <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.5" />
                 <path
@@ -259,7 +266,7 @@ export function FontFamilyField({
             </div>
             <button
               type="button"
-              className="font-import-btn"
+              className={styles.fontImportBtn}
               onClick={() => fileInputRef.current?.click()}
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -291,12 +298,12 @@ export function FontFamilyField({
         </div>
       )}
 
-      <div className="font-preview-row">
-        <div className="font-preview" style={{ fontFamily: value }}>
+      <div className={styles.fontPreviewRow}>
+        <div className={styles.fontPreview} style={{ fontFamily: value }}>
           {loading ? '加载中…' : failed ? '字体文件缺失' : '直播背景 Aa 123'}
         </div>
         {matchedOption ? (
-          <span className="font-license-badge" data-license={matchedOption.license}>
+          <span className={styles.fontLicenseBadge} data-license={matchedOption.license}>
             {matchedOption.license}
           </span>
         ) : null}

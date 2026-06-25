@@ -23,7 +23,7 @@ export function ElementView({
 }) {
   return (
     <g
-      className={interactive ? `scene-element${element.locked ? ' locked' : ''}` : undefined}
+      className={interactive ? (element.locked ? 'cursor-default' : 'cursor-move') : undefined}
       data-element-id={element.id}
       onPointerDown={(event) => {
         if (!interactive) {
