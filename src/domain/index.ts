@@ -4,6 +4,18 @@ export * from './scene'
 // Canvas size (画布尺寸 SSOT:类型 / 常量 / 纯函数)
 export * from './canvas-size'
 
+// History (撤销/重做纯栈操作)
+export {
+  type HistoryEntry,
+  type HistoryState,
+  MAX_HISTORY_SIZE,
+  createEmptyHistoryState,
+  createHistoryEntry,
+  pushHistory,
+  undoHistory,
+  redoHistory,
+} from './history'
+
 // Alignment (smart-guide)
 export {
   type GuideMode,
