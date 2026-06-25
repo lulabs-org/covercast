@@ -1,30 +1,20 @@
 import { useState, useCallback, useMemo } from 'react'
+import {
+  type CanvasSize,
+  type CanvasSizePreset,
+  DEFAULT_CANVAS_WIDTH,
+  DEFAULT_CANVAS_HEIGHT,
+  CANVAS_SIZE_PRESETS,
+  findPreset,
+  isPresetSize,
+  computeAspectRatio,
+  clampCustomSize,
+  createDefaultCanvasSize,
+} from '@/domain/canvas-size'
 
-export type CanvasSize = {
-  width: number
-  height: number
-}
-
-export type CanvasSizePreset = {
-  id: string
-  label: string
-  width: number
-  height: number
-  ratio: string
-}
-
-export const DEFAULT_CANVAS_WIDTH = 941
-export const DEFAULT_CANVAS_HEIGHT = 1672
-
-export const CANVAS_SIZE_PRESETS: CanvasSizePreset[] = [
-  { id: 'default', label: '941 × 1672', width: 941, height: 1672, ratio: '默认' },
-  { id: '9:16', label: '1080 × 1920', width: 1080, height: 1920, ratio: '9:16' },
-  { id: '3:4', label: '1080 × 1440', width: 1080, height: 1440, ratio: '3:4' },
-  { id: '1:1', label: '1080 × 1080', width: 1080, height: 1080, ratio: '1:1' },
-  { id: '4:3', label: '1440 × 1080', width: 1440, height: 1080, ratio: '4:3' },
-  { id: '16:9', label: '1920 × 1080', width: 1920, height: 1080, ratio: '16:9' },
-  { id: '2.35:1', label: '1080 × 460', width: 1080, height: 460, ratio: '2.35:1' },
-]
+// 向后兼容:旧调用方可能从本 hook 导入类型。
+// 新代码请直接从 @/domain/canvas-size 导入。
+export type { CanvasSize, CanvasSizePreset }
 
 const STORAGE_KEY = 'covercast.canvasSize.v1'
 
@@ -86,19 +76,13 @@ export function useCanvasSize(options: UseCanvasSizeOptions = {}) {
     if (!saved) {
       return false
     }
-    return !CANVAS_SIZE_PRESETS.some(
-      (preset) => preset.width === saved.width && preset.height === saved.height,
-    )
+    return !isPresetSize(saved)
   })
 
   const setCanvasSize = useCallback((size: CanvasSize) => {
     setCanvasSizeState(size)
     saveCanvasSize(size)
-
-    const isPreset = CANVAS_SIZE_PRESETS.some(
-      (preset) => preset.width === size.width && preset.height === size.height,
-    )
-    setIsCustomSize(!isPreset)
+    setIsCustomSize(!isPresetSize(size))
   }, [])
 
   const setPresetSize = useCallback((preset: CanvasSizePreset) => {
@@ -109,33 +93,22 @@ export function useCanvasSize(options: UseCanvasSizeOptions = {}) {
   }, [])
 
   const setCustomSize = useCallback((width: number, height: number) => {
-    const size = {
-      width: Math.max(100, Math.round(width)),
-      height: Math.max(100, Math.round(height)),
-    }
+    const size = clampCustomSize(width, height)
     setCanvasSizeState(size)
     saveCanvasSize(size)
     setIsCustomSize(true)
   }, [])
 
   const resetToDefault = useCallback(() => {
-    const size = { width: DEFAULT_CANVAS_WIDTH, height: DEFAULT_CANVAS_HEIGHT }
+    const size = createDefaultCanvasSize()
     setCanvasSizeState(size)
     saveCanvasSize(size)
     setIsCustomSize(false)
   }, [])
 
-  const currentPreset = useMemo(() => {
-    return CANVAS_SIZE_PRESETS.find(
-      (preset) => preset.width === canvasSize.width && preset.height === canvasSize.height,
-    )
-  }, [canvasSize])
+  const currentPreset = useMemo(() => findPreset(canvasSize), [canvasSize])
 
-  const aspectRatio = useMemo(() => {
-    const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b))
-    const divisor = gcd(canvasSize.width, canvasSize.height)
-    return `${canvasSize.width / divisor}:${canvasSize.height / divisor}`
-  }, [canvasSize])
+  const aspectRatio = useMemo(() => computeAspectRatio(canvasSize), [canvasSize])
 
   return {
     canvasSize,
