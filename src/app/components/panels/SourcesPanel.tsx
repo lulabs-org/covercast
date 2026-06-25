@@ -1,6 +1,6 @@
 'use client'
 
-import { type ReactNode, useState } from 'react'
+import { useState } from 'react'
 import { BUILT_IN_TEMPLATES } from '@/domain'
 import { type CustomSceneTemplate, type SceneSlotInfo } from '../../hooks/useTemplateManager'
 import { cn } from '@/shared/lib'

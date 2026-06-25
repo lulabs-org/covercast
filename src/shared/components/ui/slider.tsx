@@ -27,13 +27,6 @@ function Slider({
   onValueChange,
   ...props
 }: SingleSliderProps) {
-  // Convert single value to array for Radix
-  const _values = React.useMemo(
-    () =>
-      value !== undefined ? [value] : defaultValue !== undefined ? [defaultValue] : [min, max],
-    [value, defaultValue, min, max],
-  )
-
   // Handle value change - convert array back to single value
   const handleValueChange = React.useCallback(
     (arr: number[]) => {

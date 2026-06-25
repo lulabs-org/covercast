@@ -1,6 +1,5 @@
 'use client'
 
-import { type ReactNode } from 'react'
 import { type SceneElement, isSelected, selectSingle, type SelectionState } from '@/domain'
 import { cn } from '@/shared/lib'
 import { SidebarSection } from '../editor/sidebar/SidebarSection'
