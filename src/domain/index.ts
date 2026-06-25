@@ -1,6 +1,9 @@
 // Scene domain (core)
 export * from './scene'
 
+// Canvas size (画布尺寸 SSOT:类型 / 常量 / 纯函数)
+export * from './canvas-size'
+
 // Alignment (smart-guide)
 export {
   type GuideMode,

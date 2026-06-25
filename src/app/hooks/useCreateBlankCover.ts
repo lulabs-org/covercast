@@ -8,8 +8,10 @@ import {
   selectSingle,
   createSelectionState,
   type SelectionState,
+  type CanvasSizePreset,
+  type CanvasSize,
+  createDefaultCanvasSize,
 } from '@/domain'
-import type { CanvasSizePreset, CanvasSize } from './useCanvasSize'
 import type { CustomSceneTemplate } from './useTemplateManager'
 
 export type BlankCoverConfig = {
@@ -24,7 +26,7 @@ const DEFAULT_CONFIG: BlankCoverConfig = {
   coverName: '',
   backgroundColor: '#1e293b',
   backgroundOpacity: 1,
-  canvasSize: { width: 941, height: 1672 },
+  canvasSize: createDefaultCanvasSize(),
   templateId: 'empty',
 }
 
