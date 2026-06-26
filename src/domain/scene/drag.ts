@@ -9,26 +9,26 @@
  * 不依赖 DOM——`getSvgPoint` 留在 hook(它调用 `svg.createSVGPoint()`)。
  */
 
+import { type Scene, type SceneElement, isTextElement } from './types'
 import {
-  type Scene,
-  type SceneElement,
-  isTextElement,
-  type GuideLine,
-  type MeasurementGuide,
-  type ResizeLabel,
   type BoundingBox,
   type GroupDragState,
   type GroupResizeState,
+  computeBoundingBox,
+  computeNewBoundsFromHandle,
+} from './transform'
+import {
+  type GuideLine,
+  type MeasurementGuide,
+  type ResizeLabel,
   type SnapState,
   type ResizeSnapState,
   type SpatialIndex,
-  computeBoundingBox,
-  computeNewBoundsFromHandle,
   computeSnapOptimized,
   computeSpacingGuidesOptimized,
   computeResizeSnapOptimized,
   computeGuidesOptimized,
-} from './index'
+} from '../alignment'
 import { clamp } from '@/shared/lib'
 
 /** 单元素拖拽状态(move 或 resize) */

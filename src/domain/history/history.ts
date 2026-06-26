@@ -10,7 +10,7 @@
  * - redo → future 头弹出到 past,返回要恢复的 entry
  */
 
-import { cloneScene, type Scene } from './scene'
+import { cloneScene, type Scene } from '../scene'
 
 export type HistoryEntry = {
   scene: Scene

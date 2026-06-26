@@ -1,59 +1,32 @@
 // Types
-export {
-  type TextAlign,
-  type ImageFit,
-  type ImageShape,
-  type ShapeFillMode,
-  type GradientDirection,
-  type ShapeGradient,
-  type TextElement,
-  type ShapeElement,
-  type ImageElement,
-  type SceneElement,
-  type Scene,
-  type SceneTemplate,
-  isTextElement,
-  isShapeElement,
-  isImageElement,
-} from './types'
+export * from './types'
 
 // Factories
-export {
-  createTextElement,
-  createRectElement,
-  createEllipseElement,
-  createImageElement,
-} from './factories'
+export * from './factories'
 
 // Defaults
-export {
-  DEFAULT_CANVAS_WIDTH,
-  DEFAULT_CANVAS_HEIGHT,
-  BUILT_IN_TEMPLATES,
-  DEFAULT_TEMPLATE_ID,
-  createDefaultScene,
-  createSceneFromTemplate,
-  cloneScene,
-  createEmptyScene,
-} from './defaults'
+export * from './defaults'
 
 // Operations (scene 纯变换)
-export {
-  patchElementById,
-  toggleElementHidden,
-  toggleElementLocked,
-  moveElementLayer,
-  addElement,
-  deleteElementsByIds,
-} from './operations'
+export * from './operations'
 
 // Clipboard (粘贴元素纯变换)
-export {
-  cloneSceneElement,
-  createSceneElementId,
-  uniqueSceneElementName,
-  createPastedSceneElement,
-} from './clipboard'
+export * from './clipboard'
+
+// Query (marquee / hit-test)
+export * from './query'
+
+// Selection (选择状态)
+export * from './selection'
+
+// Transform (group-drag / resize 几何变换)
+export * from './transform'
+
+// Drag (拖拽帧纯变换)
+export * from './drag'
+
+// Keyboard (arrow-key 移动纯变换)
+export * from './keyboard'
 
 // Font family (re-export for convenience)
 export { DEFAULT_FONT_FAMILY } from '@/config/fonts'

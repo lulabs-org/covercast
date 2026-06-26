@@ -1,9 +1,7 @@
 import type { Scene } from './types'
 import { BUILT_IN_TEMPLATES, DEFAULT_TEMPLATE_ID } from './templates'
 
-// 画布尺寸常量已迁至 domain/canvas-size.ts,此处仅作向后兼容 re-export。
-// 新代码请直接从 @/domain/canvas-size 导入。
-export { DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT } from '../canvas-size'
+// 画布尺寸常量 SSOT 在 domain/canvas/,不再在此 re-export 以避免重复导出冲突。
 
 export { BUILT_IN_TEMPLATES, DEFAULT_TEMPLATE_ID }
 

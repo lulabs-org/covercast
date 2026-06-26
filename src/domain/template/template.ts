@@ -11,7 +11,7 @@
  * 注意:不依赖 `document` / `window` / `localStorage`,可独立单测。
  */
 
-import { cloneScene, type Scene, type SceneElement } from './scene'
+import { cloneScene, type Scene, type SceneElement } from '../scene'
 
 /** 自定义模板导出文件格式标识 */
 export const TEMPLATE_EXPORT_FORMAT = 'covercast.template'

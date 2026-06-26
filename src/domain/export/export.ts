@@ -1,13 +1,12 @@
+import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH } from '../canvas'
 import {
-  DEFAULT_CANVAS_HEIGHT,
-  DEFAULT_CANVAS_WIDTH,
   type ImageElement,
   type Scene,
   type SceneElement,
   type ShapeElement,
   type TextAlign,
   type TextElement,
-} from './scene'
+} from '../scene'
 
 export function resolvePaint(fill: string, prefix = 'covercast'): string {
   if (fill === 'courseGradient') {
@@ -330,4 +329,29 @@ function clampOpacity(value: number): number {
   }
 
   return Math.min(Math.max(value, 0), 1)
+}
+
+// ─── 导出格式 (Export format) ──────────────────────────────────────────────
+
+/** 场景导出格式 */
+export type ExportFormat = 'png' | 'jpeg' | 'svg' | 'json'
+
+/** 导出格式选项:扩展名 / 标签 / MIME 类型 / 值 */
+export const EXPORT_FORMAT_OPTIONS: {
+  extension: string
+  label: string
+  mimeType: string
+  value: ExportFormat
+}[] = [
+  { extension: 'png', label: 'PNG', mimeType: 'image/png', value: 'png' },
+  { extension: 'jpg', label: 'JPG', mimeType: 'image/jpeg', value: 'jpeg' },
+  { extension: 'svg', label: 'SVG', mimeType: 'image/svg+xml;charset=utf-8', value: 'svg' },
+  { extension: 'json', label: 'JSON', mimeType: 'application/json;charset=utf-8', value: 'json' },
+]
+
+/**
+ * 按 ExportFormat 查找对应的格式选项,找不到时回退到 PNG。
+ */
+export function findExportFormatOption(format: ExportFormat) {
+  return EXPORT_FORMAT_OPTIONS.find((option) => option.value === format) ?? EXPORT_FORMAT_OPTIONS[0]
 }

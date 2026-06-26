@@ -1,17 +1,16 @@
 import { useState, useEffect } from 'react'
 import { type WheelEvent as ReactWheelEvent } from 'react'
-import { DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT } from '@/domain'
-import { clamp } from '@/shared/lib'
+import {
+  DEFAULT_CANVAS_WIDTH,
+  DEFAULT_CANVAS_HEIGHT,
+  CANVAS_ZOOM_MIN,
+  CANVAS_ZOOM_MAX,
+  CANVAS_ZOOM_STEP,
+  clampZoom,
+} from '@/domain'
 
-const CANVAS_ZOOM_MIN = 0.25
-const CANVAS_ZOOM_MAX = 3
-const CANVAS_ZOOM_STEP = 0.1
 const CANVAS_PREVIEW_MAX_WIDTH = 560
 const STAGE_VIEWPORT_PADDING = 36
-
-function clampZoom(value: number) {
-  return clamp(Number.isFinite(value) ? value : 1, CANVAS_ZOOM_MIN, CANVAS_ZOOM_MAX)
-}
 
 type UseCanvasZoomOptions = {
   stageViewportRef: React.RefObject<HTMLDivElement | null>

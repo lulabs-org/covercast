@@ -1,4 +1,5 @@
-import type { SceneElement } from './scene'
+import type { SceneElement } from './types'
+import type { Rect } from '../alignment'
 
 export type MarqueeState = {
   startX: number
@@ -9,13 +10,6 @@ export type MarqueeState = {
 }
 
 export type HitTestStrategy = 'intersection' | 'contain'
-
-export type Rect = {
-  x: number
-  y: number
-  width: number
-  height: number
-}
 
 export function createMarqueeState(): MarqueeState {
   return {

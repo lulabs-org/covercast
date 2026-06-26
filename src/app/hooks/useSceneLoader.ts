@@ -1,5 +1,11 @@
 import { useEffect } from 'react'
-import { BUILT_IN_TEMPLATES, type Scene, selectSingle, type SelectionState } from '@/domain'
+import {
+  BUILT_IN_TEMPLATES,
+  type Scene,
+  selectSingle,
+  type SelectionState,
+  scenesMatch,
+} from '@/domain'
 
 export function useSceneLoader({
   setScene,
@@ -27,9 +33,7 @@ export function useSceneLoader({
           setScene(nextScene)
           setStatus('已读取本地场景')
           const matchingTemplateId =
-            BUILT_IN_TEMPLATES.find(
-              (template) => JSON.stringify(template.scene) === JSON.stringify(nextScene),
-            )?.id ?? ''
+            BUILT_IN_TEMPLATES.find((template) => scenesMatch(template.scene, nextScene))?.id ?? ''
           setActiveTemplateId(matchingTemplateId)
           if (nextScene.elements[0]?.id) {
             setSelection((prev) => selectSingle(prev, nextScene.elements[0].id))
