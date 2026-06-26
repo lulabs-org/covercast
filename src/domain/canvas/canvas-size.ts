@@ -93,3 +93,23 @@ export function clampCustomSize(width: number, height: number): CanvasSize {
     height: Math.max(MIN_CANVAS_DIMENSION, Math.round(height)),
   }
 }
+
+// ─── 画布缩放 (Canvas zoom) ────────────────────────────────────────────────
+
+/** 画布缩放下限 */
+export const CANVAS_ZOOM_MIN = 0.25
+
+/** 画布缩放上限 */
+export const CANVAS_ZOOM_MAX = 3
+
+/** 画布缩放步长(按钮 / 滚轮) */
+export const CANVAS_ZOOM_STEP = 0.1
+
+/**
+ * 把缩放值限制在 [CANVAS_ZOOM_MIN, CANVAS_ZOOM_MAX] 范围内。
+ * 非有限值回退到 1(默认缩放)。
+ */
+export function clampZoom(value: number): number {
+  const safeValue = Number.isFinite(value) ? value : 1
+  return Math.min(Math.max(safeValue, CANVAS_ZOOM_MIN), CANVAS_ZOOM_MAX)
+}

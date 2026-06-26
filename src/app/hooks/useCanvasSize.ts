@@ -10,10 +10,10 @@ import {
   computeAspectRatio,
   clampCustomSize,
   createDefaultCanvasSize,
-} from '@/domain/canvas-size'
+} from '@/domain/canvas'
 
 // 向后兼容:旧调用方可能从本 hook 导入类型。
-// 新代码请直接从 @/domain/canvas-size 导入。
+// 新代码请直接从 @/domain/canvas 导入。
 export type { CanvasSize, CanvasSizePreset }
 
 const STORAGE_KEY = 'covercast.canvasSize.v1'

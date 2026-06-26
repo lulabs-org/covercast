@@ -1,30 +1,5 @@
 import { useMemo } from 'react'
-import type { GuideLine, MeasurementGuide } from '@/domain'
-
-type GuideWithMode = {
-  mode?: 'keyboard' | 'drag'
-}
-
-function filterGuidesByMode<T extends GuideWithMode>(
-  guides: T[],
-  currentSelectedIds: string[],
-  guidesSelectedIds: string[],
-): T[] {
-  return guides.filter((guide) => {
-    if (!guide.mode) {
-      return true
-    }
-
-    if (guide.mode === 'keyboard') {
-      const idsMatch =
-        guidesSelectedIds.length === currentSelectedIds.length &&
-        guidesSelectedIds.every((id) => currentSelectedIds.includes(id))
-      return idsMatch
-    }
-
-    return true
-  })
-}
+import { filterGuidesByMode, type GuideLine, type MeasurementGuide } from '@/domain'
 
 export function useVisibleGuides(
   guides: GuideLine[],

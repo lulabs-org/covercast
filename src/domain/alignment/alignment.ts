@@ -8,7 +8,7 @@
  * `SpatialIndex` so only nearby elements are considered.
  */
 
-import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH } from './scene'
+import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH } from '../canvas'
 import { SpatialIndex } from './spatial-index'
 
 export type GuideMode = 'drag' | 'keyboard'
@@ -1145,4 +1145,33 @@ export function computeResizeSnapOptimized(
     canvasWidth,
     canvasHeight,
   )
+}
+
+/**
+ * 按 mode 过滤 guide。
+ *
+ * - 无 mode 的 guide 永远保留
+ * - `keyboard` mode 的 guide 仅当当前选中元素与生成 guide 时的选中元素一致时保留
+ *   (避免键盘移动后选中变化,旧 guide 仍然显示)
+ * - `drag` mode 的 guide 永远保留
+ */
+export function filterGuidesByMode<T extends { mode?: GuideMode }>(
+  guides: T[],
+  currentSelectedIds: readonly string[],
+  guidesSelectedIds: readonly string[],
+): T[] {
+  return guides.filter((guide) => {
+    if (!guide.mode) {
+      return true
+    }
+
+    if (guide.mode === 'keyboard') {
+      const idsMatch =
+        guidesSelectedIds.length === currentSelectedIds.length &&
+        guidesSelectedIds.every((id) => currentSelectedIds.includes(id))
+      return idsMatch
+    }
+
+    return true
+  })
 }

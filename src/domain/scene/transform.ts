@@ -7,7 +7,7 @@
  * group position clamping, and a small dimension formatter.
  */
 
-import type { SceneElement } from './scene'
+import type { SceneElement } from './types'
 
 export type GroupDragState = {
   mode: 'group-move'

@@ -7,22 +7,16 @@ import {
   type ImageElement,
   type Scene,
   sceneToSvgMarkup,
+  type ExportFormat,
+  EXPORT_FORMAT_OPTIONS,
+  findExportFormatOption,
 } from '@/domain'
 import { isLocalAssetSrc, parseLocalAssetId, getLocalAssetDataUrl } from '../lib/localAssetStorage'
 
-export type ExportFormat = 'png' | 'jpeg' | 'svg' | 'json'
-
-export const EXPORT_FORMAT_OPTIONS: {
-  extension: string
-  label: string
-  mimeType: string
-  value: ExportFormat
-}[] = [
-  { extension: 'png', label: 'PNG', mimeType: 'image/png', value: 'png' },
-  { extension: 'jpg', label: 'JPG', mimeType: 'image/jpeg', value: 'jpeg' },
-  { extension: 'svg', label: 'SVG', mimeType: 'image/svg+xml;charset=utf-8', value: 'svg' },
-  { extension: 'json', label: 'JSON', mimeType: 'application/json;charset=utf-8', value: 'json' },
-]
+// 向后兼容:旧调用方可能从本 hook 导入类型与常量。
+// 新代码请直接从 @/domain 导入。
+export type { ExportFormat }
+export { EXPORT_FORMAT_OPTIONS }
 
 async function inlineSceneAssets(scene: Scene): Promise<Scene> {
   const elements = await Promise.all(
@@ -145,8 +139,7 @@ export function useExportScene(
   canvasHeight = DEFAULT_CANVAS_HEIGHT,
 ) {
   const exportScene = async (format: ExportFormat) => {
-    const formatOption =
-      EXPORT_FORMAT_OPTIONS.find((option) => option.value === format) ?? EXPORT_FORMAT_OPTIONS[0]
+    const formatOption = findExportFormatOption(format)
     setStatus(`正在导出 ${formatOption.label}...`)
 
     try {
