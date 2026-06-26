@@ -31,6 +31,22 @@ export {
   normalizeTemplateExportPayload,
 } from './template'
 
+// Drag (拖拽帧纯变换)
+export {
+  type SingleDragState,
+  type DragState,
+  type DragMoveDelta,
+  type DragContext,
+  type DragFrameResult,
+  minimumWidth,
+  minimumHeight,
+  computeGroupMoveFrame,
+  computeGroupResizeFrame,
+  computeSingleMoveFrame,
+  computeSingleResizeFrame,
+  computeDragFrame,
+} from './drag'
+
 // Alignment (smart-guide)
 export {
   type GuideMode,
