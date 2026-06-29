@@ -6,6 +6,20 @@
  * the scene module. Pure type module — no runtime logic.
  */
 
+/**
+ * 轴对齐矩形（axis-aligned bounding rectangle）。
+ *
+ * 被 alignment / marquee / spatial-index 等多个模块共享。
+ * 未来如需 Point / Size / Vector2D 等更多几何类型，
+ * 可考虑迁移到独立的 geometry.ts 模块。
+ */
+export type Rect = {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
 export type TextAlign = 'left' | 'center' | 'right'
 export type ImageFit = 'cover' | 'contain'
 export type ImageShape = 'rect' | 'circle'

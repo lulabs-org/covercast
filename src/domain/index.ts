@@ -8,7 +8,6 @@ export {
   type GuideDirection,
   type GuideType,
   type GuideLine,
-  type Rect,
   type ExtensionLine,
   type MeasurementGuide,
   type ResizeLabel,
@@ -52,7 +51,7 @@ export {
   formatDimension,
 } from './transform'
 
-// Query (marquee)
+// Marquee (selection-box + hit-test)
 export {
   type MarqueeState,
   type HitTestStrategy,
@@ -68,9 +67,9 @@ export {
   containsRect,
   hitTestElement,
   hitTestElements,
-} from './query'
+} from './marquee'
 
-// Export (scene-svg)
+// SVG serialization (scene → svg markup)
 export {
   resolvePaint,
   textAnchorForAlign,
@@ -80,7 +79,7 @@ export {
   renderDefs,
   renderBackground,
   gradientVector,
-} from './export'
+} from './svg-serializer'
 
 // Selection
 export {

@@ -1,5 +1,6 @@
 // Types
 export {
+  type Rect,
   type TextAlign,
   type ImageFit,
   type ImageShape,

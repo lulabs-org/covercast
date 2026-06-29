@@ -8,7 +8,7 @@
  * `SpatialIndex` so only nearby elements are considered.
  */
 
-import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH } from './scene'
+import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH, Rect } from './scene'
 import { SpatialIndex } from './spatial-index'
 
 export type GuideMode = 'drag' | 'keyboard'
@@ -29,13 +29,6 @@ export type GuideLine = {
   x2: number
   y2: number
   mode?: GuideMode
-}
-
-export type Rect = {
-  x: number
-  y: number
-  width: number
-  height: number
 }
 
 export type ExtensionLine = {

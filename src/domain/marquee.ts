@@ -6,7 +6,7 @@
  * a marquee selection should include.
  */
 
-import type { SceneElement } from './scene'
+import type { SceneElement, Rect } from './scene'
 
 export type MarqueeState = {
   startX: number
@@ -17,13 +17,6 @@ export type MarqueeState = {
 }
 
 export type HitTestStrategy = 'intersection' | 'contain'
-
-export type Rect = {
-  x: number
-  y: number
-  width: number
-  height: number
-}
 
 /**
  * Creates a fresh, inactive marquee state with zeroed coordinates.

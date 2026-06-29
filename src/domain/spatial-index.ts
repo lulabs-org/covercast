@@ -6,7 +6,7 @@
  * local neighborhood rather than every element on the canvas.
  */
 
-import { Rect } from './alignment'
+import type { Rect } from './scene'
 
 const CELL_SIZE = 100
 
