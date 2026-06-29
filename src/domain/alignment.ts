@@ -1,3 +1,13 @@
+/**
+ * @file Alignment guides, snap engine, and spacing measurements.
+ *
+ * Computes visual guide lines (canvas edges/centers and element-to-element
+ * alignments), an axis-aware snap engine with hysteresis to keep snapping
+ * stable, spacing/distance measurement guides between elements, and a
+ * resize-specific snap engine. Optimized variants delegate to a
+ * `SpatialIndex` so only nearby elements are considered.
+ */
+
 import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH } from './scene'
 import { SpatialIndex } from './spatial-index'
 
@@ -66,6 +76,17 @@ export type CanvasSizeOptions = {
   canvasHeight?: number
 }
 
+/**
+ * Computes alignment guide lines for the dragged rect against canvas edges
+ * and other rects. Returns guides for left/center-h/right (vertical) and
+ * top/center-v/bottom (horizontal) alignments within `threshold` pixels.
+ * @param dragged - The rect currently being dragged.
+ * @param others - Other rects to test against.
+ * @param threshold - Pixel tolerance for an alignment match. Defaults to `5`.
+ * @param canvasWidth - Canvas width for edge/center guides.
+ * @param canvasHeight - Canvas height for edge/center guides.
+ * @returns An array of `GuideLine` instances to render.
+ */
 export function computeGuides(
   dragged: Rect,
   others: Rect[],
@@ -354,10 +375,27 @@ type SnapCandidate = {
 export const SNAP_THRESHOLD = 5
 export const SNAP_HYSTERESIS = 10
 
+/**
+ * Creates an empty snap state (no active snap on either axis).
+ * @returns A fresh `SnapState` with `x` and `y` set to `null`.
+ */
 export function createSnapState(): SnapState {
   return { x: null, y: null }
 }
 
+/**
+ * Computes the snapped position for a dragged rect, considering canvas edges
+ * and other rects. Honors a previous snap with hysteresis to avoid jitter,
+ * then falls back to the closest candidate within `threshold`.
+ * @param rawRect - The unsnapped rect from the pointer.
+ * @param others - Other rects to snap against.
+ * @param prevSnap - Snap state from the previous frame for hysteresis.
+ * @param threshold - Pixel tolerance for snap candidates. Defaults to `SNAP_THRESHOLD`.
+ * @param hysteresis - Pixel tolerance for keeping a previous snap. Defaults to `SNAP_HYSTERESIS`.
+ * @param canvasWidth - Canvas width for edge/center snapping.
+ * @param canvasHeight - Canvas height for edge/center snapping.
+ * @returns A `SnapResult` containing the snapped rect, deltas, guides, and new snap state.
+ */
 export function computeSnap(
   rawRect: Rect,
   others: Rect[],
@@ -511,6 +549,15 @@ type MeasurementCandidate = {
   position: 'left' | 'right' | 'top' | 'bottom'
 }
 
+/**
+ * Computes spacing measurement guides between the dragged rect and others
+ * that share a vertical or horizontal alignment. Returns at most one guide
+ * per side (left/right/top/bottom), choosing the nearest aligned candidate.
+ * @param dragged - The rect currently being dragged.
+ * @param others - Other rects to measure against.
+ * @param alignThreshold - Pixel tolerance for alignment. Defaults to `5`.
+ * @returns An array of `MeasurementGuide` instances.
+ */
 export function computeSpacingGuides(
   dragged: Rect,
   others: Rect[],
@@ -676,6 +723,7 @@ export function computeSpacingGuides(
   return selectedGuides
 }
 
+/** Picks the best measurement candidate: aligned ones first, then by distance. */
 function selectBestCandidate(candidates: MeasurementCandidate[]): MeasurementCandidate | null {
   if (candidates.length === 0) return null
   if (candidates.length === 1) return candidates[0]
@@ -690,6 +738,7 @@ function selectBestCandidate(candidates: MeasurementCandidate[]): MeasurementCan
   return candidates[0]
 }
 
+/** Returns `true` when the dragged and other rect share any vertical edge/center alignment. */
 function checkVerticalAlignment(
   dTop: number,
   dCenterV: number,
@@ -710,6 +759,7 @@ function checkVerticalAlignment(
   )
 }
 
+/** Returns `true` when the dragged and other rect share any horizontal edge/center alignment. */
 function checkHorizontalAlignment(
   dLeft: number,
   dCenterH: number,
@@ -730,6 +780,7 @@ function checkHorizontalAlignment(
   )
 }
 
+/** Builds a horizontal spacing measurement guide with extension lines to the measured edges. */
 function createHorizontalMeasurementGuide(
   startX: number,
   endX: number,
@@ -787,6 +838,7 @@ function createHorizontalMeasurementGuide(
   }
 }
 
+/** Builds a vertical spacing measurement guide with extension lines to the measured edges. */
 function createVerticalMeasurementGuide(
   startY: number,
   endY: number,
@@ -844,6 +896,7 @@ function createVerticalMeasurementGuide(
   }
 }
 
+/** Returns whichever of `min`/`max` is closer to `value`. */
 function findNearestEdge(value: number, min: number, max: number): number {
   const distToMin = Math.abs(value - min)
   const distToMax = Math.abs(value - max)
@@ -870,10 +923,28 @@ export type ResizeSnapResult = {
   snapState: ResizeSnapState
 }
 
+/**
+ * Creates an empty resize snap state (no active snap on either dimension).
+ * @returns A fresh `ResizeSnapState` with `w` and `h` set to `null`.
+ */
 export function createResizeSnapState(): ResizeSnapState {
   return { w: null, h: null }
 }
 
+/**
+ * Computes snapped width/height for a resize gesture, considering canvas
+ * edges, canvas centers, and other rects' right/bottom edges. Honors a
+ * previous snap with hysteresis before falling back to the closest
+ * candidate within `threshold`.
+ * @param rawRect - The unsnapped rect from the pointer.
+ * @param others - Other rects to snap against.
+ * @param prevSnap - Snap state from the previous frame for hysteresis.
+ * @param threshold - Pixel tolerance for snap candidates. Defaults to `SNAP_THRESHOLD`.
+ * @param hysteresis - Pixel tolerance for keeping a previous snap. Defaults to `SNAP_HYSTERESIS`.
+ * @param canvasWidth - Canvas width for edge/center snapping.
+ * @param canvasHeight - Canvas height for edge/center snapping.
+ * @returns A `ResizeSnapResult` with snapped dimensions, deltas, and new snap state.
+ */
 export function computeResizeSnap(
   rawRect: Rect,
   others: Rect[],
@@ -972,6 +1043,16 @@ export function computeResizeSnap(
 
 const GUIDE_QUERY_RANGE = 200
 
+/**
+ * Spatial-index-accelerated variant of {@link computeGuides}. Only elements
+ * within `GUIDE_QUERY_RANGE` pixels of `dragged` are considered.
+ * @param dragged - The rect currently being dragged.
+ * @param spatialIndex - Index of all candidate rects.
+ * @param threshold - Pixel tolerance for an alignment match. Defaults to `5`.
+ * @param canvasWidth - Canvas width for edge/center guides.
+ * @param canvasHeight - Canvas height for edge/center guides.
+ * @returns An array of `GuideLine` instances to render.
+ */
 export function computeGuidesOptimized(
   dragged: Rect,
   spatialIndex: SpatialIndex,
@@ -983,6 +1064,18 @@ export function computeGuidesOptimized(
   return computeGuides(dragged, nearbyRects, threshold, canvasWidth, canvasHeight)
 }
 
+/**
+ * Spatial-index-accelerated variant of {@link computeSnap}. Only elements
+ * within `GUIDE_QUERY_RANGE` pixels of `rawRect` are considered.
+ * @param rawRect - The unsnapped rect from the pointer.
+ * @param spatialIndex - Index of all candidate rects.
+ * @param prevSnap - Snap state from the previous frame for hysteresis.
+ * @param threshold - Pixel tolerance for snap candidates. Defaults to `SNAP_THRESHOLD`.
+ * @param hysteresis - Pixel tolerance for keeping a previous snap. Defaults to `SNAP_HYSTERESIS`.
+ * @param canvasWidth - Canvas width for edge/center snapping.
+ * @param canvasHeight - Canvas height for edge/center snapping.
+ * @returns A `SnapResult` containing the snapped rect, deltas, guides, and new snap state.
+ */
 export function computeSnapOptimized(
   rawRect: Rect,
   spatialIndex: SpatialIndex,
@@ -1004,6 +1097,14 @@ export function computeSnapOptimized(
   )
 }
 
+/**
+ * Spatial-index-accelerated variant of {@link computeSpacingGuides}. Only
+ * elements within `GUIDE_QUERY_RANGE` pixels of `dragged` are considered.
+ * @param dragged - The rect currently being dragged.
+ * @param spatialIndex - Index of all candidate rects.
+ * @param alignThreshold - Pixel tolerance for alignment. Defaults to `5`.
+ * @returns An array of `MeasurementGuide` instances.
+ */
 export function computeSpacingGuidesOptimized(
   dragged: Rect,
   spatialIndex: SpatialIndex,
@@ -1013,6 +1114,18 @@ export function computeSpacingGuidesOptimized(
   return computeSpacingGuides(dragged, nearbyRects, alignThreshold)
 }
 
+/**
+ * Spatial-index-accelerated variant of {@link computeResizeSnap}. Only
+ * elements within `GUIDE_QUERY_RANGE` pixels of `rawRect` are considered.
+ * @param rawRect - The unsnapped rect from the pointer.
+ * @param spatialIndex - Index of all candidate rects.
+ * @param prevSnap - Snap state from the previous frame for hysteresis.
+ * @param threshold - Pixel tolerance for snap candidates. Defaults to `SNAP_THRESHOLD`.
+ * @param hysteresis - Pixel tolerance for keeping a previous snap. Defaults to `SNAP_HYSTERESIS`.
+ * @param canvasWidth - Canvas width for edge/center snapping.
+ * @param canvasHeight - Canvas height for edge/center snapping.
+ * @returns A `ResizeSnapResult` with snapped dimensions, deltas, and new snap state.
+ */
 export function computeResizeSnapOptimized(
   rawRect: Rect,
   spatialIndex: SpatialIndex,

@@ -1,6 +1,18 @@
+/**
+ * @file Scene element factory helpers.
+ *
+ * Provides constructor functions that build fresh scene element instances
+ * (text, rectangle, ellipse, image) with sensible defaults and unique ids.
+ * Used when inserting new elements into the canvas.
+ */
+
 import { DEFAULT_FONT_FAMILY } from '@/config/fonts'
 import type { TextElement, ShapeElement, ImageElement } from './types'
 
+/**
+ * Creates a new text element with default styling and position.
+ * @returns A `TextElement` instance with a unique id and default content.
+ */
 export function createTextElement(): TextElement {
   return {
     id: `text-${Date.now()}`,
@@ -20,6 +32,10 @@ export function createTextElement(): TextElement {
   }
 }
 
+/**
+ * Creates a new rectangle element with a default gradient fill.
+ * @returns A `ShapeElement` instance with a unique id and rounded corners.
+ */
 export function createRectElement(): ShapeElement {
   return {
     id: `rect-${Date.now()}`,
@@ -43,6 +59,10 @@ export function createRectElement(): ShapeElement {
   }
 }
 
+/**
+ * Creates a new ellipse element with a default gradient fill.
+ * @returns A `ShapeElement` instance with a unique id.
+ */
 export function createEllipseElement(): ShapeElement {
   return {
     id: `ellipse-${Date.now()}`,
@@ -65,6 +85,12 @@ export function createEllipseElement(): ShapeElement {
   }
 }
 
+/**
+ * Creates a new image element referencing the provided source URL.
+ * @param src - The image source URL.
+ * @param name - Optional display name (also used as alt text). Defaults to `'自定义素材'`.
+ * @returns An `ImageElement` instance with a unique id and `contain` fit.
+ */
 export function createImageElement(src: string, name = '自定义素材'): ImageElement {
   return {
     id: `image-${Date.now()}`,

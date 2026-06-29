@@ -1,3 +1,11 @@
+/**
+ * @file Scene domain type definitions.
+ *
+ * Defines the core data model for scenes and their elements
+ * (text, shapes, images) along with type guards used across
+ * the scene module. Pure type module — no runtime logic.
+ */
+
 export type TextAlign = 'left' | 'center' | 'right'
 export type ImageFit = 'cover' | 'contain'
 export type ImageShape = 'rect' | 'circle'
@@ -69,14 +77,29 @@ export type SceneTemplate = {
   scene: Scene
 }
 
+/**
+ * Type guard that narrows a `SceneElement` to a `TextElement`.
+ * @param element - The scene element to check.
+ * @returns `true` when the element is a text element.
+ */
 export function isTextElement(element: SceneElement): element is TextElement {
   return element.type === 'text'
 }
 
+/**
+ * Type guard that narrows a `SceneElement` to a `ShapeElement`.
+ * @param element - The scene element to check.
+ * @returns `true` when the element is a rectangle or ellipse shape.
+ */
 export function isShapeElement(element: SceneElement): element is ShapeElement {
   return element.type === 'rect' || element.type === 'ellipse'
 }
 
+/**
+ * Type guard that narrows a `SceneElement` to an `ImageElement`.
+ * @param element - The scene element to check.
+ * @returns `true` when the element is an image element.
+ */
 export function isImageElement(element: SceneElement): element is ImageElement {
   return element.type === 'image'
 }

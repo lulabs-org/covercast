@@ -1,3 +1,12 @@
+/**
+ * @file Built-in scene templates.
+ *
+ * Defines the preset scene layouts (empty, dual-course, solo interview,
+ * roundtable, launch poster, course sprint) and exposes them via
+ * `BUILT_IN_TEMPLATES`. The active default template is selected through
+ * `DEFAULT_TEMPLATE_ID`. Pure data module — no runtime side effects.
+ */
+
 import { DEFAULT_FONT_FAMILY } from '@/config/fonts'
 import type { Scene, SceneTemplate } from './types'
 
@@ -858,6 +867,10 @@ const courseSprintScene: Scene = {
   ],
 }
 
+/**
+ * Registry of all built-in scene templates available to the user.
+ * Each entry pairs a unique id, display metadata, and a full `Scene` instance.
+ */
 export const BUILT_IN_TEMPLATES: SceneTemplate[] = [
   {
     id: 'empty',
@@ -897,4 +910,5 @@ export const BUILT_IN_TEMPLATES: SceneTemplate[] = [
   },
 ]
 
+/** Id of the template used by default when creating new scenes. */
 export const DEFAULT_TEMPLATE_ID = 'dual-course'
