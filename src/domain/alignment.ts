@@ -8,7 +8,7 @@
  * `SpatialIndex` so only nearby elements are considered.
  */
 
-import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH, Rect } from './scene'
+import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH, type Rect } from './scene'
 import { SpatialIndex } from './spatial-index'
 
 export type GuideMode = 'drag' | 'keyboard'
