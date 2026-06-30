@@ -23,6 +23,7 @@ import { MarqueeOverlay } from './canvas/MarqueeOverlay'
 import { SmartGuideOverlay } from './canvas/SmartGuideOverlay'
 import { ResizeLabelOverlay } from './canvas/ResizeLabelOverlay'
 import { SpacingGuideOverlay } from './canvas/SpacingGuideOverlay'
+import { MoveableLayer } from './canvas/MoveableLayer'
 
 type SceneCanvasProps = {
   scene: Scene
@@ -112,96 +113,106 @@ export default function SceneCanvas({
   }
 
   return (
-    <svg
-      ref={svgRef}
-      className={className}
-      viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
-      role="img"
-      aria-label="Covercast OBS live background"
-      preserveAspectRatio="xMidYMid meet"
-      onPointerDown={onCanvasPointerDown}
-      style={{
-        ...style,
-        touchAction: interactive ? 'none' : undefined,
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-      }}
-    >
-      <SceneDefs
-        visibleElements={visibleElements}
-        idPrefix={idPrefix}
-        canvasWidth={canvasWidth}
-        canvasHeight={canvasHeight}
-      />
-
-      <g
-        mask={
-          hasBackgroundCutouts(visibleElements) ? `url(#${backgroundMaskId(idPrefix)})` : undefined
-        }
+    <>
+      <svg
+        ref={svgRef}
+        className={className}
+        viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
+        role="img"
+        aria-label="Covercast OBS live background"
+        preserveAspectRatio="xMidYMid meet"
+        onPointerDown={onCanvasPointerDown}
+        style={{
+          ...style,
+          touchAction: interactive ? 'none' : undefined,
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+        }}
       >
-        <rect
-          width={canvasWidth}
-          height={canvasHeight}
-          fill={scene.backgroundColor}
-          opacity={clampOpacity(scene.backgroundOpacity)}
-        />
-        <rect
-          width={canvasWidth}
-          height={canvasHeight}
-          fill={`url(#${idPrefix}-bg-glow)`}
-          opacity={0.68 * clampOpacity(scene.backgroundOpacity)}
-        />
-      </g>
-
-      {visibleElements.map((element) => (
-        <ElementView
-          key={element.id}
-          element={element}
+        <SceneDefs
+          visibleElements={visibleElements}
           idPrefix={idPrefix}
-          interactive={interactive}
-          editingTextId={editingTextId}
-          resolveSrc={resolveSrc}
-          onPointerDown={onElementPointerDown}
-          onDoubleClick={onTextElementDoubleClick}
+          canvasWidth={canvasWidth}
+          canvasHeight={canvasHeight}
         />
-      ))}
 
-      {interactive && selectedElements.length > 0 ? (
-        <>
-          {selectedElements.map((element) => (
-            <SelectionFrame
-              key={element.id}
-              element={element}
-              onResizePointerDown={selectedElements.length === 1 ? onResizePointerDown : undefined}
-            />
-          ))}
-          {selectedElements.length > 1 && !isGroupDragging ? (
-            <GroupSelectionFrame
-              elements={selectedElements}
-              shiftKeyPressed={shiftKeyPressed}
-              onDragPointerDown={onGroupDragPointerDown}
-              onResizePointerDown={onGroupResizePointerDown}
-            />
-          ) : null}
-        </>
-      ) : null}
+        <g
+          mask={
+            hasBackgroundCutouts(visibleElements)
+              ? `url(#${backgroundMaskId(idPrefix)})`
+              : undefined
+          }
+        >
+          <rect
+            width={canvasWidth}
+            height={canvasHeight}
+            fill={scene.backgroundColor}
+            opacity={clampOpacity(scene.backgroundOpacity)}
+          />
+          <rect
+            width={canvasWidth}
+            height={canvasHeight}
+            fill={`url(#${idPrefix}-bg-glow)`}
+            opacity={0.68 * clampOpacity(scene.backgroundOpacity)}
+          />
+        </g>
 
-      {interactive && marquee && isMarqueeActive(marquee) ? (
-        <MarqueeOverlay marquee={marquee} />
-      ) : null}
+        {visibleElements.map((element) => (
+          <ElementView
+            key={element.id}
+            element={element}
+            idPrefix={idPrefix}
+            interactive={interactive}
+            editingTextId={editingTextId}
+            resolveSrc={resolveSrc}
+            onPointerDown={onElementPointerDown}
+            onDoubleClick={onTextElementDoubleClick}
+          />
+        ))}
 
-      {interactive && marqueePreviewElements.length > 0 ? (
-        <GroupSelectionFrame elements={marqueePreviewElements} shiftKeyPressed={shiftKeyPressed} />
-      ) : null}
+        {interactive && selectedElements.length > 0 ? (
+          <>
+            {selectedElements.map((element) => (
+              <SelectionFrame
+                key={element.id}
+                element={element}
+                onResizePointerDown={
+                  selectedElements.length === 1 ? onResizePointerDown : undefined
+                }
+              />
+            ))}
+            {selectedElements.length > 1 && !isGroupDragging ? (
+              <GroupSelectionFrame
+                elements={selectedElements}
+                shiftKeyPressed={shiftKeyPressed}
+                onDragPointerDown={onGroupDragPointerDown}
+                onResizePointerDown={onGroupResizePointerDown}
+              />
+            ) : null}
+          </>
+        ) : null}
 
-      {guides && guides.length > 0 ? <SmartGuideOverlay guides={guides} /> : null}
+        {interactive && marquee && isMarqueeActive(marquee) ? (
+          <MarqueeOverlay marquee={marquee} />
+        ) : null}
 
-      {resizeLabel ? <ResizeLabelOverlay resizeLabel={resizeLabel} /> : null}
+        {interactive && marqueePreviewElements.length > 0 ? (
+          <GroupSelectionFrame
+            elements={marqueePreviewElements}
+            shiftKeyPressed={shiftKeyPressed}
+          />
+        ) : null}
 
-      {spacingGuides && spacingGuides.length > 0 ? (
-        <SpacingGuideOverlay spacingGuides={spacingGuides} />
-      ) : null}
-    </svg>
+        {guides && guides.length > 0 ? <SmartGuideOverlay guides={guides} /> : null}
+
+        {resizeLabel ? <ResizeLabelOverlay resizeLabel={resizeLabel} /> : null}
+
+        {spacingGuides && spacingGuides.length > 0 ? (
+          <SpacingGuideOverlay spacingGuides={spacingGuides} />
+        ) : null}
+      </svg>
+      <MoveableLayer svgRef={svgRef} enabled={false} />
+    </>
   )
 }
 
