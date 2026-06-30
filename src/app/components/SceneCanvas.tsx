@@ -49,6 +49,12 @@ type SceneCanvasProps = {
   onGroupDragPointerDown?: (event: PointerEvent<SVGRectElement>) => void
   onGroupResizePointerDown?: (handle: ResizeHandleType, event: PointerEvent<SVGRectElement>) => void
   onTextElementDoubleClick?: (elementId: string) => void
+  moveableTargetId?: string | null
+  moveableEnabled?: boolean
+  isMoveableDragging?: boolean
+  onMoveableDragStart?: () => void
+  onMoveableDrag?: (translateX: number, translateY: number) => void
+  onMoveableDragEnd?: (isDrag: boolean) => void
 }
 
 export default function SceneCanvas({
@@ -75,6 +81,12 @@ export default function SceneCanvas({
   onGroupDragPointerDown,
   onGroupResizePointerDown,
   onTextElementDoubleClick,
+  moveableTargetId = null,
+  moveableEnabled = false,
+  isMoveableDragging = false,
+  onMoveableDragStart,
+  onMoveableDrag,
+  onMoveableDragEnd,
 }: SceneCanvasProps) {
   const [shiftKeyPressed, setShiftKeyPressed] = useState(false)
 
@@ -172,15 +184,17 @@ export default function SceneCanvas({
 
         {interactive && selectedElements.length > 0 ? (
           <>
-            {selectedElements.map((element) => (
-              <SelectionFrame
-                key={element.id}
-                element={element}
-                onResizePointerDown={
-                  selectedElements.length === 1 ? onResizePointerDown : undefined
-                }
-              />
-            ))}
+            {isMoveableDragging
+              ? null
+              : selectedElements.map((element) => (
+                  <SelectionFrame
+                    key={element.id}
+                    element={element}
+                    onResizePointerDown={
+                      selectedElements.length === 1 ? onResizePointerDown : undefined
+                    }
+                  />
+                ))}
             {selectedElements.length > 1 && !isGroupDragging ? (
               <GroupSelectionFrame
                 elements={selectedElements}
@@ -211,7 +225,16 @@ export default function SceneCanvas({
           <SpacingGuideOverlay spacingGuides={spacingGuides} />
         ) : null}
       </svg>
-      <MoveableLayer svgRef={svgRef} enabled={false} />
+      <MoveableLayer
+        svgRef={svgRef}
+        targetElementId={moveableTargetId}
+        canvasWidth={canvasWidth}
+        canvasHeight={canvasHeight}
+        enabled={moveableEnabled && interactive}
+        onDragStart={onMoveableDragStart}
+        onDrag={onMoveableDrag}
+        onDragEnd={onMoveableDragEnd}
+      />
     </>
   )
 }
