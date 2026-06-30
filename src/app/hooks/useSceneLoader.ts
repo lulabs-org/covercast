@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
-import { BUILT_IN_TEMPLATES, type Scene } from '../lib/scene'
-import { selectSingle, type SelectionState } from '../lib/selection'
+import { BUILT_IN_TEMPLATES, type Scene, selectSingle, type SelectionState } from '@/domain'
 
 export function useSceneLoader({
   setScene,

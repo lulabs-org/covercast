@@ -6,7 +6,7 @@ import {
   deleteSceneSlot,
   listAllSlots,
 } from '../../lib/storage'
-import type { Scene } from '../../lib/scene'
+import type { Scene } from '@/domain'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

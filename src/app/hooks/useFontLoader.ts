@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
-import type { FontOption } from '../lib/fonts'
+import type { FontOption } from '@/config/fonts'
 
 /**
  * 字体按需加载器

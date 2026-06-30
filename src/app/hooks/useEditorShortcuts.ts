@@ -1,15 +1,16 @@
 import { useEffect } from 'react'
-import { type Scene, type SceneElement } from '../lib/scene'
 import {
+  type Scene,
+  type SceneElement,
   computeGuidesOptimized,
   computeSpacingGuidesOptimized,
   type GuideLine,
   type MeasurementGuide,
-  type GuideContext,
-} from '../lib/smart-guide'
-import { SpatialIndex, buildSpatialIndex } from '../lib/spatial-index'
-import { computeBoundingBox } from '../lib/group-drag'
-import { type SelectionState } from '../lib/selection'
+  SpatialIndex,
+  buildSpatialIndex,
+  computeBoundingBox,
+  type SelectionState,
+} from '@/domain'
 
 function isCopyPasteModifier(event: KeyboardEvent) {
   return (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey
@@ -150,8 +151,6 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
         )
         spatialIndexRef.current = buildSpatialIndex(otherElements)
 
-        const keyboardContext: GuideContext = { mode: 'keyboard' }
-
         setScene((currentScene) => {
           const updatedElements = currentScene.elements.map((element) => {
             if (!selection.selectedIds.includes(element.id) || element.locked) {
@@ -171,16 +170,10 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
 
           if (updatedSelectedElements.length > 0) {
             const movedBounds = computeBoundingBox(updatedSelectedElements)
-            const guides = computeGuidesOptimized(
-              movedBounds,
-              spatialIndexRef.current,
-              undefined,
-              keyboardContext,
-            )
+            const guides = computeGuidesOptimized(movedBounds, spatialIndexRef.current)
             const spacingGuides = computeSpacingGuidesOptimized(
               movedBounds,
               spatialIndexRef.current,
-              keyboardContext,
             )
 
             setGuidesSelectedIds(selection.selectedIds)
@@ -247,8 +240,6 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
         )
         spatialIndexRef.current = buildSpatialIndex(otherElements)
 
-        const keyboardContext: GuideContext = { mode: 'keyboard' }
-
         setScene((currentScene) => {
           const updatedElements = currentScene.elements.map((element) => {
             if (!selection.selectedIds.includes(element.id) || element.locked) {
@@ -268,16 +259,10 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
 
           if (updatedSelectedElements.length > 0) {
             const movedBounds = computeBoundingBox(updatedSelectedElements)
-            const guides = computeGuidesOptimized(
-              movedBounds,
-              spatialIndexRef.current,
-              undefined,
-              keyboardContext,
-            )
+            const guides = computeGuidesOptimized(movedBounds, spatialIndexRef.current)
             const spacingGuides = computeSpacingGuidesOptimized(
               movedBounds,
               spatialIndexRef.current,
-              keyboardContext,
             )
 
             setGuidesSelectedIds(selection.selectedIds)

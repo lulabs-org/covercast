@@ -1,11 +1,18 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { cloneScene, createDefaultScene, type Scene, type SceneElement } from '../lib/scene'
+import {
+  cloneScene,
+  createDefaultScene,
+  type Scene,
+  type SceneElement,
+  createSelectionState,
+  selectSingle,
+  type SelectionState,
+  type HitTestStrategy,
+} from '@/domain'
+import { clamp } from '@/shared/lib'
 import editorStyles from './editor/editor.module.css'
-
-import { createSelectionState, selectSingle, type SelectionState } from '../lib/selection'
-import { type HitTestStrategy } from '../lib/marquee'
 import { useScrollVisibility } from '../lib/use-scroll-visibility'
 import { usePanelResize } from '../lib/use-panel-resize'
 import { useHistory } from '../hooks/useHistory'
@@ -227,6 +234,7 @@ export default function SceneEditor() {
     setEditingTextId,
     canvasWidth: canvasSize.width,
     canvasHeight: canvasSize.height,
+    moveableSingleDragEnabled: true,
   })
 
   const selectedElement = useMemo(() => {
@@ -235,6 +243,58 @@ export default function SceneEditor() {
     }
     return scene.elements.find((element) => element.id === selection.selectedIds[0]) ?? null
   }, [scene.elements, selection.selectedIds])
+
+  const moveableTargetId = useMemo(() => {
+    if (selection.selectedIds.length !== 1 || editingTextId) {
+      return null
+    }
+    const element = scene.elements.find((item) => item.id === selection.selectedIds[0])
+    if (!element || element.locked || element.hidden === true) {
+      return null
+    }
+    return element.id
+  }, [selection.selectedIds, editingTextId, scene.elements])
+
+  const [isMoveableDragging, setIsMoveableDragging] = useState(false)
+  const moveableDragStartRef = useRef<SceneElement | null>(null)
+
+  const handleMoveableDragStart = useCallback(() => {
+    const id = moveableTargetId
+    if (!id) {
+      return
+    }
+    const element = scene.elements.find((item) => item.id === id)
+    if (!element) {
+      return
+    }
+    moveableDragStartRef.current = { ...element }
+    saveHistory(`移动元素「${element.name}」`, scene)
+    setIsMoveableDragging(true)
+  }, [moveableTargetId, scene, saveHistory])
+
+  const handleMoveableDrag = useCallback(
+    (translateX: number, translateY: number) => {
+      const start = moveableDragStartRef.current
+      if (!start) {
+        return
+      }
+      const nextX = clamp(start.x + translateX, -start.width + 24, canvasSize.width - 24)
+      const nextY = clamp(start.y + translateY, -start.height + 24, canvasSize.height - 24)
+      setScene((currentScene) => ({
+        ...currentScene,
+        elements: currentScene.elements.map((element) =>
+          element.id === start.id ? ({ ...element, x: nextX, y: nextY } as SceneElement) : element,
+        ),
+      }))
+      markSceneEdited()
+    },
+    [canvasSize.width, canvasSize.height, setScene, markSceneEdited],
+  )
+
+  const handleMoveableDragEnd = useCallback(() => {
+    moveableDragStartRef.current = null
+    setIsMoveableDragging(false)
+  }, [])
 
   const { visibleGuides, visibleSpacingGuides } = useVisibleGuides(
     guides,
@@ -482,6 +542,12 @@ export default function SceneEditor() {
             onGroupDragPointerDown={handleGroupDragPointerDown}
             onGroupResizePointerDown={handleGroupResizePointerDown}
             onTextElementDoubleClick={handleTextElementDoubleClick}
+            moveableTargetId={moveableTargetId}
+            moveableEnabled
+            isMoveableDragging={isMoveableDragging}
+            onMoveableDragStart={handleMoveableDragStart}
+            onMoveableDrag={handleMoveableDrag}
+            onMoveableDragEnd={handleMoveableDragEnd}
           />
 
           <div

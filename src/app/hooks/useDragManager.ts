@@ -13,8 +13,6 @@ import {
   isTextElement,
   type Scene,
   type SceneElement,
-} from '../lib/scene'
-import {
   computeGuidesOptimized,
   computeSnapOptimized,
   computeSpacingGuidesOptimized,
@@ -26,10 +24,12 @@ import {
   type ResizeLabel,
   type ResizeSnapState,
   type SnapState,
-} from '../lib/smart-guide'
-import { SpatialIndex, buildSpatialIndex } from '../lib/spatial-index'
-import { handleElementClick, isSelected, selectSingle, type SelectionState } from '../lib/selection'
-import {
+  SpatialIndex,
+  buildSpatialIndex,
+  handleElementClick,
+  isSelected,
+  selectSingle,
+  type SelectionState,
   computeBoundingBox,
   computeNewBoundsFromHandle,
   createGroupResizeState,
@@ -37,7 +37,7 @@ import {
   type GroupDragState,
   type GroupResizeState,
   type ResizeHandleType,
-} from '../lib/group-drag'
+} from '@/domain'
 import { clamp } from '@/shared/lib'
 
 type SingleDragState = {
@@ -100,6 +100,7 @@ export function useDragManager({
   setEditingTextId,
   canvasWidth = DEFAULT_CANVAS_WIDTH,
   canvasHeight = DEFAULT_CANVAS_HEIGHT,
+  moveableSingleDragEnabled = false,
 }: {
   scene: Scene
   selection: SelectionState
@@ -112,6 +113,7 @@ export function useDragManager({
   setEditingTextId: React.Dispatch<React.SetStateAction<string | null>>
   canvasWidth?: number
   canvasHeight?: number
+  moveableSingleDragEnabled?: boolean
 }) {
   const [drag, setDrag] = useState<DragState | null>(null)
   const [guides, setGuides] = useState<GuideLine[]>([])
@@ -442,6 +444,15 @@ export function useDragManager({
         return
       }
 
+      if (
+        moveableSingleDragEnabled &&
+        wasSelected &&
+        selection.selectedIds.length === 1 &&
+        !isShiftPressed
+      ) {
+        return
+      }
+
       const point = getSvgPoint(svg, event.clientX, event.clientY)
 
       if (wasSelected && selection.selectedIds.length > 1 && !isShiftPressed) {
@@ -479,7 +490,16 @@ export function useDragManager({
         element: { ...element },
       })
     },
-    [scene, selection, editingTextId, svgRef, setSelection, setEditingTextId, saveHistory],
+    [
+      scene,
+      selection,
+      editingTextId,
+      svgRef,
+      setSelection,
+      setEditingTextId,
+      saveHistory,
+      moveableSingleDragEnabled,
+    ],
   )
 
   const handleResizePointerDown = useCallback(

@@ -2,11 +2,16 @@
 
 import type { Ref, WheelEvent as ReactWheelEvent, PointerEvent } from 'react'
 import SceneCanvas from '../SceneCanvas'
-import type { Scene } from '../../lib/scene'
-import type { GuideLine, MeasurementGuide, ResizeLabel } from '../../lib/smart-guide'
-import type { HitTestStrategy, MarqueeState } from '../../lib/marquee'
-import type { ResizeHandleType } from '../../lib/group-drag'
-import { Slider } from '@/shared/components'
+import type {
+  Scene,
+  GuideLine,
+  MeasurementGuide,
+  ResizeLabel,
+  HitTestStrategy,
+  MarqueeState,
+  ResizeHandleType,
+} from '@/domain'
+import { Slider } from '@/shared/components/ui'
 import styles from './editor.module.css'
 
 type StagePanelProps = {
@@ -48,6 +53,12 @@ type StagePanelProps = {
   onGroupDragPointerDown?: (event: PointerEvent<SVGRectElement>) => void
   onGroupResizePointerDown?: (handle: ResizeHandleType, event: PointerEvent<SVGRectElement>) => void
   onTextElementDoubleClick?: (elementId: string) => void
+  moveableTargetId?: string | null
+  moveableEnabled?: boolean
+  isMoveableDragging?: boolean
+  onMoveableDragStart?: () => void
+  onMoveableDrag?: (translateX: number, translateY: number) => void
+  onMoveableDragEnd?: (isDrag: boolean) => void
 }
 
 export function StagePanel({
@@ -84,6 +95,12 @@ export function StagePanel({
   onGroupDragPointerDown,
   onGroupResizePointerDown,
   onTextElementDoubleClick,
+  moveableTargetId,
+  moveableEnabled,
+  isMoveableDragging,
+  onMoveableDragStart,
+  onMoveableDrag,
+  onMoveableDragEnd,
 }: StagePanelProps) {
   return (
     <section className={styles.stagePanel} aria-label="Canvas preview">
@@ -170,6 +187,12 @@ export function StagePanel({
               onGroupDragPointerDown={onGroupDragPointerDown}
               onGroupResizePointerDown={onGroupResizePointerDown}
               onTextElementDoubleClick={onTextElementDoubleClick}
+              moveableTargetId={moveableTargetId}
+              moveableEnabled={moveableEnabled}
+              isMoveableDragging={isMoveableDragging}
+              onMoveableDragStart={onMoveableDragStart}
+              onMoveableDrag={onMoveableDrag}
+              onMoveableDragEnd={onMoveableDragEnd}
             />
           </div>
         </div>

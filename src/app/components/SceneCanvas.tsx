@@ -4,25 +4,26 @@ import {
   DEFAULT_CANVAS_HEIGHT,
   type Scene,
   type SceneElement,
-} from '../lib/scene'
-import type { GuideLine, MeasurementGuide, ResizeLabel } from '../lib/smart-guide'
-import {
+  type GuideLine,
+  type MeasurementGuide,
+  type ResizeLabel,
   getMarqueeRect,
   hasMarqueeSize,
   hitTestElements,
   isMarqueeActive,
   type HitTestStrategy,
   type MarqueeState,
-} from '../lib/marquee'
+  type ResizeHandleType,
+} from '@/domain'
+import { SceneDefs, backgroundMaskId, hasBackgroundCutouts } from './canvas/SceneDefs'
+import { ElementView } from './canvas/elements/ElementView'
+import { SelectionFrame } from './canvas/SelectionFrame'
+import { GroupSelectionFrame } from './canvas/GroupSelectionFrame'
 import { MarqueeOverlay } from './canvas/MarqueeOverlay'
 import { SmartGuideOverlay } from './canvas/SmartGuideOverlay'
 import { ResizeLabelOverlay } from './canvas/ResizeLabelOverlay'
 import { SpacingGuideOverlay } from './canvas/SpacingGuideOverlay'
-import { SelectionFrame } from './canvas/SelectionFrame'
-import { GroupSelectionFrame } from './canvas/GroupSelectionFrame'
-import { ElementView } from './canvas/elements/ElementView'
-import { SceneDefs, backgroundMaskId, hasBackgroundCutouts } from './canvas/SceneDefs'
-import { type ResizeHandleType } from '../lib/group-drag'
+import { MoveableLayer } from './canvas/MoveableLayer'
 
 type SceneCanvasProps = {
   scene: Scene
@@ -48,6 +49,12 @@ type SceneCanvasProps = {
   onGroupDragPointerDown?: (event: PointerEvent<SVGRectElement>) => void
   onGroupResizePointerDown?: (handle: ResizeHandleType, event: PointerEvent<SVGRectElement>) => void
   onTextElementDoubleClick?: (elementId: string) => void
+  moveableTargetId?: string | null
+  moveableEnabled?: boolean
+  isMoveableDragging?: boolean
+  onMoveableDragStart?: () => void
+  onMoveableDrag?: (translateX: number, translateY: number) => void
+  onMoveableDragEnd?: (isDrag: boolean) => void
 }
 
 export default function SceneCanvas({
@@ -74,6 +81,12 @@ export default function SceneCanvas({
   onGroupDragPointerDown,
   onGroupResizePointerDown,
   onTextElementDoubleClick,
+  moveableTargetId = null,
+  moveableEnabled = false,
+  isMoveableDragging = false,
+  onMoveableDragStart,
+  onMoveableDrag,
+  onMoveableDragEnd,
 }: SceneCanvasProps) {
   const [shiftKeyPressed, setShiftKeyPressed] = useState(false)
 
@@ -112,96 +125,117 @@ export default function SceneCanvas({
   }
 
   return (
-    <svg
-      ref={svgRef}
-      className={className}
-      viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
-      role="img"
-      aria-label="Covercast OBS live background"
-      preserveAspectRatio="xMidYMid meet"
-      onPointerDown={onCanvasPointerDown}
-      style={{
-        ...style,
-        touchAction: interactive ? 'none' : undefined,
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-      }}
-    >
-      <SceneDefs
-        visibleElements={visibleElements}
-        idPrefix={idPrefix}
+    <>
+      <svg
+        ref={svgRef}
+        className={className}
+        viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
+        role="img"
+        aria-label="Covercast OBS live background"
+        preserveAspectRatio="xMidYMid meet"
+        onPointerDown={onCanvasPointerDown}
+        style={{
+          ...style,
+          touchAction: interactive ? 'none' : undefined,
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+        }}
+      >
+        <SceneDefs
+          visibleElements={visibleElements}
+          idPrefix={idPrefix}
+          canvasWidth={canvasWidth}
+          canvasHeight={canvasHeight}
+        />
+
+        <g
+          mask={
+            hasBackgroundCutouts(visibleElements)
+              ? `url(#${backgroundMaskId(idPrefix)})`
+              : undefined
+          }
+        >
+          <rect
+            width={canvasWidth}
+            height={canvasHeight}
+            fill={scene.backgroundColor}
+            opacity={clampOpacity(scene.backgroundOpacity)}
+          />
+          <rect
+            width={canvasWidth}
+            height={canvasHeight}
+            fill={`url(#${idPrefix}-bg-glow)`}
+            opacity={0.68 * clampOpacity(scene.backgroundOpacity)}
+          />
+        </g>
+
+        {visibleElements.map((element) => (
+          <ElementView
+            key={element.id}
+            element={element}
+            idPrefix={idPrefix}
+            interactive={interactive}
+            editingTextId={editingTextId}
+            resolveSrc={resolveSrc}
+            onPointerDown={onElementPointerDown}
+            onDoubleClick={onTextElementDoubleClick}
+          />
+        ))}
+
+        {interactive && selectedElements.length > 0 ? (
+          <>
+            {isMoveableDragging
+              ? null
+              : selectedElements.map((element) => (
+                  <SelectionFrame
+                    key={element.id}
+                    element={element}
+                    onResizePointerDown={
+                      selectedElements.length === 1 ? onResizePointerDown : undefined
+                    }
+                  />
+                ))}
+            {selectedElements.length > 1 && !isGroupDragging ? (
+              <GroupSelectionFrame
+                elements={selectedElements}
+                shiftKeyPressed={shiftKeyPressed}
+                onDragPointerDown={onGroupDragPointerDown}
+                onResizePointerDown={onGroupResizePointerDown}
+              />
+            ) : null}
+          </>
+        ) : null}
+
+        {interactive && marquee && isMarqueeActive(marquee) ? (
+          <MarqueeOverlay marquee={marquee} />
+        ) : null}
+
+        {interactive && marqueePreviewElements.length > 0 ? (
+          <GroupSelectionFrame
+            elements={marqueePreviewElements}
+            shiftKeyPressed={shiftKeyPressed}
+          />
+        ) : null}
+
+        {guides && guides.length > 0 ? <SmartGuideOverlay guides={guides} /> : null}
+
+        {resizeLabel ? <ResizeLabelOverlay resizeLabel={resizeLabel} /> : null}
+
+        {spacingGuides && spacingGuides.length > 0 ? (
+          <SpacingGuideOverlay spacingGuides={spacingGuides} />
+        ) : null}
+      </svg>
+      <MoveableLayer
+        svgRef={svgRef}
+        targetElementId={moveableTargetId}
         canvasWidth={canvasWidth}
         canvasHeight={canvasHeight}
+        enabled={moveableEnabled && interactive}
+        onDragStart={onMoveableDragStart}
+        onDrag={onMoveableDrag}
+        onDragEnd={onMoveableDragEnd}
       />
-
-      <g
-        mask={
-          hasBackgroundCutouts(visibleElements) ? `url(#${backgroundMaskId(idPrefix)})` : undefined
-        }
-      >
-        <rect
-          width={canvasWidth}
-          height={canvasHeight}
-          fill={scene.backgroundColor}
-          opacity={clampOpacity(scene.backgroundOpacity)}
-        />
-        <rect
-          width={canvasWidth}
-          height={canvasHeight}
-          fill={`url(#${idPrefix}-bg-glow)`}
-          opacity={0.68 * clampOpacity(scene.backgroundOpacity)}
-        />
-      </g>
-
-      {visibleElements.map((element) => (
-        <ElementView
-          key={element.id}
-          element={element}
-          idPrefix={idPrefix}
-          interactive={interactive}
-          editingTextId={editingTextId}
-          resolveSrc={resolveSrc}
-          onPointerDown={onElementPointerDown}
-          onDoubleClick={onTextElementDoubleClick}
-        />
-      ))}
-
-      {interactive && selectedElements.length > 0 ? (
-        <>
-          {selectedElements.map((element) => (
-            <SelectionFrame
-              key={element.id}
-              element={element}
-              onResizePointerDown={selectedElements.length === 1 ? onResizePointerDown : undefined}
-            />
-          ))}
-          {selectedElements.length > 1 && !isGroupDragging ? (
-            <GroupSelectionFrame
-              elements={selectedElements}
-              shiftKeyPressed={shiftKeyPressed}
-              onDragPointerDown={onGroupDragPointerDown}
-              onResizePointerDown={onGroupResizePointerDown}
-            />
-          ) : null}
-        </>
-      ) : null}
-
-      {interactive && marquee && isMarqueeActive(marquee) ? (
-        <MarqueeOverlay marquee={marquee} />
-      ) : null}
-
-      {interactive && marqueePreviewElements.length > 0 ? (
-        <GroupSelectionFrame elements={marqueePreviewElements} shiftKeyPressed={shiftKeyPressed} />
-      ) : null}
-
-      {guides && guides.length > 0 ? <SmartGuideOverlay guides={guides} /> : null}
-
-      {resizeLabel ? <ResizeLabelOverlay resizeLabel={resizeLabel} /> : null}
-
-      {spacingGuides && spacingGuides.length > 0 ? (
-        <SpacingGuideOverlay spacingGuides={spacingGuides} />
-      ) : null}
-    </svg>
+    </>
   )
 }
 

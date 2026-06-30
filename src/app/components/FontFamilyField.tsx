@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback, type ChangeEvent } from 'react'
-import { FONT_GROUPS, findFontOption, type FontOption } from '../lib/fonts'
+import { FONT_GROUPS, findFontOption, type FontOption } from '@/config/fonts'
 import { useFontLoader } from '../hooks/useFontLoader'
 import type { useLocalFonts } from '../hooks/useLocalFonts'
 import { cn } from '@/shared/lib'

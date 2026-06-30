@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react'
-import { cloneScene, type Scene } from '../lib/scene'
-import { type SelectionState } from '../lib/selection'
+import { cloneScene, type Scene, type SelectionState } from '@/domain'
 
 const MAX_HISTORY_SIZE = 50
 

@@ -1,4 +1,4 @@
-import type { ResizeLabel } from '../../lib/smart-guide'
+import type { ResizeLabel } from '@/domain'
 
 export function ResizeLabelOverlay({ resizeLabel }: { resizeLabel: ResizeLabel }) {
   const labelText = `${resizeLabel.w} × ${resizeLabel.h}`

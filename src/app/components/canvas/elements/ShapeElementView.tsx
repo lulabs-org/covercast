@@ -1,5 +1,4 @@
-import { type ShapeElement, type SceneElement } from '../../../lib/scene'
-import { resolvePaint } from '../../../lib/scene-svg'
+import { type ShapeElement, type SceneElement, resolvePaint } from '@/domain'
 
 export function ShapeElementView({
   element,

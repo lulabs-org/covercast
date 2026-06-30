@@ -1,3 +1,12 @@
+/**
+ * @file Group transform geometry.
+ *
+ * Provides drag and resize operations that act on multiple scene elements
+ * as a single unit. Includes bounding-box computation, scale-matrix
+ * application, per-handle resize math (with optional aspect-ratio lock),
+ * group position clamping, and a small dimension formatter.
+ */
+
 import type { SceneElement } from './scene'
 
 export type GroupDragState = {
@@ -32,6 +41,13 @@ export type ScaleMatrix = {
   offsetY: number
 }
 
+/**
+ * Creates a `GroupDragState` snapshot of the given elements at a pointer origin.
+ * @param startX - Drag start pointer x.
+ * @param startY - Drag start pointer y.
+ * @param elements - Elements participating in the drag (shallow-copied).
+ * @returns A new `GroupDragState` instance.
+ */
 export function createGroupDragState(
   startX: number,
   startY: number,
@@ -45,6 +61,15 @@ export function createGroupDragState(
   }
 }
 
+/**
+ * Creates a `GroupResizeState` snapshot capturing the resize handle, pointer
+ * origin, the participating elements, and their initial bounding box.
+ * @param handle - The resize handle being dragged.
+ * @param startX - Resize start pointer x.
+ * @param startY - Resize start pointer y.
+ * @param elements - Elements participating in the resize (shallow-copied).
+ * @returns A new `GroupResizeState` instance.
+ */
 export function createGroupResizeState(
   handle: ResizeHandleType,
   startX: number,
@@ -61,6 +86,12 @@ export function createGroupResizeState(
   }
 }
 
+/**
+ * Computes the axis-aligned bounding box that contains all given elements.
+ * Returns a zero-sized box at the origin when the input is empty.
+ * @param elements - The elements to bound.
+ * @returns A `BoundingBox` covering all elements.
+ */
 export function computeBoundingBox(elements: SceneElement[]): BoundingBox {
   if (elements.length === 0) {
     return { x: 0, y: 0, width: 0, height: 0 }
@@ -86,6 +117,12 @@ export function computeBoundingBox(elements: SceneElement[]): BoundingBox {
   }
 }
 
+/**
+ * Computes the scale matrix that maps `originalBounds` onto `newBounds`.
+ * @param originalBounds - The source bounds.
+ * @param newBounds - The target bounds.
+ * @returns A `ScaleMatrix` with scale factors and offsets.
+ */
 export function computeScaleMatrix(
   originalBounds: BoundingBox,
   newBounds: BoundingBox,
@@ -101,6 +138,12 @@ export function computeScaleMatrix(
   }
 }
 
+/**
+ * Applies a scale matrix to a single element, producing a scaled copy.
+ * @param element - The element to transform.
+ * @param matrix - The scale matrix to apply.
+ * @returns A new element with updated position and dimensions.
+ */
 export function applyScaleToElement(element: SceneElement, matrix: ScaleMatrix): SceneElement {
   const newX = element.x * matrix.scaleX + matrix.offsetX
   const newY = element.y * matrix.scaleY + matrix.offsetY
@@ -116,6 +159,13 @@ export function applyScaleToElement(element: SceneElement, matrix: ScaleMatrix):
   } as SceneElement
 }
 
+/**
+ * Resizes a group of elements by mapping their original bounds to new bounds.
+ * @param originalElements - The elements at the start of the resize.
+ * @param originalBounds - The group's bounding box at resize start.
+ * @param newBounds - The target bounding box after resize.
+ * @returns A new array of scaled elements.
+ */
 export function applyGroupResize(
   originalElements: SceneElement[],
   originalBounds: BoundingBox,
@@ -125,6 +175,16 @@ export function applyGroupResize(
   return originalElements.map((element) => applyScaleToElement(element, matrix))
 }
 
+/**
+ * Computes the new bounding box for a resize gesture based on the dragged
+ * handle and the pointer delta. Optionally preserves the original aspect
+ * ratio and enforces a minimum size of 10 pixels.
+ * @param originalBounds - The bounding box at the start of the resize.
+ * @param handle - The resize handle being dragged.
+ * @param delta - Pointer displacement (with `dx` and `dy`) since resize start.
+ * @param maintainAspectRatio - When `true`, lock width/height ratio.
+ * @returns The resulting `BoundingBox`.
+ */
 export function computeNewBoundsFromHandle(
   originalBounds: BoundingBox,
   handle: ResizeHandleType,
@@ -245,6 +305,12 @@ export function computeNewBoundsFromHandle(
   }
 }
 
+/**
+ * Applies a translation delta to every element in the group.
+ * @param originalElements - The elements at the start of the drag.
+ * @param delta - Pointer displacement (with `dx` and `dy`) since drag start.
+ * @returns A new array of translated elements.
+ */
 export function applyGroupDragDelta(
   originalElements: SceneElement[],
   delta: { dx: number; dy: number },
@@ -256,6 +322,13 @@ export function applyGroupDragDelta(
   }))
 }
 
+/**
+ * Shifts the group so its bounding box stays within the supplied bounds.
+ * Returns the input array unchanged when no clamping is required.
+ * @param elements - The elements to constrain.
+ * @param bounds - Inclusive bounds (`minX`, `minY`, `maxX`, `maxY`).
+ * @returns A new array of shifted elements, or the input when already in bounds.
+ */
 export function clampGroupPosition(
   elements: SceneElement[],
   bounds: { minX: number; minY: number; maxX: number; maxY: number },
@@ -281,6 +354,12 @@ export function clampGroupPosition(
   }))
 }
 
+/**
+ * Formats a `width × height` pair as a rounded display string.
+ * @param width - The width in pixels.
+ * @param height - The height in pixels.
+ * @returns A string like `"300 × 180"`.
+ */
 export function formatDimension(width: number, height: number): string {
   return `${Math.round(width)} × ${Math.round(height)}`
 }
