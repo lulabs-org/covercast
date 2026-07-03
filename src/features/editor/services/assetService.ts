@@ -15,6 +15,7 @@ import {
 } from '../lib/localAssetStorage'
 
 export type { LocalAssetMeta }
+export { isLocalAssetSrc, parseLocalAssetId }
 
 export async function uploadLocalAsset(
   file: File,

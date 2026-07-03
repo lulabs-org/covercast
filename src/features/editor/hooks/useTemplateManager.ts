@@ -282,7 +282,7 @@ export function useTemplateManager(options: UseTemplateManagerOptions) {
     saveCustomTemplateWithScene,
     saveActiveCustomTemplate,
     deleteCustomTemplate,
-    duplicateCustomTemplate,
+    duplicateCustomTemplate: doDuplicateCustomTemplate,
     renameCustomTemplate,
     exportTemplateJson,
     importTemplateFile,

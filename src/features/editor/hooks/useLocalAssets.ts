@@ -2,12 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  getLocalAssetBlobUrl,
+  getLocalAssetUrl,
   isLocalAssetSrc,
   parseLocalAssetId,
+  getAllLocalAssetMetas,
   type LocalAssetMeta,
-  getLocalAssetMetas,
-} from '../lib/localAssetStorage'
+} from '../services/assetService'
 import { isImageElement, type Scene } from '../lib/scene'
 
 /**
@@ -19,7 +19,7 @@ import { isImageElement, type Scene } from '../lib/scene'
  */
 export function useLocalAssets(scene: Scene) {
   const [blobUrlMap, setBlobUrlMap] = useState<Record<string, string>>({})
-  const [metas] = useState<LocalAssetMeta[]>(() => getLocalAssetMetas())
+  const [metas] = useState<LocalAssetMeta[]>(() => getAllLocalAssetMetas())
 
   const revokedUrlsRef = useRef<Set<string>>(new Set())
 
@@ -48,7 +48,7 @@ export function useLocalAssets(scene: Scene) {
 
       const entries = await Promise.all(
         ids.map(async (id) => {
-          const blobUrl = await getLocalAssetBlobUrl(id)
+          const blobUrl = await getLocalAssetUrl(id)
           return [id, blobUrl] as const
         }),
       )
