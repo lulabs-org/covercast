@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
-import LiveView from '../components/LiveView'
-import { PAGE_METADATA, SITE_CONFIG, OPEN_GRAPH, TWITTER_CARD } from '../lib/seo-config'
+import LiveView from '@/features/editor/components/LiveView'
+import { PAGE_METADATA, SITE_CONFIG, OPEN_GRAPH, TWITTER_CARD } from '@/config/seo'
 
 export const metadata: Metadata = {
   title: PAGE_METADATA.live.title,

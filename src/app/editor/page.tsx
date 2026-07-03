@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
-import SceneEditor from '../components/SceneEditor'
-import { PAGE_METADATA, SITE_CONFIG, OPEN_GRAPH, TWITTER_CARD } from '../lib/seo-config'
+import SceneEditor from '@/features/editor/components/SceneEditor'
+import { PAGE_METADATA, SITE_CONFIG, OPEN_GRAPH, TWITTER_CARD } from '@/config/seo'
 
 export const metadata: Metadata = {
   title: PAGE_METADATA.editor.title,
