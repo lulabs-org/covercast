@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { BUILT_IN_TEMPLATES, createDefaultScene } from '../lib/scene'
 import { type SceneSlotInfo, type CustomSceneTemplate } from './useTemplateManager'
+import { fetchAllSceneSlots, postScene, deleteSceneSlotApi } from '../services/clientSceneApi'
 
 const SLOT_NAMES_STORAGE_KEY = 'covercast.slotNames.v1'
 
@@ -42,10 +43,7 @@ export function useSlotManager(options: UseSlotManagerOptions) {
 
     async function loadSlots() {
       try {
-        const response = await fetch('/api/scene?list=1', { cache: 'no-store' })
-        if (!response.ok) return
-
-        const allSlots = (await response.json()) as { templateId: string; slots: string[] }[]
+        const allSlots = await fetchAllSceneSlots()
         if (!active) return
 
         const slotNames = readSlotNamesFromStorage()
@@ -87,15 +85,7 @@ export function useSlotManager(options: UseSlotManagerOptions) {
     const defaultScene = template?.scene ?? createDefaultScene()
 
     try {
-      await fetch('/api/scene', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          templateId,
-          slotId,
-          scene: defaultScene,
-        }),
-      })
+      await postScene(defaultScene, templateId, slotId)
 
       const templateName = template?.name ?? '未命名模板'
       const name = `${templateName} - 源 ${templateSlots.length + 1}`
@@ -119,24 +109,18 @@ export function useSlotManager(options: UseSlotManagerOptions) {
     removeSlotNameFromStorage(templateId, slotId)
 
     try {
-      const response = await fetch('/api/scene', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ templateId, slotId }),
-      })
+      await deleteSceneSlotApi(templateId, slotId)
 
-      if (response.ok) {
-        setTemplateSlots((prev) =>
-          prev.filter((s) => !(s.templateId === templateId && s.slotId === slotId)),
+      setTemplateSlots((prev) =>
+        prev.filter((s) => !(s.templateId === templateId && s.slotId === slotId)),
+      )
+
+      if (activeSlotId === slotId) {
+        const remaining = templateSlots.filter(
+          (s) => !(s.templateId === templateId && s.slotId === slotId),
         )
-
-        if (activeSlotId === slotId) {
-          const remaining = templateSlots.filter(
-            (s) => !(s.templateId === templateId && s.slotId === slotId),
-          )
-          const nextSlotId = remaining[0]?.slotId ?? 'default'
-          setActiveSlotId(nextSlotId)
-        }
+        const nextSlotId = remaining[0]?.slotId ?? 'default'
+        setActiveSlotId(nextSlotId)
       }
     } catch {
       setStatus('删除浏览器源失败')

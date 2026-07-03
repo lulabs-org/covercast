@@ -1,29 +1,16 @@
 import { useState, useEffect } from 'react'
-import {
-  BUILT_IN_TEMPLATES,
-  DEFAULT_TEMPLATE_ID,
-  cloneScene,
-  type Scene,
-  type SceneElement,
-} from '../lib/scene'
+import { BUILT_IN_TEMPLATES, DEFAULT_TEMPLATE_ID, cloneScene, type Scene } from '../lib/scene'
 import { selectSingle, type SelectionState } from '../lib/selection'
-
-const TEMPLATE_EXPORT_FORMAT = 'covercast.template'
-const CUSTOM_TEMPLATE_STORAGE_KEY = 'covercast.customTemplates.v1'
-
-type CustomSceneTemplate = {
-  id: string
-  name: string
-  createdAt: string
-  updatedAt?: string
-  scene: Scene
-}
-
-type TemplateExportPayload = {
-  format: typeof TEMPLATE_EXPORT_FORMAT
-  version: 1
-  template: CustomSceneTemplate
-}
+import {
+  readCustomTemplatesFromStorage,
+  writeCustomTemplatesToStorage,
+  createCustomTemplate,
+  updateCustomTemplate,
+  duplicateCustomTemplate as duplicateTemplate,
+  createTemplateExportPayload,
+  normalizeTemplateExportPayload,
+  type CustomSceneTemplate,
+} from '../services/templateService'
 
 type SceneSlotInfo = {
   templateId: string
@@ -31,164 +18,8 @@ type SceneSlotInfo = {
   name: string
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object'
-}
-
-function isScene(value: unknown): value is Scene {
-  if (!isRecord(value)) {
-    return false
-  }
-
-  return (
-    value.version === 1 &&
-    typeof value.backgroundColor === 'string' &&
-    typeof value.backgroundOpacity === 'number' &&
-    Array.isArray(value.elements) &&
-    value.elements.every(isStoredSceneElement)
-  )
-}
-
-function isStoredSceneElement(value: unknown): value is SceneElement {
-  if (!isRecord(value)) {
-    return false
-  }
-
-  const hasBounds =
-    typeof value.id === 'string' &&
-    typeof value.name === 'string' &&
-    typeof value.x === 'number' &&
-    typeof value.y === 'number' &&
-    typeof value.width === 'number' &&
-    typeof value.height === 'number'
-
-  if (!hasBounds) {
-    return false
-  }
-
-  if (value.type === 'text') {
-    return (
-      typeof value.text === 'string' &&
-      typeof value.fill === 'string' &&
-      typeof value.fontSize === 'number' &&
-      typeof value.fontFamily === 'string' &&
-      typeof value.fontWeight === 'number' &&
-      (value.align === 'left' || value.align === 'center' || value.align === 'right') &&
-      typeof value.lineHeight === 'number'
-    )
-  }
-
-  if (value.type === 'image') {
-    return (
-      typeof value.src === 'string' &&
-      typeof value.alt === 'string' &&
-      (value.fit === 'cover' || value.fit === 'contain') &&
-      (value.shape === 'rect' || value.shape === 'circle')
-    )
-  }
-
-  if (value.type === 'rect' || value.type === 'ellipse') {
-    return typeof value.fill === 'string'
-  }
-
-  return false
-}
-
 function scenesMatch(left: Scene, right: Scene) {
   return JSON.stringify(left) === JSON.stringify(right)
-}
-
-function readCustomTemplatesFromStorage(): CustomSceneTemplate[] {
-  try {
-    const rawValue = window.localStorage.getItem(CUSTOM_TEMPLATE_STORAGE_KEY)
-    if (!rawValue) {
-      return []
-    }
-
-    const parsedValue = JSON.parse(rawValue) as unknown
-    if (!Array.isArray(parsedValue)) {
-      return []
-    }
-
-    return parsedValue
-      .map(normalizeCustomTemplate)
-      .filter((template): template is CustomSceneTemplate => template !== null)
-  } catch {
-    return []
-  }
-}
-
-function writeCustomTemplatesToStorage(templates: CustomSceneTemplate[]) {
-  window.localStorage.setItem(CUSTOM_TEMPLATE_STORAGE_KEY, JSON.stringify(templates))
-}
-
-function normalizeCustomTemplate(value: unknown): CustomSceneTemplate | null {
-  if (!isRecord(value) || !isScene(value.scene)) {
-    return null
-  }
-
-  if (
-    typeof value.id !== 'string' ||
-    typeof value.name !== 'string' ||
-    typeof value.createdAt !== 'string'
-  ) {
-    return null
-  }
-
-  return {
-    id: value.id,
-    name: value.name,
-    createdAt: value.createdAt,
-    updatedAt: typeof value.updatedAt === 'string' ? value.updatedAt : undefined,
-    scene: cloneScene(value.scene),
-  }
-}
-
-function normalizeTemplateExportPayload(value: unknown): CustomSceneTemplate | null {
-  if (!isRecord(value) || value.format !== TEMPLATE_EXPORT_FORMAT || value.version !== 1) {
-    return null
-  }
-
-  return normalizeCustomTemplate(value.template)
-}
-
-function createCustomTemplateId() {
-  return `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-}
-
-function uniqueTemplateName(name: string, templates: CustomSceneTemplate[]) {
-  const baseName = name.trim() || '导入模板'
-  const existingNames = new Set(templates.map((template) => template.name))
-
-  if (!existingNames.has(baseName)) {
-    return baseName
-  }
-
-  let suffix = 2
-  let candidate = `${baseName} ${suffix}`
-
-  while (existingNames.has(candidate)) {
-    suffix += 1
-    candidate = `${baseName} ${suffix}`
-  }
-
-  return candidate
-}
-
-function createTemplateExportPayload(name: string, scene: Scene): TemplateExportPayload {
-  const timestamp = new Date().toISOString()
-
-  return {
-    format: TEMPLATE_EXPORT_FORMAT,
-    version: 1,
-    template: {
-      id: createCustomTemplateId(),
-      name: name.trim() || '自定义场景',
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      scene: cloneScene(scene),
-    },
-  }
 }
 
 function downloadBlob(blob: Blob, filename: string) {
@@ -267,21 +98,17 @@ export function useTemplateManager(options: UseTemplateManagerOptions) {
     applyTemplate(template)
   }
 
+  function persistCustomTemplates(nextTemplates: CustomSceneTemplate[]) {
+    writeCustomTemplatesToStorage(nextTemplates)
+    setCustomTemplates(nextTemplates)
+  }
+
   function saveCustomTemplateWithName(name: string) {
-    const timestamp = new Date().toISOString()
-    const templateName = name.trim() || `自定义模板 ${customTemplates.length + 1}`
-    const template: CustomSceneTemplate = {
-      id: createCustomTemplateId(),
-      name: templateName,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      scene: cloneScene(scene),
-    }
+    const template = createCustomTemplate(name, scene)
     const nextTemplates = [template, ...customTemplates]
 
     try {
-      writeCustomTemplatesToStorage(nextTemplates)
-      setCustomTemplates(nextTemplates)
+      persistCustomTemplates(nextTemplates)
       setActiveTemplateId(template.id)
       setStatus(`已保存「${template.name}」到浏览器缓存`)
     } catch {
@@ -290,20 +117,11 @@ export function useTemplateManager(options: UseTemplateManagerOptions) {
   }
 
   function saveCustomTemplate() {
-    const timestamp = new Date().toISOString()
-    const templateName = customTemplateName.trim() || `自定义模板 ${customTemplates.length + 1}`
-    const template: CustomSceneTemplate = {
-      id: createCustomTemplateId(),
-      name: templateName,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      scene: cloneScene(scene),
-    }
+    const template = createCustomTemplate(customTemplateName, scene)
     const nextTemplates = [template, ...customTemplates]
 
     try {
-      writeCustomTemplatesToStorage(nextTemplates)
-      setCustomTemplates(nextTemplates)
+      persistCustomTemplates(nextTemplates)
       setCustomTemplateName('')
       setActiveTemplateId(template.id)
       setStatus(`已保存「${template.name}」到浏览器缓存`)
@@ -314,20 +132,11 @@ export function useTemplateManager(options: UseTemplateManagerOptions) {
   }
 
   function saveCustomTemplateWithScene(name: string, sceneToSave: Scene) {
-    const timestamp = new Date().toISOString()
-    const templateName = name.trim() || `自定义模板 ${customTemplates.length + 1}`
-    const template: CustomSceneTemplate = {
-      id: createCustomTemplateId(),
-      name: templateName,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      scene: cloneScene(sceneToSave),
-    }
+    const template = createCustomTemplate(name, sceneToSave)
     const nextTemplates = [template, ...customTemplates]
 
     try {
-      writeCustomTemplatesToStorage(nextTemplates)
-      setCustomTemplates(nextTemplates)
+      persistCustomTemplates(nextTemplates)
       setActiveTemplateId(template.id)
       setStatus(`已创建「${template.name}」`)
     } catch {
@@ -342,18 +151,13 @@ export function useTemplateManager(options: UseTemplateManagerOptions) {
       return
     }
 
-    const updatedTemplate: CustomSceneTemplate = {
-      ...activeCustomTemplate,
-      updatedAt: new Date().toISOString(),
-      scene: cloneScene(scene),
-    }
+    const updatedTemplate = updateCustomTemplate(activeCustomTemplate, { scene })
     const nextTemplates = customTemplates.map((template) =>
       template.id === activeCustomTemplate.id ? updatedTemplate : template,
     )
 
     try {
-      writeCustomTemplatesToStorage(nextTemplates)
-      setCustomTemplates(nextTemplates)
+      persistCustomTemplates(nextTemplates)
       setActiveTemplateId(updatedTemplate.id)
       setStatus(`已保存「${updatedTemplate.name}」的修改`)
     } catch {
@@ -365,8 +169,7 @@ export function useTemplateManager(options: UseTemplateManagerOptions) {
     const nextTemplates = customTemplates.filter((template) => template.id !== templateId)
 
     try {
-      writeCustomTemplatesToStorage(nextTemplates)
-      setCustomTemplates(nextTemplates)
+      persistCustomTemplates(nextTemplates)
       if (activeTemplateId === templateId) {
         setActiveTemplateId('')
       }
@@ -376,25 +179,17 @@ export function useTemplateManager(options: UseTemplateManagerOptions) {
     }
   }
 
-  function duplicateCustomTemplate(templateId: string) {
+  function doDuplicateCustomTemplate(templateId: string) {
     const template = customTemplates.find((t) => t.id === templateId)
     if (!template) {
       return
     }
 
-    const timestamp = new Date().toISOString()
-    const duplicatedTemplate: CustomSceneTemplate = {
-      id: createCustomTemplateId(),
-      name: uniqueTemplateName(`${template.name} 副本`, customTemplates),
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      scene: cloneScene(template.scene),
-    }
+    const duplicatedTemplate = duplicateTemplate(template, customTemplates)
     const nextTemplates = [duplicatedTemplate, ...customTemplates]
 
     try {
-      writeCustomTemplatesToStorage(nextTemplates)
-      setCustomTemplates(nextTemplates)
+      persistCustomTemplates(nextTemplates)
       setStatus(`已创建副本「${duplicatedTemplate.name}」`)
     } catch {
       setStatus('创建副本失败，浏览器缓存空间可能不足')
@@ -413,16 +208,11 @@ export function useTemplateManager(options: UseTemplateManagerOptions) {
       return
     }
 
-    const updatedTemplate: CustomSceneTemplate = {
-      ...template,
-      name: trimmedName,
-      updatedAt: new Date().toISOString(),
-    }
+    const updatedTemplate = updateCustomTemplate(template, { name: trimmedName })
     const nextTemplates = customTemplates.map((t) => (t.id === templateId ? updatedTemplate : t))
 
     try {
-      writeCustomTemplatesToStorage(nextTemplates)
-      setCustomTemplates(nextTemplates)
+      persistCustomTemplates(nextTemplates)
       setStatus(`已重命名为「${trimmedName}」`)
     } catch {
       setStatus('重命名失败，请检查浏览器缓存权限')
@@ -457,18 +247,10 @@ export function useTemplateManager(options: UseTemplateManagerOptions) {
         return
       }
 
-      const importedTemplate: CustomSceneTemplate = {
-        ...template,
-        id: createCustomTemplateId(),
-        name: uniqueTemplateName(template.name, customTemplates),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        scene: cloneScene(template.scene),
-      }
+      const importedTemplate = createCustomTemplate(template.name, template.scene)
       const nextTemplates = [importedTemplate, ...customTemplates]
 
-      writeCustomTemplatesToStorage(nextTemplates)
-      setCustomTemplates(nextTemplates)
+      persistCustomTemplates(nextTemplates)
       setScene(cloneScene(importedTemplate.scene))
       if (importedTemplate.scene.elements[0]?.id) {
         setSelection(selectSingle(selection, importedTemplate.scene.elements[0].id))

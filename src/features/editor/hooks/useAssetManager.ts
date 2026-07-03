@@ -7,14 +7,7 @@ import {
   type SceneElement,
 } from '../lib/scene'
 import { selectSingle, type SelectionState } from '../lib/selection'
-import {
-  buildLocalAssetSrc,
-  isSupportedImageType,
-  isWithinSizeLimit,
-  readFileAsArrayBuffer,
-  saveLocalAsset,
-  type LocalAssetMeta,
-} from '../lib/localAssetStorage'
+import { uploadLocalAsset } from '../services/assetService'
 
 export function useAssetManager({
   setStatus,
@@ -32,33 +25,10 @@ export function useAssetManager({
   setSelection: React.Dispatch<React.SetStateAction<SelectionState>>
 }) {
   async function uploadAsset(file: File, mode: 'add' | 'replace') {
-    if (!isSupportedImageType(file)) {
-      setStatus('素材上传失败，仅支持 PNG、JPG、WebP')
-      return
-    }
-
-    if (!isWithinSizeLimit(file)) {
-      setStatus('素材上传失败，文件大小不能超过 8MB')
-      return
-    }
-
     setStatus('正在保存素材...')
 
     try {
-      const assetId = `asset-${Date.now()}`
-      const buffer = await readFileAsArrayBuffer(file)
-
-      const meta: LocalAssetMeta = {
-        id: assetId,
-        name: file.name,
-        mime: file.type,
-        size: file.size,
-        createdAt: new Date().toISOString(),
-      }
-
-      await saveLocalAsset(meta, buffer)
-
-      const src = buildLocalAssetSrc(assetId)
+      const { src } = await uploadLocalAsset(file)
 
       if (mode === 'replace' && selectedElement && isImageElement(selectedElement)) {
         patchElement(selectedElement.id, {

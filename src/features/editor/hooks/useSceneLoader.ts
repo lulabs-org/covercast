@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { BUILT_IN_TEMPLATES, type Scene } from '../lib/scene'
 import { selectSingle, type SelectionState } from '../lib/selection'
+import { fetchScene } from '../services/clientSceneApi'
 
 export function useSceneLoader({
   setScene,
@@ -18,12 +19,7 @@ export function useSceneLoader({
 
     async function loadScene() {
       try {
-        const response = await fetch('/api/scene', { cache: 'no-store' })
-        if (!response.ok) {
-          throw new Error('Scene request failed')
-        }
-
-        const nextScene = (await response.json()) as Scene
+        const nextScene = await fetchScene()
         if (active) {
           setScene(nextScene)
           setStatus('已读取本地场景')

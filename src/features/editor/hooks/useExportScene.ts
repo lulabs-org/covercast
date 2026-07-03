@@ -1,141 +1,15 @@
 'use client'
 
+import { DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH, type Scene } from '../lib/scene'
 import {
-  DEFAULT_CANVAS_HEIGHT,
-  DEFAULT_CANVAS_WIDTH,
-  isImageElement,
-  type ImageElement,
-  type Scene,
-} from '../lib/scene'
-import { sceneToSvgMarkup } from '../lib/scene-svg'
-import { isLocalAssetSrc, parseLocalAssetId, getLocalAssetDataUrl } from '../lib/localAssetStorage'
+  exportSceneToFormat,
+  downloadBlob,
+  type ExportFormat,
+  EXPORT_FORMAT_OPTIONS,
+} from '../services/exportService'
 
-export type ExportFormat = 'png' | 'jpeg' | 'svg' | 'json'
-
-export const EXPORT_FORMAT_OPTIONS: {
-  extension: string
-  label: string
-  mimeType: string
-  value: ExportFormat
-}[] = [
-  { extension: 'png', label: 'PNG', mimeType: 'image/png', value: 'png' },
-  { extension: 'jpg', label: 'JPG', mimeType: 'image/jpeg', value: 'jpeg' },
-  { extension: 'svg', label: 'SVG', mimeType: 'image/svg+xml;charset=utf-8', value: 'svg' },
-  { extension: 'json', label: 'JSON', mimeType: 'application/json;charset=utf-8', value: 'json' },
-]
-
-async function inlineSceneAssets(scene: Scene): Promise<Scene> {
-  const elements = await Promise.all(
-    scene.elements.map(async (element) => {
-      if (!isImageElement(element) || !element.src || element.src.startsWith('data:')) {
-        return element
-      }
-
-      // 本地素材：从 IndexedDB 读取并转为 data URL
-      if (isLocalAssetSrc(element.src)) {
-        const id = parseLocalAssetId(element.src)
-        if (id) {
-          const dataUrl = await getLocalAssetDataUrl(id)
-          if (dataUrl) {
-            return { ...element, src: dataUrl } satisfies ImageElement
-          }
-        }
-        return element
-      }
-
-      // 远程素材：通过 fetch 获取
-      const response = await fetch(element.src, { cache: 'no-store' })
-      if (!response.ok) {
-        return element
-      }
-
-      const blob = await response.blob()
-      const dataUrl = await blobToDataUrl(blob)
-      return { ...element, src: dataUrl } satisfies ImageElement
-    }),
-  )
-
-  return { ...scene, elements }
-}
-
-function blobToDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result))
-    reader.onerror = () => reject(reader.error)
-    reader.readAsDataURL(blob)
-  })
-}
-
-async function renderSvgToCanvas(
-  svgMarkup: string,
-  backgroundColor: string | null,
-  canvasWidth: number,
-  canvasHeight: number,
-): Promise<HTMLCanvasElement> {
-  const svgBlob = new Blob([svgMarkup], { type: 'image/svg+xml;charset=utf-8' })
-  const svgUrl = URL.createObjectURL(svgBlob)
-
-  try {
-    return await new Promise<HTMLCanvasElement>((resolve, reject) => {
-      const image = new Image()
-      image.onload = () => {
-        const canvas = document.createElement('canvas')
-        canvas.width = canvasWidth
-        canvas.height = canvasHeight
-        const context = canvas.getContext('2d')
-        if (!context) {
-          reject(new Error('Canvas context unavailable'))
-          return
-        }
-
-        if (backgroundColor) {
-          context.fillStyle = backgroundColor
-          context.fillRect(0, 0, canvasWidth, canvasHeight)
-        }
-
-        context.drawImage(image, 0, 0, canvasWidth, canvasHeight)
-        resolve(canvas)
-      }
-      image.onerror = () => reject(new Error('SVG render failed'))
-      image.src = svgUrl
-    })
-  } finally {
-    URL.revokeObjectURL(svgUrl)
-  }
-}
-
-function canvasToBlob(
-  canvas: HTMLCanvasElement,
-  mimeType: string,
-  quality?: number,
-): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) {
-          reject(new Error('Canvas export failed'))
-          return
-        }
-
-        resolve(blob)
-      },
-      mimeType,
-      quality,
-    )
-  })
-}
-
-function downloadBlob(blob: Blob, filename: string) {
-  const objectUrl = URL.createObjectURL(blob)
-  const download = document.createElement('a')
-  download.href = objectUrl
-  download.download = filename
-  document.body.appendChild(download)
-  download.click()
-  download.remove()
-  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0)
-}
+export type { ExportFormat }
+export { EXPORT_FORMAT_OPTIONS }
 
 export function useExportScene(
   scene: Scene,
@@ -155,26 +29,8 @@ export function useExportScene(
         return
       }
 
-      const exportScene = await inlineSceneAssets(scene)
-      const svgMarkup = sceneToSvgMarkup(exportScene, canvasWidth, canvasHeight)
-      const filename = `covercast-${new Date().toISOString().slice(0, 10)}.${formatOption.extension}`
-
-      if (format === 'svg') {
-        downloadBlob(new Blob([svgMarkup], { type: formatOption.mimeType }), filename)
-      } else {
-        const canvas = await renderSvgToCanvas(
-          svgMarkup,
-          format === 'jpeg' ? '#ffffff' : null,
-          canvasWidth,
-          canvasHeight,
-        )
-        const blob = await canvasToBlob(
-          canvas,
-          formatOption.mimeType,
-          format === 'jpeg' ? 0.92 : undefined,
-        )
-        downloadBlob(blob, filename)
-      }
+      const { blob, filename } = await exportSceneToFormat(scene, format, canvasWidth, canvasHeight)
+      downloadBlob(blob, filename)
 
       setStatus(`${formatOption.label} 已导出，尺寸 ${canvasWidth}×${canvasHeight}`)
     } catch {
