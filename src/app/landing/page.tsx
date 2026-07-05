@@ -1,7 +1,7 @@
-import HeroSection from './components/HeroSection'
-import FeaturesSection from './components/FeaturesSection'
-import FooterSection from './components/FooterSection'
-import BackgroundEffects from './components/BackgroundEffects'
+import HeroSection from '@/features/landing/components/HeroSection'
+import FeaturesSection from '@/features/landing/components/FeaturesSection'
+import FooterSection from '@/features/landing/components/FooterSection'
+import BackgroundEffects from '@/features/landing/components/BackgroundEffects'
 
 export default function LandingPage() {
   return (
