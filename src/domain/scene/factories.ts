@@ -9,20 +9,40 @@
 import { DEFAULT_FONT_FAMILY } from '@/config/fonts'
 import type { TextElement, ShapeElement, ImageElement } from './types'
 
+const DEFAULT_SHAPE_GRADIENT = {
+  startColor: '#ffffff',
+  endColor: '#99f19c',
+  direction: 'horizontal' as const,
+}
+
+const DEFAULT_SHAPE_STYLE = {
+  fill: '#ffffff',
+  fillMode: 'gradient' as const,
+  gradient: DEFAULT_SHAPE_GRADIENT,
+  stroke: '#ffffff',
+  strokeWidth: 0,
+  opacity: 1,
+}
+
+function createElementId(kind: 'text' | 'rect' | 'ellipse' | 'image'): string {
+  return `${kind}-${Date.now()}`
+}
+
+function frame(x: number, y: number, width: number, height: number) {
+  return { x, y, width, height }
+}
+
 /**
  * Creates a new text element with default styling and position.
  * @returns A `TextElement` instance with a unique id and default content.
  */
 export function createTextElement(): TextElement {
   return {
-    id: `text-${Date.now()}`,
+    id: createElementId('text'),
     name: '自定义文字',
     type: 'text',
     text: '新的文字',
-    x: 330,
-    y: 760,
-    width: 280,
-    height: 56,
+    ...frame(330, 760, 280, 56),
     fill: '#ffffff',
     fontSize: 42,
     fontFamily: DEFAULT_FONT_FAMILY,
@@ -38,24 +58,12 @@ export function createTextElement(): TextElement {
  */
 export function createRectElement(): ShapeElement {
   return {
-    id: `rect-${Date.now()}`,
+    id: createElementId('rect'),
     name: '自定义矩形',
     type: 'rect',
-    x: 320,
-    y: 720,
-    width: 300,
-    height: 180,
-    fill: '#ffffff',
-    fillMode: 'gradient',
-    gradient: {
-      startColor: '#ffffff',
-      endColor: '#99f19c',
-      direction: 'horizontal',
-    },
-    stroke: '#ffffff',
-    strokeWidth: 0,
+    ...frame(320, 720, 300, 180),
+    ...DEFAULT_SHAPE_STYLE,
     radius: 16,
-    opacity: 1,
   }
 }
 
@@ -65,23 +73,11 @@ export function createRectElement(): ShapeElement {
  */
 export function createEllipseElement(): ShapeElement {
   return {
-    id: `ellipse-${Date.now()}`,
+    id: createElementId('ellipse'),
     name: '自定义椭圆',
     type: 'ellipse',
-    x: 340,
-    y: 740,
-    width: 260,
-    height: 160,
-    fill: '#ffffff',
-    fillMode: 'gradient',
-    gradient: {
-      startColor: '#ffffff',
-      endColor: '#99f19c',
-      direction: 'horizontal',
-    },
-    stroke: '#ffffff',
-    strokeWidth: 0,
-    opacity: 1,
+    ...frame(340, 740, 260, 160),
+    ...DEFAULT_SHAPE_STYLE,
   }
 }
 
@@ -93,15 +89,12 @@ export function createEllipseElement(): ShapeElement {
  */
 export function createImageElement(src: string, name = '自定义素材'): ImageElement {
   return {
-    id: `image-${Date.now()}`,
+    id: createElementId('image'),
     name,
     type: 'image',
     src,
     alt: name,
-    x: 356,
-    y: 720,
-    width: 230,
-    height: 230,
+    ...frame(356, 720, 230, 230),
     fit: 'contain',
     shape: 'rect',
   }
