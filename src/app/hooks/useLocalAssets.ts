@@ -8,7 +8,7 @@ import {
   type LocalAssetMeta,
   getLocalAssetMetas,
 } from '../lib/localAssetStorage'
-import { isImageElement, type Scene } from '../lib/scene'
+import { isImageElement, type Scene } from '@/domain'
 
 /**
  * 管理本地素材的 blob URL 生命周期。
@@ -103,5 +103,6 @@ export function useLocalAssets(scene: Scene) {
     resolveSrc,
     getMeta,
     metas,
+    blobUrlMap,
   }
 }

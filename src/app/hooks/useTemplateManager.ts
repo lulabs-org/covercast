@@ -5,8 +5,9 @@ import {
   cloneScene,
   type Scene,
   type SceneElement,
-} from '../lib/scene'
-import { selectSingle, type SelectionState } from '../lib/selection'
+  selectSingle,
+  type SelectionState,
+} from '@/domain'
 
 const TEMPLATE_EXPORT_FORMAT = 'covercast.template'
 const CUSTOM_TEMPLATE_STORAGE_KEY = 'covercast.customTemplates.v1'

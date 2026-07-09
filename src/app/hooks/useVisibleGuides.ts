@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import type { GuideLine, MeasurementGuide } from '../lib/smart-guide'
+import type { GuideLine, MeasurementGuide } from '@/domain'
 
 type GuideWithMode = {
   mode?: 'keyboard' | 'drag'

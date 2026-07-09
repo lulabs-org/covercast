@@ -1,3 +1,13 @@
+/**
+ * @file Scene-to-SVG serialization.
+ *
+ * Converts a `Scene` instance into a standalone SVG markup string suitable
+ * for OBS live backgrounds and image export. Handles defs (gradients, masks,
+ * filters), background rendering with cutout masks, and per-element rendering
+ * for text, shape, and image elements. All string values are escaped to keep
+ * the produced SVG well-formed.
+ */
+
 import {
   DEFAULT_CANVAS_HEIGHT,
   DEFAULT_CANVAS_WIDTH,
@@ -9,6 +19,13 @@ import {
   type TextElement,
 } from './scene'
 
+/**
+ * Resolves a paint token (e.g. `'courseGradient'`) to an SVG `url(#...)` reference,
+ * returning the literal value unchanged when it is a plain color.
+ * @param fill - The paint value to resolve.
+ * @param prefix - Id prefix used for SVG gradient defs. Defaults to `'covercast'`.
+ * @returns The resolved SVG paint value.
+ */
 export function resolvePaint(fill: string, prefix = 'covercast'): string {
   if (fill === 'courseGradient') {
     return `url(#${prefix}-course-gradient)`
@@ -21,6 +38,11 @@ export function resolvePaint(fill: string, prefix = 'covercast'): string {
   return fill
 }
 
+/**
+ * Maps a text alignment value to the corresponding SVG `text-anchor` keyword.
+ * @param align - The alignment to convert.
+ * @returns `'start'`, `'middle'`, or `'end'`.
+ */
 export function textAnchorForAlign(align: TextAlign): 'start' | 'middle' | 'end' {
   if (align === 'center') {
     return 'middle'
@@ -33,6 +55,11 @@ export function textAnchorForAlign(align: TextAlign): 'start' | 'middle' | 'end'
   return 'start'
 }
 
+/**
+ * Computes the SVG `x` coordinate for a text element based on its alignment.
+ * @param element - The text element to compute the anchor x for.
+ * @returns The x position the `<text>` tag should use.
+ */
 export function textX(element: TextElement): number {
   if (element.align === 'center') {
     return element.x + element.width / 2
@@ -45,6 +72,11 @@ export function textX(element: TextElement): number {
   return element.x
 }
 
+/**
+ * Returns the bounding rect of an arbitrary scene element.
+ * @param element - The element to measure.
+ * @returns An object with `x`, `y`, `width`, and `height` properties.
+ */
 export function elementBounds(element: SceneElement) {
   return {
     x: element.x,
@@ -54,6 +86,14 @@ export function elementBounds(element: SceneElement) {
   }
 }
 
+/**
+ * Serializes a `Scene` into a complete SVG markup string.
+ * Hidden elements are filtered out before rendering.
+ * @param scene - The scene to serialize.
+ * @param canvasWidth - Output SVG width. Defaults to `DEFAULT_CANVAS_WIDTH`.
+ * @param canvasHeight - Output SVG height. Defaults to `DEFAULT_CANVAS_HEIGHT`.
+ * @returns A self-contained `<svg>...</svg>` string.
+ */
 export function sceneToSvgMarkup(
   scene: Scene,
   canvasWidth = DEFAULT_CANVAS_WIDTH,
@@ -78,6 +118,13 @@ export function sceneToSvgMarkup(
   ].join('')
 }
 
+/**
+ * Renders the SVG `<defs>` block: built-in gradients/filters plus per-shape
+ * custom gradients and the background cutout mask (when applicable).
+ * @param prefix - Id prefix used for all defs ids.
+ * @param scene - Optional scene used to discover gradient/cutout shapes.
+ * @returns The `<defs>...</defs>` markup string.
+ */
 export function renderDefs(prefix: string, scene?: Scene): string {
   const customGradients =
     scene?.elements
@@ -118,6 +165,18 @@ export function renderDefs(prefix: string, scene?: Scene): string {
   `
 }
 
+/**
+ * Renders the scene background: a solid color rect overlaid with a radial glow.
+ * When the scene contains background-cutout shapes, the group is masked so those
+ * areas become transparent.
+ * @param backgroundColor - CSS color for the base rect.
+ * @param backgroundOpacity - Opacity (0–1) of the background. Defaults to `1`.
+ * @param prefix - Id prefix for referenced mask/gradient ids. Defaults to `'covercast'`.
+ * @param scene - Optional scene used to detect background cutouts.
+ * @param canvasWidth - Background rect width. Defaults to `DEFAULT_CANVAS_WIDTH`.
+ * @param canvasHeight - Background rect height. Defaults to `DEFAULT_CANVAS_HEIGHT`.
+ * @returns The background `<g>...</g>` markup string.
+ */
 export function renderBackground(
   backgroundColor: string,
   backgroundOpacity = 1,
@@ -138,6 +197,7 @@ export function renderBackground(
   `
 }
 
+/** Dispatches an element to its dedicated renderer based on its `type`. */
 function renderElement(element: SceneElement, prefix: string): string {
   if (element.type === 'text') {
     return renderTextElement(element)
@@ -150,6 +210,7 @@ function renderElement(element: SceneElement, prefix: string): string {
   return renderShapeElement(element, prefix)
 }
 
+/** Renders a shape element as an SVG `<rect>` or `<ellipse>` with fill, stroke, and opacity. */
 function renderShapeElement(element: ShapeElement, prefix: string): string {
   const opacity = element.opacity ?? 1
   const fill = element.backgroundCutout
@@ -167,6 +228,7 @@ function renderShapeElement(element: ShapeElement, prefix: string): string {
   return `<rect x="${element.x}" y="${element.y}" width="${element.width}" height="${element.height}" rx="${element.radius ?? 0}" ${common}${stroke} />`
 }
 
+/** Resolves the SVG fill value for a shape: a per-shape gradient reference or a paint token. */
 function resolveShapeFill(element: ShapeElement, prefix: string): string {
   if (isGradientShape(element)) {
     return `url(#${shapeGradientId(prefix, element.id)})`
@@ -175,6 +237,7 @@ function resolveShapeFill(element: ShapeElement, prefix: string): string {
   return resolvePaint(element.fill, prefix)
 }
 
+/** Renders an SVG `<linearGradient>` definition for a shape's custom gradient. */
 function renderShapeGradient(
   element: ShapeElement & { gradient: NonNullable<ShapeElement['gradient']> },
   prefix: string,
@@ -190,6 +253,7 @@ function renderShapeGradient(
   `
 }
 
+/** Type guard: returns `true` when the element is a visible shape using gradient fill mode. */
 function isGradientShape(element: SceneElement): element is ShapeElement & {
   gradient: NonNullable<ShapeElement['gradient']>
 } {
@@ -205,6 +269,7 @@ function shapeGradientId(prefix: string, elementId: string): string {
   return `${prefix}-shape-gradient-${elementId}`
 }
 
+/** Builds the SVG `<mask>` used to cut holes in the background for cutout shapes. */
 function renderBackgroundMask(
   prefix: string,
   scene?: Scene,
@@ -230,6 +295,7 @@ function renderBackgroundMask(
   `
 }
 
+/** Renders the black shape used to punch a hole inside the background mask. */
 function renderCutoutMaskShape(element: ShapeElement): string {
   if (element.type === 'ellipse') {
     return `<ellipse cx="${element.x + element.width / 2}" cy="${element.y + element.height / 2}" rx="${element.width / 2}" ry="${element.height / 2}" fill="#000000" />`
@@ -238,6 +304,7 @@ function renderCutoutMaskShape(element: ShapeElement): string {
   return `<rect x="${element.x}" y="${element.y}" width="${element.width}" height="${element.height}" rx="${element.radius ?? 0}" fill="#000000" />`
 }
 
+/** Type guard: returns `true` when the element is a visible shape marked as a background cutout. */
 function isBackgroundCutoutShape(element: SceneElement): element is ShapeElement {
   return (
     (element.type === 'rect' || element.type === 'ellipse') &&
@@ -246,6 +313,7 @@ function isBackgroundCutoutShape(element: SceneElement): element is ShapeElement
   )
 }
 
+/** Returns `true` when the scene contains at least one background cutout shape. */
 function hasBackgroundCutouts(scene?: Scene): boolean {
   return scene?.elements.some(isBackgroundCutoutShape) ?? false
 }
@@ -254,6 +322,12 @@ function backgroundMaskId(prefix: string): string {
   return `${prefix}-background-mask`
 }
 
+/**
+ * Returns the SVG gradient vector (x1/y1/x2/y2 percentages) for a given
+ * gradient direction.
+ * @param direction - The gradient direction to convert.
+ * @returns An object with `x1`, `y1`, `x2`, `y2` percentage strings.
+ */
 export function gradientVector(direction: NonNullable<ShapeElement['gradient']>['direction']) {
   if (direction === 'vertical') {
     return { x1: '0%', y1: '0%', x2: '0%', y2: '100%' }
@@ -270,6 +344,7 @@ export function gradientVector(direction: NonNullable<ShapeElement['gradient']>[
   return { x1: '0%', y1: '0%', x2: '100%', y2: '0%' }
 }
 
+/** Renders a text element as an SVG `<text>` with one `<tspan>` per line. */
 function renderTextElement(element: TextElement): string {
   const lines = element.text.split('\n')
   const x = textX(element)
@@ -285,6 +360,11 @@ function renderTextElement(element: TextElement): string {
   return `<text x="${x}" y="${element.y + element.fontSize}" fill="${escapeAttribute(element.fill)}" font-family="${escapeAttribute(element.fontFamily)}" font-size="${element.fontSize}" font-weight="${element.fontWeight}" text-anchor="${anchor}" opacity="${element.opacity ?? 1}">${tspans}</text>`
 }
 
+/**
+ * Renders an image element. Falls back to a circular placeholder with initials
+ * when `src` is empty; otherwise emits an `<image>` tag, optionally clipped to
+ * a circle based on `element.shape`.
+ */
 function renderImageElement(element: ImageElement, prefix: string): string {
   const opacity = element.opacity ?? 1
   const clipId = `${prefix}-clip-${element.id}`
@@ -316,14 +396,17 @@ function renderImageElement(element: ImageElement, prefix: string): string {
   return `<image href="${escapeAttribute(element.src)}" x="${element.x}" y="${element.y}" width="${element.width}" height="${element.height}" preserveAspectRatio="${preserveAspectRatio}" opacity="${opacity}" />`
 }
 
+/** Escapes XML-significant characters (`&`, `<`, `>`) for safe text content. */
 function escapeText(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
+/** Escapes a string for use inside an XML attribute (text escaping plus `"`). */
 function escapeAttribute(value: string): string {
   return escapeText(value).replace(/"/g, '&quot;')
 }
 
+/** Clamps an opacity value to the `[0, 1]` range, treating non-finite values as `1`. */
 function clampOpacity(value: number): number {
   if (!Number.isFinite(value)) {
     return 1

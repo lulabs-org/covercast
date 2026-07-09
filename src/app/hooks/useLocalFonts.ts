@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import type { FontOption } from '../lib/fonts'
+import type { FontOption } from '@/config/fonts'
 import {
   restoreLocalFonts,
   saveLocalFont,

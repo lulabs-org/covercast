@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto'
 import { mkdir, readFile, readdir, stat, unlink, writeFile } from 'fs/promises'
 import path from 'path'
 import { clamp } from '@/shared/lib'
-import { createDefaultScene, type Scene } from './scene'
+import { createDefaultScene, type Scene } from '@/domain'
 
 const DATA_DIR = path.join(process.cwd(), '.covercast')
 const ASSETS_DIR = path.join(DATA_DIR, 'assets')

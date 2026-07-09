@@ -13,8 +13,6 @@ import {
   isTextElement,
   type Scene,
   type SceneElement,
-} from '../lib/scene'
-import {
   computeGuidesOptimized,
   computeSnapOptimized,
   computeSpacingGuidesOptimized,
@@ -26,10 +24,12 @@ import {
   type ResizeLabel,
   type ResizeSnapState,
   type SnapState,
-} from '../lib/smart-guide'
-import { SpatialIndex, buildSpatialIndex } from '../lib/spatial-index'
-import { handleElementClick, isSelected, selectSingle, type SelectionState } from '../lib/selection'
-import {
+  SpatialIndex,
+  buildSpatialIndex,
+  handleElementClick,
+  isSelected,
+  selectSingle,
+  type SelectionState,
   computeBoundingBox,
   computeNewBoundsFromHandle,
   createGroupResizeState,
@@ -37,7 +37,7 @@ import {
   type GroupDragState,
   type GroupResizeState,
   type ResizeHandleType,
-} from '../lib/group-drag'
+} from '@/domain'
 import { clamp } from '@/shared/lib'
 
 type SingleDragState = {

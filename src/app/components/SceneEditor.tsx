@@ -1,11 +1,18 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { cloneScene, createDefaultScene, type Scene, type SceneElement } from '../lib/scene'
+import { type Editor } from 'tldraw'
+import {
+  cloneScene,
+  createDefaultScene,
+  type Scene,
+  type SceneElement,
+  createSelectionState,
+  selectSingle,
+  type SelectionState,
+  type HitTestStrategy,
+} from '@/domain'
 import editorStyles from './editor/editor.module.css'
-
-import { createSelectionState, selectSingle, type SelectionState } from '../lib/selection'
-import { type HitTestStrategy } from '../lib/marquee'
 import { useScrollVisibility } from '../lib/use-scroll-visibility'
 import { usePanelResize } from '../lib/use-panel-resize'
 import { useHistory } from '../hooks/useHistory'
@@ -43,7 +50,9 @@ export default function SceneEditor() {
   const [appOrigin, setAppOrigin] = useState('')
   const [exportFormat, setExportFormat] = useState<ExportFormat>('png')
   const [guidesSelectedIds, setGuidesSelectedIds] = useState<string[]>([])
+  const [canvasEngine, setCanvasEngine] = useState<'svg' | 'tldraw'>('svg')
   const svgRef = useRef<SVGSVGElement>(null)
+  const tldrawEditorRef = useRef<Editor | null>(null)
   const sceneElementsRef = useRef<SceneElement[]>(scene.elements)
   const selectedElementRef = useRef<SceneElement | null>(null)
   const [collapsedSections, setCollapsedSections] = useState<Record<SidebarSectionId, boolean>>({
@@ -58,7 +67,10 @@ export default function SceneEditor() {
   const localFontManager = useLocalFonts()
 
   // 管理本地素材的 blob URL 生命周期
-  const { resolveSrc } = useLocalAssets(scene)
+  const { resolveSrc, blobUrlMap } = useLocalAssets(scene)
+
+  // Version key that changes when blob URLs are built — triggers tldraw reload
+  const srcVersion = useMemo(() => Object.keys(blobUrlMap).length, [blobUrlMap])
 
   const { leftPanelRef, rightPanelRef, stageViewportRef } = useScrollVisibility()
   const { panelWidths, resizerLeftRef, resizerRightRef, handleMouseDown } = usePanelResize()
@@ -277,6 +289,63 @@ export default function SceneEditor() {
     [scene, saveHistory, markSceneEdited],
   )
 
+  // tldraw → Scene sync (debounced inside CovercastEditor)
+  // Does NOT call saveHistory — tldraw has its own undo/redo
+  // Preserves hidden elements in their original layer order — they're not in
+  // tldraw but must stay in Scene at their original position
+  const handleTldrawSceneChange = useCallback(
+    (newScene: Scene) => {
+      setScene((prev) => {
+        const newElementsMap = new Map(newScene.elements.map((el) => [el.id, el]))
+        const prevIds = new Set(prev.elements.map((el) => el.id))
+
+        // Walk prev.elements in order: replace visible with tldraw version,
+        // keep hidden elements as-is at their original position
+        const merged = prev.elements.map((el) => {
+          const updated = newElementsMap.get(el.id)
+          return updated ?? el
+        })
+
+        // Append elements created in tldraw that don't exist in prev
+        const newElements = newScene.elements.filter((el) => !prevIds.has(el.id))
+
+        return {
+          ...newScene,
+          elements: [...merged, ...newElements],
+        }
+      })
+      markSceneEdited()
+    },
+    [markSceneEdited],
+  )
+
+  // tldraw selection → SceneEditor selection
+  const handleTldrawSelectionChange = useCallback((elementIds: string[]) => {
+    setSelection({ selectedIds: elementIds })
+  }, [])
+
+  // tldraw editor ready — store ref for undo/redo
+  const handleTldrawEditorReady = useCallback((editor: Editor) => {
+    tldrawEditorRef.current = editor
+  }, [])
+
+  // Undo/redo — switches engine based on canvas mode
+  const handleUndo = useCallback(() => {
+    if (canvasEngine === 'tldraw') {
+      tldrawEditorRef.current?.undo()
+    } else {
+      undo()
+    }
+  }, [canvasEngine, undo])
+
+  const handleRedo = useCallback(() => {
+    if (canvasEngine === 'tldraw') {
+      tldrawEditorRef.current?.redo()
+    } else {
+      redo()
+    }
+  }, [canvasEngine, redo])
+
   const {
     elementClipboardRef,
     elementsClipboardRef,
@@ -330,6 +399,7 @@ export default function SceneEditor() {
     setSpacingGuides,
     setScene,
     markSceneEdited,
+    disabled: canvasEngine === 'tldraw',
   })
 
   const { handleAssetInput } = useAssetManager({
@@ -372,10 +442,10 @@ export default function SceneEditor() {
 
       <main className={editorStyles.editorShell}>
         <SceneToolbar
-          undo={undo}
-          redo={redo}
-          canUndo={history.past.length > 0}
-          canRedo={history.future.length > 0}
+          undo={handleUndo}
+          redo={handleRedo}
+          canUndo={canvasEngine === 'tldraw' ? true : history.past.length > 0}
+          canRedo={canvasEngine === 'tldraw' ? true : history.future.length > 0}
           addTextElement={addTextElement}
           addRectElement={addRectElement}
           addEllipseElement={addEllipseElement}
@@ -450,6 +520,12 @@ export default function SceneEditor() {
 
           <StagePanel
             status={status}
+            canvasEngine={canvasEngine}
+            onCanvasEngineChange={setCanvasEngine}
+            onSceneChange={handleTldrawSceneChange}
+            onSelectionChange={handleTldrawSelectionChange}
+            onEditorReady={handleTldrawEditorReady}
+            srcVersion={srcVersion}
             canvasZoom={canvasZoom}
             canvasZoomPercent={canvasZoomPercent}
             canvasPreviewWidth={canvasPreviewWidth}

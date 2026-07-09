@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { type WheelEvent as ReactWheelEvent } from 'react'
-import { DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT } from '../lib/scene'
+import { DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT } from '@/domain'
 import { clamp } from '@/shared/lib'
 
 const CANVAS_ZOOM_MIN = 0.25
