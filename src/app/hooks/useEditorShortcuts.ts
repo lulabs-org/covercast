@@ -47,6 +47,8 @@ type UseEditorShortcutsOptions = {
   setSpacingGuides: (guides: MeasurementGuide[]) => void
   setScene: (updater: (currentScene: Scene) => Scene) => void
   markSceneEdited: () => void
+  /** When true, all shortcuts are disabled (e.g. tldraw mode has its own). */
+  disabled?: boolean
 }
 
 export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
@@ -67,9 +69,12 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
     setSpacingGuides,
     setScene,
     markSceneEdited,
+    disabled = false,
   } = options
 
   useEffect(() => {
+    if (disabled) return
+
     function handleEditorKeyDown(event: KeyboardEvent) {
       const arrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
 
@@ -317,5 +322,6 @@ export function useEditorShortcuts(options: UseEditorShortcutsOptions) {
     setScene,
     setSpacingGuides,
     spatialIndexRef,
+    disabled,
   ])
 }

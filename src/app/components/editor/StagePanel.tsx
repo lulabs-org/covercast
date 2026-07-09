@@ -2,6 +2,7 @@
 
 import type { Ref, WheelEvent as ReactWheelEvent, PointerEvent } from 'react'
 import dynamic from 'next/dynamic'
+import type { Editor } from 'tldraw'
 import SceneCanvas from '../SceneCanvas'
 import type {
   Scene,
@@ -73,6 +74,8 @@ type StagePanelProps = {
   // tldraw mode props
   onSceneChange?: (scene: Scene) => void
   onSelectionChange?: (elementIds: string[]) => void
+  onEditorReady?: (editor: Editor) => void
+  srcVersion?: number
 }
 
 export function StagePanel({
@@ -113,6 +116,8 @@ export function StagePanel({
   onTextElementDoubleClick,
   onSceneChange,
   onSelectionChange,
+  onEditorReady,
+  srcVersion,
 }: StagePanelProps) {
   const isTldraw = canvasEngine === 'tldraw'
 
@@ -231,6 +236,9 @@ export function StagePanel({
               scene={scene}
               canvasWidth={canvasWidth}
               canvasHeight={canvasHeight}
+              resolveSrc={resolveSrc}
+              srcVersion={srcVersion}
+              onEditorReady={onEditorReady}
               onSceneChange={onSceneChange}
               onSelectionChange={onSelectionChange}
             />

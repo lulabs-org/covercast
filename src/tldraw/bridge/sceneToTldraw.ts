@@ -10,14 +10,22 @@ import type { Scene, ShapeElement, ImageElement, TextElement } from '@/domain'
  * Handles text, rect, ellipse, and image elements.
  * Stores original element id/name in shape.meta for round-trip fidelity.
  */
-export function sceneToTldrawShapes(scene: Scene): TLShape[] {
+export type ResolveSrcFn = (src: string) => string
+
+/**
+ * Converts a Scene's elements into tldraw shape records.
+ * Handles text, rect, ellipse, and image elements.
+ * Stores original element id/name in shape.meta for round-trip fidelity.
+ * When resolveSrc is provided, resolves local-asset: srcs to blob URLs for rendering.
+ */
+export function sceneToTldrawShapes(scene: Scene, resolveSrc?: ResolveSrcFn): TLShape[] {
   return scene.elements
     .filter((el) => el.hidden !== true)
     .flatMap((el) => {
       if (el.type === 'text') return [textElementToShape(el)]
       if (el.type === 'rect') return [rectElementToShape(el)]
       if (el.type === 'ellipse') return [ellipseElementToShape(el)]
-      if (el.type === 'image') return [imageElementToShape(el)]
+      if (el.type === 'image') return [imageElementToShape(el, resolveSrc)]
       return []
     })
 }
@@ -146,8 +154,12 @@ function ellipseElementToShape(el: ShapeElement): TLShape {
   } as unknown as TLShape
 }
 
-function imageElementToShape(el: ImageElement): TLShape {
+function imageElementToShape(el: ImageElement, resolveSrc?: ResolveSrcFn): TLShape {
   const id = createShapeId(el.id) as TLShapeId
+
+  // Resolve local-asset: src to blob URL for rendering.
+  // Original src is preserved in meta for round-trip fidelity.
+  const resolvedSrc = resolveSrc ? resolveSrc(el.src) : el.src
 
   return {
     id,
@@ -161,7 +173,7 @@ function imageElementToShape(el: ImageElement): TLShape {
     props: {
       w: el.width,
       h: el.height,
-      src: el.src,
+      src: resolvedSrc,
       alt: el.alt,
       fit: el.fit,
       shape: el.shape,
@@ -170,7 +182,7 @@ function imageElementToShape(el: ImageElement): TLShape {
     },
     parentId: 'page:page',
     index: 'a1',
-    meta: { originalId: el.id, originalName: el.name },
+    meta: { originalId: el.id, originalName: el.name, originalSrc: el.src },
   } as unknown as TLShape
 }
 
@@ -184,6 +196,7 @@ export function loadSceneIntoEditor(
   scene: Scene,
   canvasWidth: number = 941,
   canvasHeight: number = 1672,
+  resolveSrc?: ResolveSrcFn,
 ) {
   const existingShapes = editor.getCurrentPageShapes()
   if (existingShapes.length > 0) {
@@ -191,7 +204,7 @@ export function loadSceneIntoEditor(
   }
 
   const bgShape = createBackgroundShape(scene, canvasWidth, canvasHeight)
-  const elementShapes = sceneToTldrawShapes(scene)
+  const elementShapes = sceneToTldrawShapes(scene, resolveSrc)
 
   editor.createShapes([bgShape, ...elementShapes])
 }

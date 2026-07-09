@@ -194,6 +194,10 @@ function imageShapeToElement(shape: TLShape): ImageElement {
     fallbackText: string
   }
 
+  // Use originalSrc from meta if available (preserves local-asset: protocol)
+  const meta = shape.meta as { originalSrc?: string }
+  const src = meta.originalSrc ?? props.src
+
   return {
     id: getOriginalId(shape),
     name: getOriginalName(shape),
@@ -204,7 +208,7 @@ function imageShapeToElement(shape: TLShape): ImageElement {
     height: props.h,
     opacity: props.opacity,
     locked: shape.isLocked,
-    src: props.src,
+    src,
     alt: props.alt,
     fit: props.fit,
     shape: props.shape,

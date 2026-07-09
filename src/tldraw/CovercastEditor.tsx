@@ -24,6 +24,10 @@ export type CovercastEditorProps = {
   scene: Scene
   canvasWidth?: number
   canvasHeight?: number
+  /** Resolves local-asset: srcs to blob URLs for rendering. */
+  resolveSrc?: (src: string) => string
+  /** Increments when blob URLs are built — triggers reload to pick up resolved srcs. */
+  srcVersion?: number
   /** Called when the tldraw editor instance is ready. */
   onEditorReady?: (editor: Editor) => void
   /** Called when the user edits shapes (debounced 300ms). Receives the converted Scene. */
@@ -36,6 +40,8 @@ export function CovercastEditor({
   scene,
   canvasWidth = DEFAULT_CANVAS_WIDTH,
   canvasHeight = DEFAULT_CANVAS_HEIGHT,
+  resolveSrc,
+  srcVersion = 0,
   onEditorReady,
   onSceneChange,
   onSelectionChange,
@@ -44,6 +50,12 @@ export function CovercastEditor({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const unsubRef = useRef<(() => void) | null>(null)
   const unsubSelectionRef = useRef<(() => void) | null>(null)
+  // Latest resolveSrc — kept in a ref to avoid triggering useEffect on every
+  // render. srcVersion controls when reload actually happens.
+  const resolveSrcRef = useRef(resolveSrc)
+  useEffect(() => {
+    resolveSrcRef.current = resolveSrc
+  })
   // Prevent infinite loop: when onSceneChange updates scene state,
   // the useEffect below would reload shapes into tldraw, which would
   // trigger store.listen again. This flag breaks the cycle.
@@ -73,7 +85,7 @@ export function CovercastEditor({
   const handleMount = (editor: Editor) => {
     editorRef.current = editor
 
-    loadSceneIntoEditor(editor, scene, canvasWidth, canvasHeight)
+    loadSceneIntoEditor(editor, scene, canvasWidth, canvasHeight, resolveSrcRef.current)
 
     // Camera constraints — lock to canvas bounds
     editor.setCameraOptions({
@@ -171,7 +183,7 @@ export function CovercastEditor({
 
     // Suppress selection + scene sync callbacks during reload
     isReloadingRef.current = true
-    loadSceneIntoEditor(editor, scene, canvasWidth, canvasHeight)
+    loadSceneIntoEditor(editor, scene, canvasWidth, canvasHeight, resolveSrcRef.current)
 
     // Re-select shapes by matching originalId
     if (selectedElementIds.length > 0) {
@@ -188,7 +200,7 @@ export function CovercastEditor({
       }
     }
     isReloadingRef.current = false
-  }, [scene, canvasWidth, canvasHeight])
+  }, [scene, canvasWidth, canvasHeight, srcVersion])
 
   // Cleanup listeners on unmount
   useEffect(() => {

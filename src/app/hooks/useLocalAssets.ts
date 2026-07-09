@@ -103,5 +103,6 @@ export function useLocalAssets(scene: Scene) {
     resolveSrc,
     getMeta,
     metas,
+    blobUrlMap,
   }
 }
