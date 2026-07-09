@@ -49,6 +49,7 @@ export default function SceneEditor() {
   const [appOrigin, setAppOrigin] = useState('')
   const [exportFormat, setExportFormat] = useState<ExportFormat>('png')
   const [guidesSelectedIds, setGuidesSelectedIds] = useState<string[]>([])
+  const [canvasEngine, setCanvasEngine] = useState<'svg' | 'tldraw'>('svg')
   const svgRef = useRef<SVGSVGElement>(null)
   const sceneElementsRef = useRef<SceneElement[]>(scene.elements)
   const selectedElementRef = useRef<SceneElement | null>(null)
@@ -283,6 +284,41 @@ export default function SceneEditor() {
     [scene, saveHistory, markSceneEdited],
   )
 
+  // tldraw → Scene sync (debounced inside CovercastEditor)
+  // Does NOT call saveHistory — tldraw has its own undo/redo
+  // Preserves hidden elements in their original layer order — they're not in
+  // tldraw but must stay in Scene at their original position
+  const handleTldrawSceneChange = useCallback(
+    (newScene: Scene) => {
+      setScene((prev) => {
+        const newElementsMap = new Map(newScene.elements.map((el) => [el.id, el]))
+        const prevIds = new Set(prev.elements.map((el) => el.id))
+
+        // Walk prev.elements in order: replace visible with tldraw version,
+        // keep hidden elements as-is at their original position
+        const merged = prev.elements.map((el) => {
+          const updated = newElementsMap.get(el.id)
+          return updated ?? el
+        })
+
+        // Append elements created in tldraw that don't exist in prev
+        const newElements = newScene.elements.filter((el) => !prevIds.has(el.id))
+
+        return {
+          ...newScene,
+          elements: [...merged, ...newElements],
+        }
+      })
+      markSceneEdited()
+    },
+    [markSceneEdited],
+  )
+
+  // tldraw selection → SceneEditor selection
+  const handleTldrawSelectionChange = useCallback((elementIds: string[]) => {
+    setSelection({ selectedIds: elementIds })
+  }, [])
+
   const {
     elementClipboardRef,
     elementsClipboardRef,
@@ -456,6 +492,10 @@ export default function SceneEditor() {
 
           <StagePanel
             status={status}
+            canvasEngine={canvasEngine}
+            onCanvasEngineChange={setCanvasEngine}
+            onSceneChange={handleTldrawSceneChange}
+            onSelectionChange={handleTldrawSelectionChange}
             canvasZoom={canvasZoom}
             canvasZoomPercent={canvasZoomPercent}
             canvasPreviewWidth={canvasPreviewWidth}
